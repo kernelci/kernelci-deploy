@@ -70,7 +70,7 @@ git tag -a {tag} -m {tag}
 
 
 def push_tag_and_branch(args, tag):
-    raise NotImplementedError("Command not implemented: push_tag_and_branch")
+    print("Function not implemented: push_tag_and_branch()")
 
 
 def main(args):
