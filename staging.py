@@ -42,21 +42,33 @@ def get_pull_requests(args):
 
 def pull(args, pr):
     head = pr['head']
-    shell_cmd("""\
+    try:
+        shell_cmd("""\
 cd {path}
 git pull --no-ff --no-edit {origin} {branch}
 """.format(path=args.path,
            origin=head['repo']['clone_url'],
            branch=head['ref']))
-
+    except subprocess.CalledProcessError:
+        print("WARNING: Failed to pull branch")
+        shell_cmd("""\
+cd {path}
+git reset --merge
+""".format(path=args.path))
 
 def apply_patches(args):
     for patch in args.patches:
         print("Applying patch: {}".format(patch))
-        shell_cmd("""\
+        try:
+            shell_cmd("""\
 cat {patch} | (cd {path} && git am)
 """.format(path=args.path, patch=patch))
-
+        except subprocess.CalledProcessError:
+            print("WARNING: Failed to apply patch")
+            shell_cmd("""\
+cd {path}
+git am --abort
+""".format(path=args.path))
 
 def create_tag(args):
     tag = args.tag or "staging-{}".format(
