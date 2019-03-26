@@ -23,6 +23,7 @@ def checkout_repository(args):
             url=args.repo_url, path=args.path))
     shell_cmd("""\
 cd {path}
+git reset --hard --merge
 git fetch origin master
 git checkout FETCH_HEAD
 """.format(path=args.path))
