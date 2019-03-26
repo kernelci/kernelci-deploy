@@ -1,0 +1,38 @@
+From 12796a25583f25e20293b8a6ffc50b0780ae76bf Mon Sep 17 00:00:00 2001
+From: Guillaume Tucker <guillaume.tucker@collabora.com>
+Date: Thu, 15 Nov 2018 11:05:51 +0000
+Subject: [PATCH 2/8] STAGING print the bisection email recipients but don't
+ send them the report
+
+---
+ push-bisection-results.py | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/push-bisection-results.py b/push-bisection-results.py
+index dc33c2bd959d..d7622579c6ab 100755
+--- a/push-bisection-results.py
++++ b/push-bisection-results.py
+@@ -212,6 +212,20 @@ def send_report(args, log_file_name, token, api):
+     if all(check == 'PASS' for check in checks_dict(args).values()):
+         add_git_recipients(kdir, 'refs/bisect/bad', to, cc)
+     cc = cc.difference(to)
++
++    # |<- STAGING --
++    print("*** recipients ***")
++    for recipients, name in (to, 'to'), (cc, 'cc'):
++        print("{}:".format(name))
++        for r in recipients:
++            print("  {}".format(r))
++    to = set(args['to'].split(' '))
++    cc = set()
++    print("Actually only sending emails to:")
++    for r in to:
++        print("  {}".format(r))
++    #  -- STAGING ->|
++
+     data.update({
+         'report_type': 'bisect',
+         'log': log_file_name,
+-- 
+2.20.1
+

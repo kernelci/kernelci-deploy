@@ -1,0 +1,34 @@
+From 19ac770cda7717e289f90d986451bfa7fce75550 Mon Sep 17 00:00:00 2001
+From: Guillaume Tucker <guillaume.tucker@collabora.com>
+Date: Tue, 11 Dec 2018 19:03:20 +0000
+Subject: [PATCH 6/8] STAGING debug noise in lib.test_configs
+
+---
+ kernelci/configs.py | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/kernelci/configs.py b/kernelci/configs.py
+index 42b4c2de9da9..d9e0e0259119 100644
+--- a/kernelci/configs.py
++++ b/kernelci/configs.py
+@@ -790,6 +790,17 @@ class TestConfig(YAMLObject):
+         return self._test_plans
+ 
+     def match(self, arch, plan, flags, config):
++        if True:
++            print(
++                plan,
++                plan in self._test_plans,
++                plan in self._test_plans and self._test_plans[plan].match(config),
++                arch,
++                self.device_type.arch == arch,
++                config,
++                self.device_type.match(flags, config),
++                all(f.match(**config) for f in self._filters)
++            )
+         return (
+             plan in self._test_plans and
+             self._test_plans[plan].match(config) and
+-- 
+2.20.1
+
