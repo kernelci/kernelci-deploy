@@ -1,4 +1,4 @@
-From baf18182c733e3357b1243300ed590131bb80756 Mon Sep 17 00:00:00 2001
+From 2bde367af14630ed9dcae9c8fa553dd384965ef1 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Tue, 22 Jan 2019 12:55:20 +0000
 Subject: [PATCH 7/8] STAGING build.py -s to not build silently

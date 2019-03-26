@@ -1,4 +1,4 @@
-From 6a45bec7de4560b9dfec5ca72e1e646d66024d37 Mon Sep 17 00:00:00 2001
+From 55e137118c581e1695d7fe0fde66b1351b9afcd3 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 21 Mar 2019 13:42:13 +0000
 Subject: [PATCH 4/8] STAGING send email reports to staging recipients

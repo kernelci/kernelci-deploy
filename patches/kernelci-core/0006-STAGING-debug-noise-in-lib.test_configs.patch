@@ -1,4 +1,4 @@
-From 19ac770cda7717e289f90d986451bfa7fce75550 Mon Sep 17 00:00:00 2001
+From 26016de53bf817bdb304e80db6108e430f6b7b8d Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Tue, 11 Dec 2018 19:03:20 +0000
 Subject: [PATCH 6/8] STAGING debug noise in lib.test_configs
@@ -8,10 +8,10 @@ Subject: [PATCH 6/8] STAGING debug noise in lib.test_configs
  1 file changed, 11 insertions(+)
 
 diff --git a/kernelci/configs.py b/kernelci/configs.py
-index 42b4c2de9da9..d9e0e0259119 100644
+index 46b456a81f74..0541c9907373 100644
 --- a/kernelci/configs.py
 +++ b/kernelci/configs.py
-@@ -790,6 +790,17 @@ class TestConfig(YAMLObject):
+@@ -791,6 +791,17 @@ class TestConfig(YAMLObject):
          return self._test_plans
  
      def match(self, arch, plan, flags, config):

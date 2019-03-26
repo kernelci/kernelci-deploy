@@ -1,4 +1,4 @@
-From 12796a25583f25e20293b8a6ffc50b0780ae76bf Mon Sep 17 00:00:00 2001
+From c7aff7de42e24ee9842637a62823f4d3de214ff9 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 15 Nov 2018 11:05:51 +0000
 Subject: [PATCH 2/8] STAGING print the bisection email recipients but don't

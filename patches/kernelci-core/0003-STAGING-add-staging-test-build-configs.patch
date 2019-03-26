@@ -1,4 +1,4 @@
-From b2cfc04876966cec0b24bfa9fce53862b761b26c Mon Sep 17 00:00:00 2001
+From 38f882857df8bf03e52d3f3e5ea267a5cf1be61a Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 14 Feb 2019 15:16:26 +0000
 Subject: [PATCH 3/8] STAGING add staging test build configs
@@ -8,7 +8,7 @@ Subject: [PATCH 3/8] STAGING add staging test build configs
  1 file changed, 38 insertions(+)
 
 diff --git a/build-configs.yaml b/build-configs.yaml
-index c7346191d033..b2b6942dbe79 100644
+index d7ed0da88793..0c08f8edcb0b 100644
 --- a/build-configs.yaml
 +++ b/build-configs.yaml
 @@ -103,6 +103,9 @@ trees:

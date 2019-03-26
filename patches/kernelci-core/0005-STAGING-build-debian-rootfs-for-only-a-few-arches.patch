@@ -1,4 +1,4 @@
-From 2ffa44b704be14334e1eb3ec3c4bba86689a4f28 Mon Sep 17 00:00:00 2001
+From 1e03352b3eb44f2e604cd41b4bd7cb26257e4699 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Tue, 4 Dec 2018 21:33:49 +0000
 Subject: [PATCH 5/8] STAGING build debian rootfs for only a few arches
@@ -9,7 +9,7 @@ Subject: [PATCH 5/8] STAGING build debian rootfs for only a few arches
  2 files changed, 2 insertions(+), 4 deletions(-)
 
 diff --git a/jenkins/stretch-igt.jpl b/jenkins/stretch-igt.jpl
-index f98e23153977..e7c846eb9dd1 100644
+index 2b965726336f..ae9784376ca5 100644
 --- a/jenkins/stretch-igt.jpl
 +++ b/jenkins/stretch-igt.jpl
 @@ -12,8 +12,7 @@ DOCKER_BASE
@@ -23,7 +23,7 @@ index f98e23153977..e7c846eb9dd1 100644
                'extra_packages':"libpciaccess0 libkmod2 libprocps6 libcairo2 \
                                  libssl1.1 libunwind8 libudev1 libglib2.0-0 \
 diff --git a/jenkins/stretch.jpl b/jenkins/stretch.jpl
-index 2c70ed75ff60..7277d5e37149 100644
+index 762a84577f79..1bf9835410ec 100644
 --- a/jenkins/stretch.jpl
 +++ b/jenkins/stretch.jpl
 @@ -12,8 +12,7 @@ DOCKER_BASE
@@ -35,7 +35,7 @@ index 2c70ed75ff60..7277d5e37149 100644
 +              'arch_list':["armhf", "arm64", "amd64"],
                'debian_release':"stretch",
                'extra_packages':"",
-               'script':"",
+               'extra_packages_remove':"bash e2fsprogs e2fslibs"
 -- 
 2.20.1
 
