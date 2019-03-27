@@ -1,4 +1,4 @@
-From 7751988a9d9879aff881f0230cd3c5407c98210a Mon Sep 17 00:00:00 2001
+From ca9273a50d332f925e84d35be54a0816a4a0dbfa Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Tue, 22 Jan 2019 15:44:23 +0000
 Subject: [PATCH 8/8] STAGING build.py: put compiler version in build log
