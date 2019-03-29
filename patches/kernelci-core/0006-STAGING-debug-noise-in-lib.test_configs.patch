@@ -1,4 +1,4 @@
-From 397463bde29296999700f90790383c033794c23c Mon Sep 17 00:00:00 2001
+From a6c4a1b6ab949f4fdd3726eac437a6dbd813b6f5 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Tue, 11 Dec 2018 19:03:20 +0000
 Subject: [PATCH 6/8] STAGING debug noise in lib.test_configs

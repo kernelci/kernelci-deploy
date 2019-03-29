@@ -1,4 +1,4 @@
-From f9343d5edc1af30d97b33c39da86af9001c42354 Mon Sep 17 00:00:00 2001
+From 159c95f58ee02b40beedd940e5534efdd35289a8 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Tue, 4 Dec 2018 21:33:49 +0000
 Subject: [PATCH 5/8] STAGING build debian rootfs for only a few arches

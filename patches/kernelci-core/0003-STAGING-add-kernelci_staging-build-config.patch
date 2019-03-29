@@ -1,33 +1,33 @@
-From cde400925a46395b7f8ece6d9cfe688984488918 Mon Sep 17 00:00:00 2001
+From 359e34523e0f58ad74341549cecaa6689209d963 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 14 Feb 2019 15:16:26 +0000
-Subject: [PATCH 3/8] STAGING add staging test build configs
+Subject: [PATCH 3/8] STAGING add kernelci_staging build config
 
 ---
  build-configs.yaml | 38 ++++++++++++++++++++++++++++++++++++++
  1 file changed, 38 insertions(+)
 
 diff --git a/build-configs.yaml b/build-configs.yaml
-index d7ed0da88793..c1d7d04ba9ed 100644
+index d7ed0da88793..2a97537a2a15 100644
 --- a/build-configs.yaml
 +++ b/build-configs.yaml
-@@ -103,6 +103,9 @@ trees:
-   stable-rc:
-     url: "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git"
+@@ -49,6 +49,9 @@ trees:
+   gtucker:
+     url: 'https://gitlab.collabora.com/gtucker/linux.git'
  
-+  staging:
-+    url: "https://gitlab.collabora.com/gtucker/linux.git"
++  kernelci:
++    url: "https://github.com/kernelci/linux.git"
 +
-   tegra:
-     url: "https://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux.git"
+   khilman:
+     url: "https://git.kernel.org/pub/scm/linux/kernel/git/khilman/linux.git"
  
-@@ -429,6 +432,41 @@ build_configs:
-     tree: evalenti
-     branch: 'for-kernelci'
+@@ -434,6 +437,41 @@ build_configs:
+     branch: 'kernelci-stable'
+     variants: *stable_variants
  
-+  staging:
-+    tree: staging
-+    branch: 'kernelci-stable'
++  kernelci_staging:
++    tree: kernelci
++    branch: 'staging.kernelci.org'
 +    variants:
 +      gcc-7:
 +        build_environment: gcc-7
@@ -60,9 +60,9 @@ index d7ed0da88793..c1d7d04ba9ed 100644
 +        architectures:
 +          arm64: *staging_arm64
 +
-   gtucker_stable:
-     tree: gtucker
-     branch: 'kernelci-stable'
+   khilman:
+     tree: khilman
+     branch: 'to-build'
 -- 
 2.20.1
 
