@@ -72,6 +72,9 @@ git pull --no-ff --no-edit {origin} {branch}
 cd {path}
 git reset --merge
 """.format(path=args.path))
+        return False
+    return True
+
 
 def apply_patches(args):
     for patch in args.patches:
@@ -86,6 +89,9 @@ cat {patch} | (cd {path} && git am)
 cd {path}
 git am --abort
 """.format(path=args.path))
+            return False
+    return True
+
 
 def create_tag(args):
     tag = args.tag or "staging-{}".format(
@@ -108,7 +114,9 @@ def main(args):
     prs = get_pull_requests(args)
     for pr in prs:
         pull(args, pr)
-    apply_patches(args)
+    if not apply_patches(args):
+        print("Aborting, all patches must apply.")
+        return False
     tag = create_tag(args)
     push_tag_and_branch(args, tag)
 
