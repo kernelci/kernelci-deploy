@@ -1,7 +1,7 @@
-From 873f82b5e634bda6413e48855f43d469af2771e7 Mon Sep 17 00:00:00 2001
+From f646b7d586c4fe7dbec4a9ce60cede91df8dce44 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 21 Mar 2019 13:42:13 +0000
-Subject: [PATCH 4/8] STAGING send email reports to staging recipients
+Subject: [PATCH 4/7] STAGING send email reports to staging recipients
 
 ---
  jenkins/kernel-arch-complete.sh | 14 ++++++++++++--

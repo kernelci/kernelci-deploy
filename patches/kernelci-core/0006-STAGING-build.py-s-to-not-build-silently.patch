@@ -1,7 +1,7 @@
-From e4999067848eb03321f6841fb6124c6931caa25e Mon Sep 17 00:00:00 2001
+From 97da4840ca8eb7b6202ca8b1bd017d3c086f814d Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Tue, 22 Jan 2019 12:55:20 +0000
-Subject: [PATCH 7/8] STAGING build.py -s to not build silently
+Subject: [PATCH 6/7] STAGING build.py -s to not build silently
 
 ---
  jenkins/build.jpl | 2 ++
