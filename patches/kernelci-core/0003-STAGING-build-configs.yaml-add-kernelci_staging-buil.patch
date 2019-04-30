@@ -1,14 +1,15 @@
-From 49f7545032132ccbb2f613dc5f337a82d0ec8879 Mon Sep 17 00:00:00 2001
+From aa83a188c628364657e90b6ab3a6dfa9b1d139f7 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 14 Feb 2019 15:16:26 +0000
-Subject: [PATCH 3/6] STAGING add kernelci_staging build config
+Subject: [PATCH 3/6] STAGING build-configs.yaml: add kernelci_staging build
+ config
 
 ---
  build-configs.yaml | 38 ++++++++++++++++++++++++++++++++++++++
  1 file changed, 38 insertions(+)
 
 diff --git a/build-configs.yaml b/build-configs.yaml
-index c8009ee6f91f..385305b168e7 100644
+index 1d4bc42ecc25..b29ef7d29004 100644
 --- a/build-configs.yaml
 +++ b/build-configs.yaml
 @@ -49,6 +49,9 @@ trees:
@@ -21,7 +22,7 @@ index c8009ee6f91f..385305b168e7 100644
    khilman:
      url: "https://git.kernel.org/pub/scm/linux/kernel/git/khilman/linux.git"
  
-@@ -456,6 +459,41 @@ build_configs:
+@@ -449,6 +452,41 @@ build_configs:
      branch: 'kernelci-stable'
      variants: *stable_variants
  
@@ -29,8 +30,8 @@ index c8009ee6f91f..385305b168e7 100644
 +    tree: kernelci
 +    branch: 'staging.kernelci.org'
 +    variants:
-+      gcc-7:
-+        build_environment: gcc-7
++      gcc-8:
++        build_environment: gcc-8
 +        architectures:
 +          arc:
 +            base_defconfig: 'nsim_hs_defconfig'
