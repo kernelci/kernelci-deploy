@@ -70,15 +70,15 @@ def get_pull_requests(args):
 
 def pull(args, pr, path):
     head = pr['head']
+    branch = head['ref']
+    user = head['repo']['owner']['login']
     try:
         shell_cmd("""\
 cd {path}
 git pull --no-ff --no-edit {origin} {branch}
-""".format(path=path,
-           origin=head['repo']['clone_url'],
-           branch=head['ref']))
+""".format(path=path, origin=head['repo']['clone_url'], branch=branch))
     except subprocess.CalledProcessError:
-        print("WARNING: Failed to pull branch")
+        print("WARNING: Failed to pull branch {} from {}".format(branch, user))
         shell_cmd("""\
 cd {path}
 git reset --merge
@@ -125,8 +125,18 @@ def main(args):
     project = PROJECTS.get(args.project)
     checkout_repository(path, project)
     prs = get_pull_requests(args)
+    skip = []
+    for user_branch in args.skip:
+        user, _, branch = user_branch.partition('/')
+        skip.append((user, branch))
     for pr in prs:
-        pull(args, pr, path)
+        head = pr['head']
+        branch = head['ref']
+        user = head['repo']['owner']['login']
+        if (user, branch) in skip:
+            print("Skipping branch {} from {}".format(branch, user))
+        else:
+            pull(args, pr, path)
     if not apply_patches(args, path):
         print("Aborting, all patches must apply.")
         return False
@@ -148,5 +158,7 @@ if __name__ == '__main__':
                         help="Name of the branch to force-push to")
     parser.add_argument("--namespace", default='kernelci',
                         help="Github project namespace")
+    parser.add_argument("--skip", nargs='+', default=[],
+                        help="Name of user/branch pairs to skip")
     args = parser.parse_args(sys.argv[1:])
     main(args)
