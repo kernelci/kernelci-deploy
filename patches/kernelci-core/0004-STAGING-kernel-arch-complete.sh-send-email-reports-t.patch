@@ -1,7 +1,7 @@
-From e750222f87c1e825c4936e5da5bed73ac62ae774 Mon Sep 17 00:00:00 2001
+From 8d83b8b9e23d99b1e087f88aa3fb73e97369ccc6 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 21 Mar 2019 13:42:13 +0000
-Subject: [PATCH 4/6] STAGING kernel-arch-complete.sh: send email reports to
+Subject: [PATCH 4/7] STAGING kernel-arch-complete.sh: send email reports to
  staging recipients
 
 ---

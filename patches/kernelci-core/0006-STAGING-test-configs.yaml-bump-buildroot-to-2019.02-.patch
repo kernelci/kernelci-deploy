@@ -1,7 +1,7 @@
-From 5a89287947cb2d953089ea3510341520f487e0b1 Mon Sep 17 00:00:00 2001
+From 318eaf5d608d6fa1d01dff0279dc779d0ac214da Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Fri, 10 May 2019 08:58:43 +0100
-Subject: [PATCH 6/6] STAGING test-configs.yaml: bump buildroot to 2019.02 from
+Subject: [PATCH 6/7] STAGING test-configs.yaml: bump buildroot to 2019.02 from
  staging
 
 ---
