@@ -1,8 +1,8 @@
-From 3780cd8852663131d3630342d9466efe3c9c3dd1 Mon Sep 17 00:00:00 2001
+From 78db2974f6a04d52eb1a579cc0363c58e0b59d4b Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 15 Nov 2018 11:05:51 +0000
-Subject: [PATCH 2/6] STAGING print the bisection email recipients but don't
- send them the report
+Subject: [PATCH 2/6] STAGING push-bisection-results: print the email
+ recipients but don't send them the report
 
 ---
  push-bisection-results.py | 14 ++++++++++++++
