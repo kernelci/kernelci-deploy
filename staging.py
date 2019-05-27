@@ -118,8 +118,13 @@ git tag -a {tag} -m {tag}
     return tag
 
 
-def push_tag_and_branch(args, tag):
-    print("WARNING - Function not implemented: push_tag_and_branch()")
+def push_tag_and_branch(args, path, tag):
+    git_cmd = "git push --force origin HEAD:{branch} {tag}".format(
+        branch=args.branch, tag=tag)
+    if args.ssh_key:
+        git_cmd = "ssh-agent sh -c 'ssh-add {key}; {cmd}'".format(
+            key=args.ssh_key, cmd=git_cmd)
+    shell_cmd("cd {path}; {git_cmd}".format(path=path, git_cmd=git_cmd))
 
 
 def main(args):
@@ -144,7 +149,7 @@ def main(args):
         print("Aborting, all patches must apply.")
         return False
     tag = create_tag(args, path)
-    # push_tag_and_branch(args, tag)
+    push_tag_and_branch(args, path, tag)
 
 
 if __name__ == '__main__':
@@ -161,5 +166,7 @@ if __name__ == '__main__':
                         help="Github project namespace")
     parser.add_argument("--skip", nargs='+', default=[],
                         help="Name of user/branch pairs to skip")
+    parser.add_argument("--ssh-key",
+                        help="Path to SSH key to push branches and tags")
     args = parser.parse_args(sys.argv[1:])
     main(args)
