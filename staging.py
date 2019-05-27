@@ -19,6 +19,7 @@
 
 import argparse
 import datetime
+import glob
 import json
 import os
 import requests
@@ -87,8 +88,9 @@ git reset --merge
     return True
 
 
-def apply_patches(args, path):
-    for patch in args.patches:
+def apply_patches(args, path, patches_path):
+    patches = sorted(glob.glob(os.path.join(patches_path, '*.patch')))
+    for patch in patches:
         print("Applying patch: {}".format(patch))
         try:
             shell_cmd("""\
@@ -137,7 +139,8 @@ def main(args):
             print("Skipping branch {} from {}".format(branch, user))
         else:
             pull(args, pr, path)
-    if not apply_patches(args, path):
+    patches_path = os.path.join('patches', args.project)
+    if not apply_patches(args, path, patches_path):
         print("Aborting, all patches must apply.")
         return False
     tag = create_tag(args, path)
@@ -148,8 +151,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser("Create staging.kernelci.org branches")
     parser.add_argument("project", choices=PROJECTS.keys(),
                         help="Name of the Github project")
-    parser.add_argument("patches", nargs='*',
-                        help="Path to extra patches to apply")
     parser.add_argument("--path",
                         help="Path to the local checkout, default is $PWD")
     parser.add_argument("--tag",
