@@ -1,4 +1,4 @@
-From 09c788511185ec6f5cd93d00512031f6ce2424a5 Mon Sep 17 00:00:00 2001
+From 0ff6812d7993dc8a92efc05f1d8617754c9c20c7 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Fri, 10 May 2019 09:11:03 +0100
 Subject: [PATCH 7/7] STAGING build-configs.yaml: enable clang-8 on arm
@@ -8,10 +8,10 @@ Subject: [PATCH 7/7] STAGING build-configs.yaml: enable clang-8 on arm
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/build-configs.yaml b/build-configs.yaml
-index b29ef7d29004..53617a850268 100644
+index 65ba92500e4f..01157e8e639f 100644
 --- a/build-configs.yaml
 +++ b/build-configs.yaml
-@@ -463,7 +463,7 @@ build_configs:
+@@ -478,7 +478,7 @@ build_configs:
              base_defconfig: 'nsim_hs_defconfig'
              filters:
                - whitelist: {defconfig: ['nsim_hs_defconfig']}
@@ -20,7 +20,7 @@ index b29ef7d29004..53617a850268 100644
              base_defconfig: 'multi_v7_defconfig'
              filters:
                - whitelist: {defconfig: ['multi_v7_defconfig']}
-@@ -485,6 +485,7 @@ build_configs:
+@@ -500,6 +500,7 @@ build_configs:
        clang-8:
          build_environment: clang-8
          architectures:

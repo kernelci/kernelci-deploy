@@ -1,15 +1,15 @@
-From 8d83b8b9e23d99b1e087f88aa3fb73e97369ccc6 Mon Sep 17 00:00:00 2001
+From 9332f553e702698f37c274696de4d1ab5c8c5d83 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 21 Mar 2019 13:42:13 +0000
 Subject: [PATCH 4/7] STAGING kernel-arch-complete.sh: send email reports to
  staging recipients
 
 ---
- jenkins/kernel-arch-complete.sh | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ jenkins/kernel-arch-complete.sh | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
 diff --git a/jenkins/kernel-arch-complete.sh b/jenkins/kernel-arch-complete.sh
-index 2d85b0aed139..1c96e098d753 100755
+index 1ae1f3d0a57c..63511bdd9848 100755
 --- a/jenkins/kernel-arch-complete.sh
 +++ b/jenkins/kernel-arch-complete.sh
 @@ -45,7 +45,7 @@ sudo touch ${BASEDIR}/${ARCH}.done
@@ -21,7 +21,7 @@ index 2d85b0aed139..1c96e098d753 100755
      echo "All builds have now finished, triggering testing..."
      # Tell the dashboard the job has finished build.
      echo "Build has now finished, reporting result to dashboard."
-@@ -54,7 +54,15 @@ if [[ BUILDS_FINISHED -eq 4 ]]; then
+@@ -54,7 +54,16 @@ if [[ BUILDS_FINISHED -eq 4 ]]; then
          echo "Not sending emails because EMAIL was false"
          exit 0
      fi
@@ -30,6 +30,7 @@ index 2d85b0aed139..1c96e098d753 100755
 +        echo "Sending results to kernelci folks"
 +        curl -X POST -H "Authorization: $EMAIL_AUTH_TOKEN" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "git_branch": "'$BRANCH'", "build_report": 1, "format": ["txt"], "send_to": ["gtucker@collabora.com", "mgalka@collabora.com", "dan.rue@linaro.org", "matthew.hart@linaro.org", "broonie@kernel.org", "khilman@baylibre.com"], "delay": 0}' ${API}/send
 +        curl -X POST -H "Authorization: $EMAIL_AUTH_TOKEN" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "git_branch": "'$BRANCH'", "boot_report": 1, "format": ["txt"], "send_to": ["gtucker@collabora.com", "mgalka@collabora.com", "dan.rue@linaro.org", "matthew.hart@linaro.org", "broonie@kernel.org", "khilman@baylibre.com"], "delay": 1800}' ${API}/send
++        curl -X POST -H "Authorization: $EMAIL_AUTH_TOKEN" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "git_branch": "'$BRANCH'",  "report_type": "test", "plan": "baseline", "send_to": ["gtucker@collabora.com", "mgalka@collabora.com", "dan.rue@linaro.org", "matthew.hart@linaro.org", "broonie@kernel.org", "khilman@baylibre.com"], "format": ["txt"], "delay": 1800}' ${API}/send
 +        curl -X POST -H "Authorization: $EMAIL_AUTH_TOKEN" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "git_branch": "'$BRANCH'",  "report_type": "test", "plan": "v4l2-compliance-vivid", "send_to": ["gtucker@collabora.com", "mgalka@collabora.com", "dan.rue@linaro.org", "matthew.hart@linaro.org", "broonie@kernel.org", "khilman@baylibre.com"], "format": ["txt"], "delay": 2700}' ${API}/send
 +        curl -X POST -H "Authorization: $EMAIL_AUTH_TOKEN" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "git_branch": "'$BRANCH'",  "report_type": "test", "plan": "v4l2-compliance-uvc", "send_to": ["gtucker@collabora.com", "mgalka@collabora.com", "dan.rue@linaro.org", "matthew.hart@linaro.org", "broonie@kernel.org", "khilman@baylibre.com"], "format": ["txt"], "delay": 2700}' ${API}/send
 +        curl -X POST -H "Authorization: $EMAIL_AUTH_TOKEN" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "git_branch": "'$BRANCH'",  "report_type": "test", "plan": "igt", "send_to": ["gtucker@collabora.com", "mgalka@collabora.com", "dan.rue@linaro.org", "matthew.hart@linaro.org", "broonie@kernel.org", "khilman@baylibre.com"], "format": ["txt"], "delay": 2700}' ${API}/send
