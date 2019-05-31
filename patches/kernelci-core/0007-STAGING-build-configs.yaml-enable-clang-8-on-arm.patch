@@ -1,7 +1,7 @@
-From 0ff6812d7993dc8a92efc05f1d8617754c9c20c7 Mon Sep 17 00:00:00 2001
+From 211d4f0918ea777eeaef74593bf079ff888f2e44 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Fri, 10 May 2019 09:11:03 +0100
-Subject: [PATCH 7/7] STAGING build-configs.yaml: enable clang-8 on arm
+Subject: [PATCH 7/8] STAGING build-configs.yaml: enable clang-8 on arm
 
 ---
  build-configs.yaml | 3 ++-

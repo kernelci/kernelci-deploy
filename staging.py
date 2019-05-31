@@ -31,13 +31,16 @@ GITHUB_API = "https://api.github.com/"
 
 PROJECTS = {
     'kernelci-core': {
-        'url': "https://github.com/kernelci/kernelci-core.git"
+        'url': "https://github.com/kernelci/kernelci-core.git",
+        'push-url': "git@github.com:kernelci/kernelci-core.git"
     },
     'kernelci-backend': {
-        'url': "https://github.com/kernelci/kernelci-backend.git"
+        'url': "https://github.com/kernelci/kernelci-backend.git",
+        'push-url': "git@github.com:kernelci/kernelci-backend.git"
     },
     'kernelci-frontend': {
-        'url': "https://github.com/kernelci/kernelci-frontend.git"
+        'url': "https://github.com/kernelci/kernelci-frontend.git",
+        'push-url': "git@github.com:kernelci/kernelci-frontend.git"
     },
 }
 
@@ -46,10 +49,21 @@ def shell_cmd(cmd):
     subprocess.check_output(cmd, shell=True)
 
 
-def checkout_repository(path, project):
+def ssh_agent(ssh_key, cmd):
+    if ssh_key:
+        cmd = "ssh-agent sh -c 'ssh-add {key}; {cmd}'".format(
+            key=ssh_key, cmd=cmd)
+    shell_cmd(cmd)
+
+
+def checkout_repository(args, path, project):
     if not os.path.exists(path):
-        shell_cmd("git clone {url} {path}".format(
-            url=project.url, path=path))
+        shell_cmd("""\
+git clone {url} {path}
+cd {path}
+git remote set-url --push origin {push}
+""".format(path=path, url=project['url'], push=project['push-url']))
+
     shell_cmd("""\
 cd {path}
 git reset --hard --merge
@@ -119,18 +133,16 @@ git tag -a {tag} -m {tag}
 
 
 def push_tag_and_branch(args, path, tag):
-    git_cmd = "git push --force origin HEAD:{branch} {tag}".format(
-        branch=args.branch, tag=tag)
-    if args.ssh_key:
-        git_cmd = "ssh-agent sh -c 'ssh-add {key}; {cmd}'".format(
-            key=args.ssh_key, cmd=git_cmd)
-    shell_cmd("cd {path}; {git_cmd}".format(path=path, git_cmd=git_cmd))
+    ssh_agent(args.ssh_key, """\
+cd {path}
+git push --force origin HEAD:{branch} {tag}
+""".format(path=path, branch=args.branch, tag=tag))
 
 
 def main(args):
     path = os.path.join('checkout', args.project)
     project = PROJECTS.get(args.project)
-    checkout_repository(path, project)
+    checkout_repository(args, path, project)
     prs = get_pull_requests(args)
     skip = []
     for user_branch in args.skip:
@@ -149,7 +161,8 @@ def main(args):
         print("Aborting, all patches must apply.")
         return False
     tag = create_tag(args, path)
-    push_tag_and_branch(args, path, tag)
+    if args.push:
+        push_tag_and_branch(args, path, tag)
 
 
 if __name__ == '__main__':
@@ -168,5 +181,7 @@ if __name__ == '__main__':
                         help="Name of user/branch pairs to skip")
     parser.add_argument("--ssh-key",
                         help="Path to SSH key to push branches and tags")
+    parser.add_argument("--push", action="store_true",
+                        help="Push the resulting branch and tag")
     args = parser.parse_args(sys.argv[1:])
     main(args)
