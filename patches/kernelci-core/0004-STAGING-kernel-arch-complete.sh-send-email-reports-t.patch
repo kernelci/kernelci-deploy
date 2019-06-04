@@ -1,4 +1,4 @@
-From 4307c264174284551b2ee4b186dac86263b91319 Mon Sep 17 00:00:00 2001
+From 947b71f28251c32501e744aa9be7329c06eba023 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 21 Mar 2019 13:42:13 +0000
 Subject: [PATCH 4/8] STAGING kernel-arch-complete.sh: send email reports to

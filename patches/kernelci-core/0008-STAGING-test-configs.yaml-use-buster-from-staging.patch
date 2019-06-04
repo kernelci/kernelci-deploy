@@ -1,4 +1,4 @@
-From 35dd17d6da30681e38c956673b9683661d8cf3a5 Mon Sep 17 00:00:00 2001
+From 93d249ebad4f1b7df6085de30fde035bf34d08f0 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Fri, 31 May 2019 17:35:13 +0100
 Subject: [PATCH 8/8] STAGING test-configs.yaml: use buster from staging
@@ -8,10 +8,10 @@ Subject: [PATCH 8/8] STAGING test-configs.yaml: use buster from staging
  1 file changed, 15 insertions(+), 5 deletions(-)
 
 diff --git a/test-configs.yaml b/test-configs.yaml
-index e228fac7863e..70a3bb449822 100644
+index ad973233931e..b8412e65453f 100644
 --- a/test-configs.yaml
 +++ b/test-configs.yaml
-@@ -24,6 +24,12 @@ file_system_types:
+@@ -19,6 +19,12 @@ file_system_types:
        armhf: [{arch: arm}]
        amd64: [{arch: x86_64}]
  
@@ -24,7 +24,7 @@ index e228fac7863e..70a3bb449822 100644
  
  file_systems:
  
-@@ -43,6 +49,10 @@ file_systems:
+@@ -38,6 +44,10 @@ file_systems:
      type: buildroot
      ramdisk: '{arch}/tests/rootfs.cpio.gz'
  
@@ -35,7 +35,7 @@ index e228fac7863e..70a3bb449822 100644
    debian_stretch_ramdisk:
      type: debian
      ramdisk: 'stretch/20190531.0/{arch}/rootfs.cpio.gz'
-@@ -108,7 +118,7 @@ test_plans:
+@@ -103,7 +113,7 @@ test_plans:
      pattern: 'boot/generic-qemu-boot-template.jinja2'
  
    cros-ec:
@@ -44,7 +44,7 @@ index e228fac7863e..70a3bb449822 100644
  
    igt:
      rootfs: debian_stretch-igt_ramdisk
-@@ -119,18 +129,18 @@ test_plans:
+@@ -114,18 +124,18 @@ test_plans:
        - whitelist: {defconfig: ['kselftest']}
  
    simple:

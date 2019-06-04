@@ -1,4 +1,4 @@
-From e2e7c83a2955b69402819645a079a37566dc756a Mon Sep 17 00:00:00 2001
+From fa8ab2a0c965d087ccd5749a21ae012419f1bddf Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Fri, 10 May 2019 08:58:43 +0100
 Subject: [PATCH 6/8] STAGING test-configs.yaml: bump buildroot to 2019.02 from
@@ -9,7 +9,7 @@ Subject: [PATCH 6/8] STAGING test-configs.yaml: bump buildroot to 2019.02 from
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/test-configs.yaml b/test-configs.yaml
-index 5191153c6022..e228fac7863e 100644
+index 499fe9d5c6d0..ad973233931e 100644
 --- a/test-configs.yaml
 +++ b/test-configs.yaml
 @@ -5,7 +5,7 @@
@@ -18,7 +18,7 @@ index 5191153c6022..e228fac7863e 100644
    buildroot:
 -    url: 'https://storage.kernelci.org/images/rootfs/buildroot/kci-2018.11'
 +    url: 'http://staging-storage.kernelci.org/images/rootfs/buildroot/kci-2019.02'
-     arch_map: &buildroot_arch_map # hack
+     arch_map:
        arm64be: [{arch: arm64, endian: big}]
        armeb:   [{arch: arm,   endian: big}]
 -- 
