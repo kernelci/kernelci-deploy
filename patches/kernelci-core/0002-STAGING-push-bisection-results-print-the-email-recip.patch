@@ -1,7 +1,7 @@
-From 318f16ebb54ab0c9a2752c1a862319d9a9a61a1b Mon Sep 17 00:00:00 2001
+From cfe332e2ac8e3e41b3ab4d6aebbea6d6db6b4cde Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 15 Nov 2018 11:05:51 +0000
-Subject: [PATCH 2/8] STAGING push-bisection-results: print the email
+Subject: [PATCH 2/7] STAGING push-bisection-results: print the email
  recipients but don't send them the report
 
 ---

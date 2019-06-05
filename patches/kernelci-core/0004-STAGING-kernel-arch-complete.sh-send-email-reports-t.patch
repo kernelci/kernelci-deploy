@@ -1,7 +1,7 @@
-From 991f15b2a6c61d0c861a3585068f900291f94b2e Mon Sep 17 00:00:00 2001
+From 9f338d8b2c136c3f0bc638184f43e9f9f8ebfb89 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 21 Mar 2019 13:42:13 +0000
-Subject: [PATCH 4/8] STAGING kernel-arch-complete.sh: send email reports to
+Subject: [PATCH 4/7] STAGING kernel-arch-complete.sh: send email reports to
  staging recipients
 
 ---
@@ -9,7 +9,7 @@ Subject: [PATCH 4/8] STAGING kernel-arch-complete.sh: send email reports to
  1 file changed, 12 insertions(+), 2 deletions(-)
 
 diff --git a/jenkins/kernel-arch-complete.sh b/jenkins/kernel-arch-complete.sh
-index 83fa8acf1d55..88f0451b55c1 100755
+index 2732c3cf09db..4404e95a1158 100755
 --- a/jenkins/kernel-arch-complete.sh
 +++ b/jenkins/kernel-arch-complete.sh
 @@ -45,7 +45,7 @@ sudo touch ${BASEDIR}/${ARCH}.done

@@ -1,7 +1,7 @@
-From 873f771daee15054e1378b46ad3bcef7159a813a Mon Sep 17 00:00:00 2001
+From 47eb01fd8ba5b9f1c12d389a7f962a7f0c1a5017 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Wed, 22 Nov 2017 15:09:05 +0000
-Subject: [PATCH 1/8] STAGING bisect.jpl: add -staging in tags and email
+Subject: [PATCH 1/7] STAGING bisect.jpl: add -staging in tags and email
  subjects
 
 ---
