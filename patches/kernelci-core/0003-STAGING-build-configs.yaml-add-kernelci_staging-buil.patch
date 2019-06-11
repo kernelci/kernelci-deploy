@@ -1,7 +1,7 @@
-From 8971afb4f06f498a91345b50f5cbff2914695db0 Mon Sep 17 00:00:00 2001
+From 47cbd1f75921438d72880f2cab6147906f65502b Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 14 Feb 2019 15:16:26 +0000
-Subject: [PATCH 3/7] STAGING build-configs.yaml: add kernelci_staging build
+Subject: [PATCH 3/5] STAGING build-configs.yaml: add kernelci_staging build
  config
 
 ---
@@ -9,7 +9,7 @@ Subject: [PATCH 3/7] STAGING build-configs.yaml: add kernelci_staging build
  1 file changed, 39 insertions(+)
 
 diff --git a/build-configs.yaml b/build-configs.yaml
-index 3e9f4c3d88fc..01157e8e639f 100644
+index 84b89db6e23f..e0d19fea2051 100644
 --- a/build-configs.yaml
 +++ b/build-configs.yaml
 @@ -52,6 +52,9 @@ trees:
@@ -22,7 +22,7 @@ index 3e9f4c3d88fc..01157e8e639f 100644
    khilman:
      url: "https://git.kernel.org/pub/scm/linux/kernel/git/khilman/linux.git"
  
-@@ -464,6 +467,42 @@ build_configs:
+@@ -500,6 +503,42 @@ build_configs:
      branch: 'kernelci-stable'
      variants: *stable_variants
  
