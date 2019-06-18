@@ -1,0 +1,44 @@
+From a9232d7b7592b0cb3a3962c97e712351c6b7cc97 Mon Sep 17 00:00:00 2001
+From: Guillaume Tucker <guillaume.tucker@collabora.com>
+Date: Tue, 18 Jun 2019 07:51:30 +0100
+Subject: [PATCH 6/7] STAGING build-config.yaml: add panfrost fragment
+
+---
+ build-configs.yaml | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/build-configs.yaml b/build-configs.yaml
+index e0d19fea2051..7fff1413f473 100644
+--- a/build-configs.yaml
++++ b/build-configs.yaml
+@@ -130,6 +130,11 @@ fragments:
+   linaro_android_recommended:
+     path: "android/configs/android-recommended.cfg"
+ 
++  panfrost:
++    path: "kernel/configs/panfrost.config"
++    configs:
++      - 'CONFIG_DRM_PANFROST=m'
++
+   tinyconfig:
+     path: "kernel/configs/tiny.config"
+     defconfig: 'tinyconfig'
+@@ -509,6 +514,7 @@ build_configs:
+     variants:
+       gcc-8:
+         build_environment: gcc-8
++        fragments: [panfrost]
+         architectures:
+           arc:
+             base_defconfig: 'nsim_hs_defconfig'
+@@ -535,6 +541,7 @@ build_configs:
+               - whitelist: {defconfig: ['x86_64_defconfig']}
+       clang-8:
+         build_environment: clang-8
++        fragments: [panfrost]
+         architectures:
+           arm: *staging_arm
+           arm64: *staging_arm64
+-- 
+2.20.1
+
