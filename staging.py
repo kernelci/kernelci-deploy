@@ -29,6 +29,7 @@ import urllib
 
 GITHUB_API = "https://api.github.com/"
 
+# List of KernelCI projects
 PROJECTS = {
     'kernelci-core': {
         'url': "https://github.com/kernelci/kernelci-core.git",
@@ -44,6 +45,19 @@ PROJECTS = {
     },
 }
 
+# List of trusted users
+USERS = [
+    'broonie',
+    'danrue',
+    'gctucker',
+    'kernelci',
+    'khilman',
+    'mattface',
+    'mgalka',
+    'montjoie',
+    'roxell',
+    'touilkhouloud',
+]
 
 def shell_cmd(cmd):
     subprocess.check_output(cmd, shell=True)
@@ -152,7 +166,9 @@ def main(args):
         head = pr['head']
         branch = head['ref']
         user = head['repo']['owner']['login']
-        if (user, branch) in skip:
+        if user not in USERS:
+            print("Skipping branch from untrusted user: {}".format(user))
+        elif (user, branch) in skip:
             print("Skipping branch {} from {}".format(branch, user))
         else:
             pull(args, pr, path)
