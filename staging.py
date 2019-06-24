@@ -59,6 +59,19 @@ USERS = [
     'touilkhouloud',
 ]
 
+# Terminal colors...
+COLORS = {
+    'green': '\033[92m',
+    'yellow': '\033[93m',
+    'red': '\033[91m',
+    'blue': '\033[94m',
+    'clear': '\033[0m',
+}
+
+def print_color(color, msg):
+    print(''.join([COLORS[color], msg, COLORS['clear']]))
+
+
 def shell_cmd(cmd):
     subprocess.check_output(cmd, shell=True)
 
@@ -80,8 +93,8 @@ git remote set-url --push origin {push}
 
     shell_cmd("""\
 cd {path}
-git reset --hard --merge
-git fetch origin master
+git reset --quiet --hard --merge
+git fetch --quiet origin master
 git checkout FETCH_HEAD
 """.format(path=path))
 
@@ -104,10 +117,10 @@ def pull(args, pr, path):
     try:
         shell_cmd("""\
 cd {path}
-git pull --no-ff --no-edit {origin} {branch}
+git pull --quiet --no-ff --no-edit {origin} {branch}
 """.format(path=path, origin=head['repo']['clone_url'], branch=branch))
     except subprocess.CalledProcessError:
-        print("WARNING: Failed to pull branch {} from {}".format(branch, user))
+        print_color('yellow', "FAILED to pull")
         shell_cmd("""\
 cd {path}
 git reset --merge
@@ -137,12 +150,12 @@ git am --abort
 def create_tag(args, path):
     tag = args.tag or "staging-{}".format(
         datetime.date.today().strftime('%Y%m%d'))
-    print("Tag: {}".format(tag))
     shell_cmd("""\
 cd {path}
 git tag -l | grep {tag} && git tag -d {tag}
 git tag -a {tag} -m {tag}
 """.format(path=path, tag=tag))
+    print("\nTag: {}".format(tag))
     return tag
 
 
@@ -162,19 +175,24 @@ def main(args):
     for user_branch in args.skip:
         user, _, branch = user_branch.partition('/')
         skip.append((user, branch))
+    print("\n{:4} {:16} {:32} {}".format("PR", "User", "Branch", "Status"))
+    print("-------------------------------------------------------------")
     for pr in prs:
         head = pr['head']
         branch = head['ref']
         user = head['repo']['owner']['login']
+        print("{:4} {:16} {:32} ".format(pr['number'], user, branch), end='')
         if user not in USERS:
-            print("Skipping branch from untrusted user: {}".format(user))
+            print_color('red', "SKIP untrusted user")
         elif (user, branch) in skip:
-            print("Skipping branch {} from {}".format(branch, user))
+            print_color('yellow', "SKIP")
         else:
-            pull(args, pr, path)
+            if pull(args, pr, path):
+                print_color('green', "OK")
+    print()
     patches_path = os.path.join('patches', args.project)
     if not apply_patches(args, path, patches_path):
-        print("Aborting, all patches must apply.")
+        print_color('red', "Aborting, all patches must apply.")
         return False
     tag = create_tag(args, path)
     if args.push:
