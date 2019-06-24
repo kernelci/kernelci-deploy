@@ -177,7 +177,7 @@ def main(args):
         skip.append((user, branch))
     print("\n{:4} {:16} {:32} {}".format("PR", "User", "Branch", "Status"))
     print("-------------------------------------------------------------")
-    for pr in prs:
+    for pr in reversed(prs):
         head = pr['head']
         branch = head['ref']
         user = head['repo']['owner']['login']
