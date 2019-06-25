@@ -155,14 +155,13 @@ cd {path}
 git tag -l | grep {tag} && git tag -d {tag}
 git tag -a {tag} -m {tag}
 """.format(path=path, tag=tag))
-    print("\nTag: {}".format(tag))
     return tag
 
 
 def push_tag_and_branch(args, path, tag):
     ssh_agent(args.ssh_key, """\
 cd {path}
-git push --force origin HEAD:{branch} {tag}
+git push --quiet --force origin HEAD:{branch} {tag}
 """.format(path=path, branch=args.branch, tag=tag))
 
 
@@ -196,7 +195,10 @@ def main(args):
         return False
     tag = create_tag(args, path)
     if args.push:
+        print("\nPushing tag ({}) and branch ({})".format(tag, args.branch))
         push_tag_and_branch(args, path, tag)
+    else:
+        print("\nTag: {}".format(tag))
 
 
 if __name__ == '__main__':
