@@ -19,31 +19,14 @@
 
 import argparse
 import datetime
+import github
 import glob
 import json
 import os
-import requests
 import subprocess
 import sys
-import urllib
 
-GITHUB_API = "https://api.github.com/"
-
-# List of KernelCI projects
-PROJECTS = {
-    'kernelci-core': {
-        'url': "https://github.com/kernelci/kernelci-core.git",
-        'push-url': "git@github.com:kernelci/kernelci-core.git"
-    },
-    'kernelci-backend': {
-        'url': "https://github.com/kernelci/kernelci-backend.git",
-        'push-url': "git@github.com:kernelci/kernelci-backend.git"
-    },
-    'kernelci-frontend': {
-        'url': "https://github.com/kernelci/kernelci-frontend.git",
-        'push-url': "git@github.com:kernelci/kernelci-frontend.git"
-    },
-}
+GITHUB = github.Github()
 
 # List of trusted users
 USERS = [
@@ -83,13 +66,13 @@ def ssh_agent(ssh_key, cmd):
     shell_cmd(cmd)
 
 
-def checkout_repository(args, path, project):
+def checkout_repository(args, path, repo):
     if not os.path.exists(path):
         shell_cmd("""\
 git clone {url} {path}
 cd {path}
 git remote set-url --push origin {push}
-""".format(path=path, url=project['url'], push=project['push-url']))
+""".format(path=path, url=repo.clone_url, push=repo.ssh_url))
 
     shell_cmd("""\
 cd {path}
@@ -99,26 +82,14 @@ git checkout FETCH_HEAD
 """.format(path=path))
 
 
-def get_pull_requests(args):
-    path = '/'.join(['repos', args.namespace, args.project, 'pulls'])
-    base_url = urllib.parse.urljoin(GITHUB_API, path)
-    url_params = urllib.parse.urlencode({'state': 'open'})
-    url = '?'.join([base_url, url_params])
-    resp = requests.get(url)
-    resp.raise_for_status()
-    data = resp.json()
-    return data
-
-
 def pull(args, pr, path):
-    head = pr['head']
-    branch = head['ref']
-    user = head['repo']['owner']['login']
+    branch = pr.head.ref
+    user = pr.head.repo.owner.login
     try:
         shell_cmd("""\
 cd {path}
 git pull --quiet --no-ff --no-edit {origin} {branch}
-""".format(path=path, origin=head['repo']['clone_url'], branch=branch))
+""".format(path=path, origin=pr.head.repo.clone_url, branch=branch))
     except subprocess.CalledProcessError:
         print_color('yellow', "FAILED to pull")
         shell_cmd("""\
@@ -167,20 +138,20 @@ git push --quiet --force origin HEAD:{branch} {tag}
 
 def main(args):
     path = os.path.join('checkout', args.project)
-    project = PROJECTS.get(args.project)
-    checkout_repository(args, path, project)
-    prs = get_pull_requests(args)
+    repo_name = '/'.join([args.namespace, args.project])
+    repo = GITHUB.get_repo(repo_name)
+    checkout_repository(args, path, repo)
+    prs = repo.get_pulls()
     skip = []
     for user_branch in args.skip:
         user, _, branch = user_branch.partition('/')
         skip.append((user, branch))
     print("\n{:4} {:16} {:32} {}".format("PR", "User", "Branch", "Status"))
     print("-------------------------------------------------------------")
-    for pr in reversed(prs):
-        head = pr['head']
-        branch = head['ref']
-        user = head['repo']['owner']['login']
-        print("{:4} {:16} {:32} ".format(pr['number'], user, branch), end='')
+    for pr in reversed(list(prs)):
+        branch = pr.head.ref
+        user = pr.head.repo.owner.login
+        print("{:4} {:16} {:32} ".format(pr.number, user, branch), end='')
         if user not in USERS:
             print_color('red', "SKIP untrusted user")
         elif (user, branch) in skip:
@@ -204,7 +175,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("\
 Create staging.kernelci.org branch with all pending PRs")
-    parser.add_argument("project", choices=PROJECTS.keys(),
+    parser.add_argument("project",
                         help="Name of the Github project")
     parser.add_argument("--tag",
                         help="Tag to create, default is to use current date")
