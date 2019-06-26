@@ -202,7 +202,8 @@ def main(args):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser("Create staging.kernelci.org branches")
+    parser = argparse.ArgumentParser("\
+Create staging.kernelci.org branch with all pending PRs")
     parser.add_argument("project", choices=PROJECTS.keys(),
                         help="Name of the Github project")
     parser.add_argument("--path",
