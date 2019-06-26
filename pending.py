@@ -206,8 +206,6 @@ if __name__ == '__main__':
 Create staging.kernelci.org branch with all pending PRs")
     parser.add_argument("project", choices=PROJECTS.keys(),
                         help="Name of the Github project")
-    parser.add_argument("--path",
-                        help="Path to the local checkout, default is $PWD")
     parser.add_argument("--tag",
                         help="Tag to create, default is to use current date")
     parser.add_argument("--branch", default="staging.kernelci.org",
