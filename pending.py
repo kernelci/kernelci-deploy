@@ -31,6 +31,7 @@ GITHUB = github.Github()
 # List of trusted users
 USERS = [
     'broonie',
+    'chaws',
     'danrue',
     'gctucker',
     'kernelci',
