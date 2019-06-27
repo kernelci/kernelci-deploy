@@ -1,27 +1,18 @@
-From 155014c1be10a5022ebf331e74227a0d65780cb4 Mon Sep 17 00:00:00 2001
+From 40438c4dac00e2799a133169ca6c7247b4a35ea4 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 21 Mar 2019 13:42:13 +0000
 Subject: [PATCH 4/5] STAGING kernel-arch-complete.sh: send email reports to
  staging recipients
 
 ---
- jenkins/kernel-arch-complete.sh | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ jenkins/kernel-arch-complete.sh | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
 diff --git a/jenkins/kernel-arch-complete.sh b/jenkins/kernel-arch-complete.sh
-index 69a7a25854f3..649e37657994 100755
+index 39a73385c606..18b2ca9003d7 100755
 --- a/jenkins/kernel-arch-complete.sh
 +++ b/jenkins/kernel-arch-complete.sh
-@@ -45,7 +45,7 @@ sudo touch ${BASEDIR}/${ARCH}.done
- # Check if all builds for all architectures have finished. The magic number here is 4 (arm, arm64, x86, mips64)
- # This magic number will need to be changed if new architectures are added.
- export BUILDS_FINISHED=$(ls ${BASEDIR}/ | grep .done | wc -l)
--if [[ BUILDS_FINISHED -eq 4 ]]; then
-+if [[ BUILDS_FINISHED -eq 6 ]]; then
-     echo "All builds have now finished, triggering testing..."
-     # Tell the dashboard the job has finished build.
-     echo "Build has now finished, reporting result to dashboard."
-@@ -54,7 +54,17 @@ if [[ BUILDS_FINISHED -eq 4 ]]; then
+@@ -54,7 +54,17 @@ if [[ BUILDS_FINISHED -eq 1 ]]; then
          echo "Not sending emails because EMAIL was false"
          exit 0
      fi
