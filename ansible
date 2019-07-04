@@ -3,25 +3,28 @@
 set -e
 
 repo="${1}"
-git_rev="${2:-staging.kernelci.org}"
-user="${3:-admin}"
-target="${4:-staging-api.kernelci.org}"
+target="${2}"
+git_rev="${3:-staging.kernelci.org}"
+user="${4:-admin}"
+key="${5:-$PWD/keys/id_rsa_staging.kernelci.org}"
 
 [ "$repo" = "kernelci-backend" ] || [ "$repo" = "kernelci-frontend" ] || {
     echo "Invalid repo name: $repo"
     exit 1
 }
 
-echo "Updating $repo"
+[ -z "$target" ] && {
+    echo "Missing target"
+    exit 1
+}
 
 path="checkout/$repo-config"
+
 [ -d "$path" ] || {
     git clone https://github.com/kernelci/"$repo"-config.git "$path"
 }
 
-key_file="$PWD/keys/id_rsa_staging.kernelci.org"
-key_arg=""
-[ -e "$key_file" ] && key_arg="--private-key $key_file"
+[ -e "$key" ] && key_arg="--private-key $key" || key_arg=""
 
 cd "$path"
 git pull --ff-only
