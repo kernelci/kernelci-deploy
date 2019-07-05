@@ -1,4 +1,4 @@
-From 369a8e820565e7f7954dd909244385208f1f725e Mon Sep 17 00:00:00 2001
+From c232ad10acb44ff04fd92ba8e6cc3fcaf8c1ef2d Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Tue, 11 Dec 2018 19:03:20 +0000
 Subject: [PATCH 4/6] STAGING kernelci.configs: debug noise in filters
