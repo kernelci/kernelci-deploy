@@ -33,6 +33,7 @@ USERS = [
     'broonie',
     'chaws',
     'danrue',
+    'eballetbo',
     'gctucker',
     'kernelci',
     'khilman',
