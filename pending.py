@@ -18,13 +18,15 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 import argparse
-import datetime
 import github
 import glob
 import json
 import os
 import subprocess
 import sys
+
+import kernelci
+from kernelci import print_color, shell_cmd, ssh_agent
 
 GITHUB = github.Github()
 
@@ -43,29 +45,6 @@ USERS = [
     'roxell',
     'touilkhouloud',
 ]
-
-# Terminal colors...
-COLORS = {
-    'green': '\033[92m',
-    'yellow': '\033[93m',
-    'red': '\033[91m',
-    'blue': '\033[94m',
-    'clear': '\033[0m',
-}
-
-def print_color(color, msg):
-    print(''.join([COLORS[color], msg, COLORS['clear']]))
-
-
-def shell_cmd(cmd):
-    subprocess.check_output(cmd, shell=True)
-
-
-def ssh_agent(ssh_key, cmd):
-    if ssh_key:
-        cmd = "ssh-agent sh -c 'ssh-add {key}; {cmd}'".format(
-            key=ssh_key, cmd=cmd)
-    shell_cmd(cmd)
 
 
 def checkout_repository(args, path, repo):
@@ -120,17 +99,6 @@ git am --abort
     return True
 
 
-def create_tag(args, path):
-    tag = args.tag or "staging-{}".format(
-        datetime.date.today().strftime('%Y%m%d'))
-    shell_cmd("""\
-cd {path}
-git tag -l | grep {tag} && git tag -d {tag}
-git tag -a {tag} -m {tag}
-""".format(path=path, tag=tag))
-    return tag
-
-
 def push_tag_and_branch(args, path, tag):
     ssh_agent(args.ssh_key, """\
 cd {path}
@@ -166,7 +134,7 @@ def main(args):
     if not apply_patches(args, path, patches_path):
         print_color('red', "Aborting, all patches must apply.")
         return False
-    tag = create_tag(args, path)
+    tag = kernelci.create_tag(args.tag, path)
     if args.push:
         print("\nPushing tag ({}) and branch ({})".format(tag, args.branch))
         push_tag_and_branch(args, path, tag)
