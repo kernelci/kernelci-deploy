@@ -18,7 +18,6 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 import argparse
-import github
 import glob
 import json
 import os
@@ -27,8 +26,6 @@ import sys
 
 import kernelci
 from kernelci import print_color, shell_cmd, ssh_agent
-
-GITHUB = github.Github()
 
 # List of trusted users
 USERS = [
@@ -45,22 +42,6 @@ USERS = [
     'roxell',
     'touilkhouloud',
 ]
-
-
-def checkout_repository(args, path, repo):
-    if not os.path.exists(path):
-        shell_cmd("""\
-git clone {url} {path}
-cd {path}
-git remote set-url --push origin {push}
-""".format(path=path, url=repo.clone_url, push=repo.ssh_url))
-
-    shell_cmd("""\
-cd {path}
-git reset --quiet --hard --merge
-git fetch --quiet origin master
-git checkout FETCH_HEAD
-""".format(path=path))
 
 
 def pull(args, pr, path):
@@ -109,8 +90,8 @@ git push --quiet --force origin HEAD:{branch} {tag}
 def main(args):
     path = os.path.join('checkout', args.project)
     repo_name = '/'.join([args.namespace, args.project])
-    repo = GITHUB.get_repo(repo_name)
-    checkout_repository(args, path, repo)
+    repo = kernelci.GITHUB.get_repo(repo_name)
+    kernelci.checkout_repository(path, repo)
     prs = repo.get_pulls()
     skip = []
     for user_branch in args.skip:

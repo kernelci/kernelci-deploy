@@ -16,6 +16,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 import datetime
+import github
+import os
 import subprocess
 
 # Mainline kernel URL from torvalds
@@ -30,6 +32,9 @@ COLORS = {
     'blue': '\033[94m',
     'clear': '\033[0m',
 }
+
+# Github API handler
+GITHUB = github.Github()
 
 
 def print_color(color, msg):
@@ -56,3 +61,19 @@ git tag -l | grep {tag} && git tag -d {tag}
 git tag -a {tag} -m {tag}
 """.format(path=path, tag=tag))
     return tag
+
+
+def checkout_repository(path, repo):
+    if not os.path.exists(path):
+        shell_cmd("""\
+git clone {url} {path}
+cd {path}
+git remote set-url --push origin {push}
+""".format(path=path, url=repo.clone_url, push=repo.ssh_url))
+
+    shell_cmd("""\
+cd {path}
+git reset --quiet --hard --merge
+git fetch --quiet origin master
+git checkout FETCH_HEAD
+""".format(path=path))
