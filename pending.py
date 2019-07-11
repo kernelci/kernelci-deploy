@@ -18,7 +18,6 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 import argparse
-import glob
 import json
 import os
 import subprocess
@@ -62,31 +61,6 @@ git reset --merge
     return True
 
 
-def apply_patches(args, path, patches_path):
-    patches = sorted(glob.glob(os.path.join(patches_path, '*.patch')))
-    for patch in patches:
-        print("Applying patch: {}".format(patch))
-        try:
-            shell_cmd("""\
-cat {patch} | (cd {path} && git am)
-""".format(path=path, patch=patch))
-        except subprocess.CalledProcessError:
-            print("WARNING: Failed to apply patch")
-            shell_cmd("""\
-cd {path}
-git am --abort
-""".format(path=path))
-            return False
-    return True
-
-
-def push_tag_and_branch(args, path, tag):
-    ssh_agent(args.ssh_key, """\
-cd {path}
-git push --quiet --force origin HEAD:{branch} {tag}
-""".format(path=path, branch=args.branch, tag=tag))
-
-
 def main(args):
     path = os.path.join('checkout', args.project)
     repo_name = '/'.join([args.namespace, args.project])
@@ -112,13 +86,13 @@ def main(args):
                 print_color('green', "OK")
     print()
     patches_path = os.path.join('patches', args.project)
-    if not apply_patches(args, path, patches_path):
+    if not kernelci.apply_patches(path, patches_path):
         print_color('red', "Aborting, all patches must apply.")
         return False
-    tag = kernelci.create_tag(args.tag, path)
+    tag = kernelci.create_tag(path, args.tag)
     if args.push:
         print("\nPushing tag ({}) and branch ({})".format(tag, args.branch))
-        push_tag_and_branch(args, path, tag)
+        kernelci.push_tag_and_branch(path, args.ssh_key, args.branch, tag)
     else:
         print("\nTag: {}".format(tag))
 

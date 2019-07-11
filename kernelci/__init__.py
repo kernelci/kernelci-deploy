@@ -17,6 +17,7 @@
 
 import datetime
 import github
+import glob
 import os
 import subprocess
 
@@ -52,9 +53,12 @@ def ssh_agent(ssh_key, cmd):
     shell_cmd(cmd)
 
 
-def create_tag(tag, path):
-    tag = tag or "staging-{}".format(
-        datetime.date.today().strftime('%Y%m%d'))
+def date_tag(px="staging-", fmt="%Y%m%d"):
+    return "{}{}".format(px, datetime.date.today().strftime(fmt))
+
+
+def create_tag(path, tag=None):
+    tag = tag or date_tag()
     shell_cmd("""\
 cd {path}
 git tag -l | grep {tag} && git tag -d {tag}
@@ -63,7 +67,7 @@ git tag -a {tag} -m {tag}
     return tag
 
 
-def checkout_repository(path, repo):
+def checkout_repository(path, repo, origin="origin", branch="master"):
     if not os.path.exists(path):
         shell_cmd("""\
 git clone {url} {path}
@@ -74,6 +78,31 @@ git remote set-url --push origin {push}
     shell_cmd("""\
 cd {path}
 git reset --quiet --hard --merge
-git fetch --quiet origin master
+git fetch --quiet {origin} {branch}
 git checkout FETCH_HEAD
+""".format(path=path, origin=origin, branch=branch))
+
+
+def apply_patches(path, patches_path):
+    patches = sorted(glob.glob(os.path.join(patches_path, '*.patch')))
+    for patch in patches:
+        print("Applying patch: {}".format(patch))
+        try:
+            shell_cmd("""\
+cat {patch} | (cd {path} && git am)
+""".format(path=path, patch=patch))
+        except subprocess.CalledProcessError:
+            print("WARNING: Failed to apply patch")
+            shell_cmd("""\
+cd {path}
+git am --abort
 """.format(path=path))
+            return False
+    return True
+
+
+def push_tag_and_branch(path, ssh_key, branch, tag):
+    ssh_agent(ssh_key, """\
+cd {path}
+git push --quiet --force origin HEAD:{branch} {tag}
+""".format(path=path, branch=branch, tag=tag))
