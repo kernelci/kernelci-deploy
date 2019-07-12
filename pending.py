@@ -81,6 +81,8 @@ def main(args):
             print_color('red', "SKIP untrusted user")
         elif (user, branch) in skip:
             print_color('yellow', "SKIP")
+        elif pr.base.ref != args.master:
+            print_color('yellow', "SKIP {}".format(pr.base.ref))
         else:
             if pull(args, pr, path):
                 print_color('green', "OK")
@@ -111,6 +113,8 @@ Create staging.kernelci.org branch with all pending PRs")
                         help="Tag to create, default is to use current date")
     parser.add_argument("--branch", default="staging.kernelci.org",
                         help="Name of the branch to force-push to")
+    parser.add_argument("--master", default="master",
+                        help="Name of the master branch to filter PRs")
     parser.add_argument("--namespace", default='kernelci',
                         help="Github project namespace")
     parser.add_argument("--skip", nargs='+', default=[],
