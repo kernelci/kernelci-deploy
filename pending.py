@@ -92,7 +92,11 @@ def main(args):
     tag = kernelci.create_tag(path, args.tag)
     if args.push:
         print("\nPushing tag ({}) and branch ({})".format(tag, args.branch))
-        kernelci.push_tag_and_branch(path, args.ssh_key, args.branch, tag)
+        ssh_key = kernelci.default_ssh_key(args.ssh_key, args.branch)
+        if not ssh_key:
+            print_color('red', "No SSH key provided.")
+            return False
+        kernelci.push_tag_and_branch(path, ssh_key, args.branch, tag)
     else:
         print("\nTag: {}".format(tag))
 

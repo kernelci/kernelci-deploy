@@ -46,6 +46,18 @@ def shell_cmd(cmd):
     subprocess.check_output(cmd, shell=True)
 
 
+def default_ssh_key(ssh_key, branch):
+    if ssh_key:
+        return ssh_key
+
+    ssh_key_name = '_'.join(['id_rsa', branch])
+    ssh_key_path = os.path.join('keys', ssh_key_name)
+    if os.path.exists(ssh_key_path):
+        return ssh_key_path
+
+    return None
+
+
 def ssh_agent(ssh_key, cmd):
     if ssh_key:
         cmd = "ssh-agent sh -c 'ssh-add {key}; {cmd}'".format(
