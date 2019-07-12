@@ -99,6 +99,7 @@ def main(args):
         kernelci.push_tag_and_branch(path, ssh_key, args.branch, tag)
     else:
         print("\nTag: {}".format(tag))
+    return True
 
 
 if __name__ == '__main__':
@@ -119,4 +120,5 @@ Create staging.kernelci.org branch with all pending PRs")
     parser.add_argument("--push", action="store_true",
                         help="Push the resulting branch and tag")
     args = parser.parse_args(sys.argv[1:])
-    main(args)
+    ret = main(args)
+    sys.exit(0 if ret is True else 1)
