@@ -44,7 +44,7 @@ def main(args):
     if not kernelci.apply_patches(path, patches_path):
         print_color('red', "Aborting, all patches must apply.")
         return False
-    tag = args.tag or kernelci.date_tag()
+    tag = args.tag or kernelci.date_tag(path)
     add_date_commit(path, tag, args.branch)
     kernelci.create_tag(path, tag)
     if args.push:

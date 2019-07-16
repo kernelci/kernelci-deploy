@@ -43,7 +43,7 @@ def print_color(color, msg):
 
 
 def shell_cmd(cmd):
-    subprocess.check_output(cmd, shell=True)
+    return subprocess.check_output(cmd, shell=True)
 
 
 def default_ssh_key(ssh_key, branch):
@@ -65,12 +65,21 @@ def ssh_agent(ssh_key, cmd):
     shell_cmd(cmd)
 
 
-def date_tag(px="staging-", fmt="%Y%m%d"):
-    return "{}{}".format(px, datetime.date.today().strftime(fmt))
+def date_tag(path, px="staging-", fmt="%Y%m%d"):
+    tag_name = "{}{}".format(px, datetime.date.today().strftime(fmt))
+    try:
+        n = int(shell_cmd("""
+cd {path}
+git tag -l | grep -c {tag}
+""".format(path=path, tag=tag_name)))
+    except subprocess.CalledProcessError:
+        n = 0
+    tag_name = '.'.join([tag_name, str(n)])
+    return tag_name
 
 
 def create_tag(path, tag=None):
-    tag = tag or date_tag()
+    tag = tag or date_tag(path)
     shell_cmd("""\
 cd {path}
 git tag -l | grep {tag} && git tag -d {tag}
