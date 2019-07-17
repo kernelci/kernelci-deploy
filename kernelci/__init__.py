@@ -101,6 +101,8 @@ cd {path}
 git reset --quiet --hard --merge
 git fetch --quiet {origin} {branch}
 git checkout FETCH_HEAD
+git config user.name "kernelci.org bot"
+git config user.email "bot@kernelci.org"
 """.format(path=path, origin=origin, branch=branch))
 
 
