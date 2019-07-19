@@ -40,7 +40,7 @@ def main(args):
     repo_name = '/'.join([args.namespace, args.project])
     repo = kernelci.GITHUB.get_repo(repo_name)
     kernelci.checkout_repository(path, repo, args.from_url, args.from_branch)
-    patches_path = os.path.join('patches', args.project)
+    patches_path = os.path.join('patches', args.project, args.branch)
     if not kernelci.apply_patches(path, patches_path):
         print_color('red', "Aborting, all patches must apply.")
         return False
