@@ -15,6 +15,7 @@
 # along with this library; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+import configparser
 import datetime
 import github
 import glob
@@ -129,3 +130,20 @@ def push_tag_and_branch(path, ssh_key, branch, tag):
 cd {path}
 git push --quiet --force origin HEAD:{branch} {tag}
 """.format(path=path, branch=branch, tag=tag))
+
+
+class Settings:
+
+    def __init__(self, path, section):
+        self._settings = configparser.ConfigParser()
+        if path:
+            self._settings.read(path)
+        self._section = section
+
+    def get(self, option):
+        if not self._settings.has_option(self._section, option):
+            return None
+        value = self._settings.get(self._section, option).split()
+        if len(value) == 1:
+            value = value[0]
+        return value
