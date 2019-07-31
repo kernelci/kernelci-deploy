@@ -26,22 +26,6 @@ import sys
 import kernelci
 from kernelci import print_color, shell_cmd, ssh_agent
 
-# List of trusted users
-USERS = [
-    'broonie',
-    'chaws',
-    'danrue',
-    'eballetbo',
-    'gctucker',
-    'kernelci',
-    'khilman',
-    'mattface',
-    'mgalka',
-    'montjoie',
-    'roxell',
-    'touilkhouloud',
-]
-
 
 def pull(args, pr, path):
     branch = pr.head.ref
@@ -62,22 +46,26 @@ git reset --merge
 
 
 def main(args):
+    settings = kernelci.Settings(args.settings, args.project)
     path = os.path.join('checkout', args.project)
-    repo_name = '/'.join([args.namespace, args.project])
+    namespace = args.namespace or settings.get('namespace') or 'kernelci'
+    repo_name = '/'.join([namespace, args.project])
     repo = kernelci.GITHUB.get_repo(repo_name)
     kernelci.checkout_repository(path, repo)
     prs = repo.get_pulls()
+    raw_skip = args.skip or settings.get('skip') or []
     skip = []
-    for user_branch in args.skip:
+    for user_branch in raw_skip:
         user, _, branch = user_branch.partition('/')
         skip.append((user, branch))
     print("\n{:4} {:16} {:32} {}".format("PR", "User", "Branch", "Status"))
     print("-------------------------------------------------------------")
+    users = settings.get('users')
     for pr in reversed(list(prs)):
         branch = pr.head.ref
         user = pr.head.repo.owner.login
         print("{:4} {:16} {:32} ".format(pr.number, user, branch), end='')
-        if user not in USERS:
+        if user not in users:
             print_color('red', "SKIP untrusted user")
         elif (user, branch) in skip:
             print_color('yellow', "SKIP")
@@ -93,12 +81,16 @@ def main(args):
         return False
     tag = kernelci.create_tag(path, args.tag)
     if args.push:
-        print("\nPushing tag ({}) and branch ({})".format(tag, args.branch))
-        ssh_key = kernelci.default_ssh_key(args.ssh_key, args.branch)
+        branch = args.branch or settings.get('branch')
+        if not branch:
+            print_color('red', "No destination branch provided.")
+            return False
+        print("\nPushing tag ({}) and branch ({})".format(tag, branch))
+        ssh_key = kernelci.default_ssh_key(args.ssh_key, branch)
         if not ssh_key:
             print_color('red', "No SSH key provided.")
             return False
-        kernelci.push_tag_and_branch(path, ssh_key, args.branch, tag)
+        kernelci.push_tag_and_branch(path, ssh_key, branch, tag)
     else:
         print("\nTag: {}".format(tag))
     return True
@@ -111,18 +103,20 @@ Create staging.kernelci.org branch with all pending PRs")
                         help="Name of the Github project")
     parser.add_argument("--tag",
                         help="Tag to create, default is to use current date")
-    parser.add_argument("--branch", default="staging.kernelci.org",
+    parser.add_argument("--branch",
                         help="Name of the branch to force-push to")
     parser.add_argument("--master", default="master",
                         help="Name of the master branch to filter PRs")
-    parser.add_argument("--namespace", default='kernelci',
-                        help="Github project namespace")
+    parser.add_argument("--namespace",
+                        help="Github project namespace, default is kernelci")
     parser.add_argument("--skip", nargs='+', default=[],
                         help="Name of user/branch pairs to skip")
     parser.add_argument("--ssh-key",
                         help="Path to SSH key to push branches and tags")
     parser.add_argument("--push", action="store_true",
                         help="Push the resulting branch and tag")
+    parser.add_argument("--settings",
+                        help="Path to a settings file")
     args = parser.parse_args(sys.argv[1:])
     ret = main(args)
     sys.exit(0 if ret is True else 1)
