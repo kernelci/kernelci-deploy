@@ -22,20 +22,30 @@ import jenkins
 import json
 import sys
 
+import kernelci
+
 
 def main(args):
-    api = jenkins.Jenkins(args.url, args.user, args.token)
+    settings = kernelci.Settings(args.settings, args.section)
+    url = args.url or settings.get('url')
+    user = args.user or settings.get('user')
+    token = args.token or settings.get('token')
+    if not all((url, user, token)):
+        print("Missing info: url, user and token are required")
+        return False
+
+    api = jenkins.Jenkins(url, user, token)
     if args.json:
         with open(args.json) as f:
             params = json.load(f)
     api.build_job(args.job, params)
+    return True
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser("\
-Submit Jenkins jobs")
+    parser = argparse.ArgumentParser("Trigger a Jenkins job")
     parser.add_argument("job",
-                        help="Name of the Jenkins job to schedule")
+                        help="Name of the Jenkins job to trigger")
     parser.add_argument("--url",
                         help="Jenkins API URL")
     parser.add_argument("--user",
@@ -44,6 +54,10 @@ Submit Jenkins jobs")
                         help="Jenkins API token")
     parser.add_argument("--json",
                         help="Path to a JSON file with job parameters")
+    parser.add_argument("--settings",
+                        help="Path to a settings file")
+    parser.add_argument("--section", default="jenkins",
+                        help="Section in the settings file")
     args = parser.parse_args(sys.argv[1:])
     ret = main(args)
     sys.exit(0 if ret is True else 1)
