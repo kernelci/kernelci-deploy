@@ -1,17 +1,17 @@
-From 127af53815971b0eb272966a873b2028f9c88723 Mon Sep 17 00:00:00 2001
+From f56694fb1a5b538d69cfb592f01f5b782ac1de31 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Wed, 14 Aug 2019 23:16:36 +0200
-Subject: [PATCH 5/5] STAGING build-configs.yaml: build clang-8 BIG_ENDIAN
+Subject: [PATCH 5/6] STAGING build-configs.yaml: build clang-8 BIG_ENDIAN
 
 ---
  build-configs.yaml | 4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/build-configs.yaml b/build-configs.yaml
-index 4090eff1afc2..ac1278e01639 100644
+index bfac6e3e9f73..5d8c54914e7a 100644
 --- a/build-configs.yaml
 +++ b/build-configs.yaml
-@@ -541,7 +541,9 @@ build_configs:
+@@ -526,7 +526,9 @@ build_configs:
          build_environment: clang-8
          architectures:
            arm: *staging_arm
