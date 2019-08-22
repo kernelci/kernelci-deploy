@@ -53,7 +53,7 @@ def main(args):
     repo = kernelci.GITHUB.get_repo(repo_name)
     kernelci.checkout_repository(path, repo)
     prs = repo.get_pulls()
-    raw_skip = args.skip or settings.get('skip') or []
+    raw_skip = args.skip or settings.get('skip', as_list=True) or []
     skip = []
     for user_branch in raw_skip:
         user, _, branch = user_branch.partition('/')

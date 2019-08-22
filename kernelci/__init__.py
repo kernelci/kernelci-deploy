@@ -140,10 +140,10 @@ class Settings:
             self._settings.read(path)
         self._section = section
 
-    def get(self, option):
+    def get(self, option, as_list=False):
         if not self._settings.has_option(self._section, option):
             return None
         value = self._settings.get(self._section, option).split()
-        if len(value) == 1:
+        if not as_list and len(value) == 1:
             value = value[0]
         return value
