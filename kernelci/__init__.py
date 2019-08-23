@@ -66,7 +66,7 @@ def ssh_agent(ssh_key, cmd):
     shell_cmd(cmd)
 
 
-def date_tag(path, px="staging-", fmt="%Y%m%d"):
+def date_tag(path, px, fmt="%Y%m%d"):
     tag_name = "{}{}".format(px, datetime.date.today().strftime(fmt))
     try:
         n = int(shell_cmd("""
@@ -79,8 +79,7 @@ git tag -l | grep -c {tag}
     return tag_name
 
 
-def create_tag(path, tag=None):
-    tag = tag or date_tag(path)
+def create_tag(path, tag):
     shell_cmd("""\
 cd {path}
 git tag -l | grep {tag} && git tag -d {tag}

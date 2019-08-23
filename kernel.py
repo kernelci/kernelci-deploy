@@ -44,7 +44,7 @@ def main(args):
     if not kernelci.apply_patches(path, patches_path):
         print_color('red', "Aborting, all patches must apply.")
         return False
-    tag = args.tag or kernelci.date_tag(path)
+    tag = args.tag or kernelci.date_tag(path, args.tag_prefix)
     add_date_commit(path, tag, args.branch)
     kernelci.create_tag(path, tag)
     if args.push:
@@ -64,6 +64,8 @@ if __name__ == '__main__':
 Create a kernel branch to test KernelCI")
     parser.add_argument("--tag",
                         help="Tag to create, default is to use current date")
+    parser.add_argument("--tag-prefix", default="staging-",
+                        help="Prefix to create date with current date")
     parser.add_argument("--branch", default="staging.kernelci.org",
                         help="Name of the branch to force-push to")
     parser.add_argument("--from-url", default=kernelci.TORVALDS_GIT_URL,

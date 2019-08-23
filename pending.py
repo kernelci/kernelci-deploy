@@ -79,7 +79,8 @@ def main(args):
     if not kernelci.apply_patches(path, patches_path):
         print_color('red', "Aborting, all patches must apply.")
         return False
-    tag = kernelci.create_tag(path, args.tag)
+    tag = args.tag or kernelci.date_tag(path, args.tag_prefix)
+    kernelci.create_tag(path, tag)
     if args.push:
         branch = args.branch or settings.get('branch')
         if not branch:
@@ -103,6 +104,8 @@ Create staging.kernelci.org branch with all pending PRs")
                         help="Name of the Github project")
     parser.add_argument("--tag",
                         help="Tag to create, default is to use current date")
+    parser.add_argument("--tag-prefix", default="staging-",
+                        help="Prefix to create date with current date")
     parser.add_argument("--branch",
                         help="Name of the branch to force-push to")
     parser.add_argument("--master", default="master",
