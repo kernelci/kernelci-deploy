@@ -1,18 +1,18 @@
-From d215a12952638ffb10b2b898fccd707a5393cc62 Mon Sep 17 00:00:00 2001
+From ba9b793fc3f894f349426a3ed14390aac1e91d16 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 14 Feb 2019 15:16:26 +0000
-Subject: [PATCH 3/6] STAGING build-configs.yaml: add kernelci_staging build
+Subject: [PATCH 3/5] STAGING build-configs.yaml: add kernelci_staging build
  config
 
 ---
- build-configs.yaml | 36 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
+ build-configs.yaml | 40 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
 diff --git a/build-configs.yaml b/build-configs.yaml
-index 15b201fea219..bfac6e3e9f73 100644
+index b6f347b55fc5..00f9f45c8b67 100644
 --- a/build-configs.yaml
 +++ b/build-configs.yaml
-@@ -492,6 +492,42 @@ build_configs:
+@@ -488,6 +488,46 @@ build_configs:
      branch: 'kernelci.org'
      variants: *stable_variants
  
@@ -35,6 +35,10 @@ index 15b201fea219..bfac6e3e9f73 100644
 +            filters:
 +              - whitelist: {defconfig: ['defconfig']}
 +            fragments: [kselftest]
++          i386:
++            base_defconfig: 'i386_defconfig'
++            filters:
++              - whitelist: {defconfig: ['i386_defconfig']}
 +          mips:
 +            base_defconfig: '32r2el_defconfig'
 +            filters:
