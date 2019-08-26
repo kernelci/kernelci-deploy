@@ -1,0 +1,24 @@
+From 8b5ef4e980268529a8139d91407168b2a4c51e32 Mon Sep 17 00:00:00 2001
+From: "kernelci.org bot" <bot@kernelci.org>
+Date: Mon, 26 Aug 2019 10:06:37 +0100
+Subject: [PATCH 6/6] STAGING build-configs.yaml build virtualvideo fragment
+
+---
+ build-configs.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/build-configs.yaml b/build-configs.yaml
+index 8109a7d64c48..620bf1eae5e3 100644
+--- a/build-configs.yaml
++++ b/build-configs.yaml
+@@ -494,6 +494,7 @@ build_configs:
+     variants:
+       gcc-8:
+         build_environment: gcc-8
++        fragments: [virtualvideo]
+         architectures:
+           arc:
+             base_defconfig: 'nsim_hs_defconfig'
+-- 
+2.20.1
+
