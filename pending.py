@@ -60,7 +60,7 @@ def main(args):
         skip.append((user, branch))
     print("\n{:4} {:16} {:32} {}".format("PR", "User", "Branch", "Status"))
     print("-------------------------------------------------------------")
-    users = settings.get('users')
+    users = settings.get('users', as_list=True) or []
     for pr in reversed(list(prs)):
         branch = pr.head.ref
         user = pr.head.repo.owner.login
