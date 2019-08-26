@@ -60,7 +60,10 @@ def main(args):
         skip.append((user, branch))
     print("\n{:4} {:16} {:32} {}".format("PR", "User", "Branch", "Status"))
     print("-------------------------------------------------------------")
-    users = settings.get('users', as_list=True) or []
+    users = settings.get('users', as_list=True)
+    if not users:
+        print_color('red', "Aborting, no list of trusted users")
+        return False
     for pr in reversed(list(prs)):
         branch = pr.head.ref
         user = pr.head.repo.owner.login
