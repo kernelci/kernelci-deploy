@@ -1,4 +1,4 @@
-From 142bdf053bf31af2a8800edd0c19d4fa5f5ebb4b Mon Sep 17 00:00:00 2001
+From be2151011a4a96580b89c7439cb20519b6d9409d Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Tue, 11 Dec 2018 19:03:20 +0000
 Subject: [PATCH 4/6] STAGING kernelci.configs: debug noise in filters
@@ -8,10 +8,10 @@ Subject: [PATCH 4/6] STAGING kernelci.configs: debug noise in filters
  1 file changed, 11 insertions(+)
 
 diff --git a/kernelci/configs.py b/kernelci/configs.py
-index ffa5391e9207..b583d5dd2da1 100644
+index 24e175819c13..d23607db35c3 100644
 --- a/kernelci/configs.py
 +++ b/kernelci/configs.py
-@@ -846,6 +846,17 @@ class TestConfig(YAMLObject):
+@@ -848,6 +848,17 @@ class TestConfig(YAMLObject):
          return self._test_plans
  
      def match(self, arch, plan, flags, config):

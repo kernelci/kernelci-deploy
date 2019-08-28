@@ -1,4 +1,4 @@
-From f99c4d30cb4dc6f1aaa6dd880a8d9642a15e6af6 Mon Sep 17 00:00:00 2001
+From 34b93022c77c62a9252a145828ada9082689f05f Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 15 Nov 2018 11:05:51 +0000
 Subject: [PATCH 2/6] STAGING push-bisection-results: print the email
