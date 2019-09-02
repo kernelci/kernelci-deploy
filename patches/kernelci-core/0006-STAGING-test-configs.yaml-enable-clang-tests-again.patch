@@ -1,0 +1,46 @@
+From 2bc9228579e168d79c94631bd5331562cafe6df6 Mon Sep 17 00:00:00 2001
+From: "kernelci.org bot" <bot@kernelci.org>
+Date: Mon, 2 Sep 2019 08:59:34 +0100
+Subject: [PATCH 6/6] STAGING test-configs.yaml: enable clang tests again
+
+---
+ test-configs.yaml | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/test-configs.yaml b/test-configs.yaml
+index e8f738c35ade..1b9b1bb3ade3 100644
+--- a/test-configs.yaml
++++ b/test-configs.yaml
+@@ -77,12 +77,12 @@ test_plans:
+   baseline:
+     rootfs: buildroot_baseline_ramdisk
+     filters:
+-      - blacklist: *kselftest_defconfig_clang_environment_filter
++      - blacklist: *kselftest_defconfig_filter
+ 
+   boot:
+     rootfs: buildroot_ramdisk
+     filters:
+-      - blacklist: *kselftest_defconfig_clang_environment_filter
++      - blacklist: *kselftest_defconfig_filter
+ 
+   boot-nfs:
+     rootfs: buildroot_nfs
+@@ -104,14 +104,11 @@ test_plans:
+             - ['arm', 'at91_dt_defconfig']
+             - ['arm', 'davinci_all_defconfig']
+             - ['arm64', 'defconfig']
+-      - blacklist: *clang_environment_filter
+ 
+   boot_qemu:
+     base_name: boot
+     rootfs: buildroot_ramdisk
+     pattern: 'boot/generic-qemu-boot-template.jinja2'
+-    filters:
+-      - blacklist: *clang_environment_filter
+ 
+   cros-ec:
+     rootfs: debian_buster_ramdisk
+-- 
+2.20.1
+
