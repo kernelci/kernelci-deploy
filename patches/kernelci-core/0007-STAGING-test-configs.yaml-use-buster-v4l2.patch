@@ -1,0 +1,58 @@
+From 232009905942ac11761d74c82c22fd938025f50f Mon Sep 17 00:00:00 2001
+From: "kernelci.org bot" <bot@kernelci.org>
+Date: Wed, 4 Sep 2019 13:06:35 +0100
+Subject: [PATCH 7/7] STAGING test-configs.yaml: use buster-v4l2
+
+---
+ test-configs.yaml | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/test-configs.yaml b/test-configs.yaml
+index 1ccc445b48f5..f09e8c6882cf 100644
+--- a/test-configs.yaml
++++ b/test-configs.yaml
+@@ -20,6 +20,12 @@ file_system_types:
+       armhf: [{arch: arm}]
+       amd64: [{arch: x86_64}]
+ 
++  debian_staging:
++    url: 'http://staging-storage.kernelci.org/images/rootfs/debian'
++    arch_map:
++      armhf: [{arch: arm}]
++      amd64: [{arch: x86_64}]
++
+ 
+ file_systems:
+ 
+@@ -47,9 +53,9 @@ file_systems:
+     type: debian
+     ramdisk: 'buster-igt/20190830.0/{arch}/rootfs.cpio.gz'
+ 
+-  debian_stretch-v4l2_ramdisk:
+-    type: debian
+-    ramdisk: 'stretch-v4l2/20190830.0/{arch}/rootfs.cpio.gz'
++  debian_buster-v4l2_ramdisk:
++    type: debian_staging
++    ramdisk: 'buster-v4l2/20190904.0/{arch}/rootfs.cpio.gz'
+ 
+ 
+ test_plan_default_filters:
+@@ -180,13 +186,13 @@ test_plans:
+     rootfs: debian_buster_ramdisk
+ 
+   v4l2-compliance-uvc:
+-    rootfs: debian_stretch-v4l2_ramdisk
++    rootfs: debian_buster-v4l2_ramdisk
+     # FIXME - this is not very sustainable, improve template naming scheme
+     pattern: 'v4l2-compliance/{category}-{method}-{protocol}-{rootfs}-v4l2-compliance-template.jinja2'
+     params: {v4l2_driver: "uvcvideo"}
+ 
+   v4l2-compliance-vivid:
+-    rootfs: debian_stretch-v4l2_ramdisk
++    rootfs: debian_buster-v4l2_ramdisk
+     pattern: 'v4l2-compliance/generic-qemu-v4l2-compliance-template.jinja2'
+     params: {v4l2_driver: "vivid"}
+     filters:
+-- 
+2.20.1
+

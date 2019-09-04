@@ -1,14 +1,14 @@
-From 2bc9228579e168d79c94631bd5331562cafe6df6 Mon Sep 17 00:00:00 2001
+From fac16ed69a163460d24bed26688a0e12f91f68e4 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Mon, 2 Sep 2019 08:59:34 +0100
-Subject: [PATCH 6/6] STAGING test-configs.yaml: enable clang tests again
+Subject: [PATCH 6/7] STAGING test-configs.yaml: enable clang tests again
 
 ---
  test-configs.yaml | 7 ++-----
  1 file changed, 2 insertions(+), 5 deletions(-)
 
 diff --git a/test-configs.yaml b/test-configs.yaml
-index e8f738c35ade..1b9b1bb3ade3 100644
+index cd78ef777717..1ccc445b48f5 100644
 --- a/test-configs.yaml
 +++ b/test-configs.yaml
 @@ -77,12 +77,12 @@ test_plans:
