@@ -1,34 +1,35 @@
-From c6eaf2c7295172c03b2af024e14563d80fe90fca Mon Sep 17 00:00:00 2001
+From 65c3fcef574ca2a287dd8510a9a5901884768861 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Mon, 2 Sep 2019 08:57:24 +0100
-Subject: [PATCH 4/7] STAGING kernelci.config.test: debug noise in filters
+Subject: [PATCH 4/6] STAGING kernelci.config.test: debug noise in filters
 
 ---
- kernelci/config/test.py | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ kernelci/config/test.py | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
 diff --git a/kernelci/config/test.py b/kernelci/config/test.py
-index 2c7950b702af..70818b1c4543 100644
+index 3b81a0835ad5..d74d4ef322ca 100644
 --- a/kernelci/config/test.py
 +++ b/kernelci/config/test.py
-@@ -392,6 +392,17 @@ class TestConfig(YAMLObject):
+@@ -392,6 +392,18 @@ class TestConfig(YAMLObject):
          return self._test_plans
  
-     def match(self, arch, plan, flags, config):
+     def match(self, arch, flags, config, plan=None):
 +        if True:
-+            print(
++            print("{} {} (listed: {}), {} {}, {} {}, filters: {}".format(
 +                plan,
++                (plan in self._test_plans and
++                 plan and self._test_plans[plan].match(config)),
 +                plan in self._test_plans,
-+                plan in self._test_plans and self._test_plans[plan].match(config),
 +                arch,
 +                self.device_type.arch == arch,
 +                config,
 +                self.device_type.match(flags, config),
 +                all(f.match(**config) for f in self._filters)
-+            )
++            ))
          return (
-             plan in self._test_plans and
-             self._test_plans[plan].match(config) and
+             plan is None or (
+                 plan in self._test_plans and
 -- 
 2.20.1
 
