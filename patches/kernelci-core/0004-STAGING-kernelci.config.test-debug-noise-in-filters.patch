@@ -1,7 +1,7 @@
-From 65c3fcef574ca2a287dd8510a9a5901884768861 Mon Sep 17 00:00:00 2001
+From 9e399340d3a877e61aa6329b831ff9455cd1b147 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Mon, 2 Sep 2019 08:57:24 +0100
-Subject: [PATCH 4/6] STAGING kernelci.config.test: debug noise in filters
+Subject: [PATCH 4/5] STAGING kernelci.config.test: debug noise in filters
 
 ---
  kernelci/config/test.py | 12 ++++++++++++
