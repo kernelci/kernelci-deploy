@@ -67,13 +67,16 @@ def main(args):
     for pr in reversed(list(prs)):
         branch = pr.head.ref
         user = pr.head.repo.owner.login
+        labels = list(label.name for label in pr.labels)
         print("{:4} {:16} {:32} ".format(pr.number, user, branch), end='')
         if user not in users:
             print_color('red', "SKIP untrusted user")
         elif (user, branch) in skip:
             print_color('yellow', "SKIP")
         elif pr.base.ref != args.master:
-            print_color('yellow', "SKIP {}".format(pr.base.ref))
+            print_color('yellow', "SKIP base: {}".format(pr.base.ref))
+        elif args.skip_label and args.skip_label in labels:
+            print_color('yellow', "SKIP label: {}".format(args.skip_label))
         else:
             if pull(args, pr, path):
                 print_color('green', "OK")
@@ -117,6 +120,8 @@ Create staging.kernelci.org branch with all pending PRs")
                         help="Github project namespace, default is kernelci")
     parser.add_argument("--skip", nargs='+', default=[],
                         help="Name of user/branch pairs to skip")
+    parser.add_argument("--skip-label", default="staging-skip",
+                        help="Name of a Github label used to skip PRs")
     parser.add_argument("--ssh-key",
                         help="Path to SSH key to push branches and tags")
     parser.add_argument("--push", action="store_true",
