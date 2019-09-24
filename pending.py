@@ -121,7 +121,7 @@ Create staging.kernelci.org branch with all pending PRs")
                         help="Path to SSH key to push branches and tags")
     parser.add_argument("--push", action="store_true",
                         help="Push the resulting branch and tag")
-    parser.add_argument("--settings",
+    parser.add_argument("--settings", default="data/staging.ini",
                         help="Path to a settings file")
     args = parser.parse_args(sys.argv[1:])
     ret = main(args)

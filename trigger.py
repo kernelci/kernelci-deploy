@@ -54,7 +54,7 @@ if __name__ == '__main__':
                         help="Jenkins API token")
     parser.add_argument("--json",
                         help="Path to a JSON file with job parameters")
-    parser.add_argument("--settings",
+    parser.add_argument("--settings", default="data/staging-jenkins.ini",
                         help="Path to a settings file")
     parser.add_argument("--section", default="jenkins",
                         help="Section in the settings file")
