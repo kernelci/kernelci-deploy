@@ -7,6 +7,7 @@ target="${2}"
 git_rev="${3:-staging.kernelci.org}"
 user="${4:-admin}"
 key="${5:-$PWD/keys/id_rsa_staging.kernelci.org}"
+opts="${6}"
 
 [ "$repo" = "kernelci-backend" ] || [ "$repo" = "kernelci-frontend" ] || {
     echo "Invalid repo name: $repo"
@@ -38,6 +39,7 @@ ansible-playbook \
     --skip-tags=secrets \
     -t app \
     $key_arg \
+    $opts \
     -e git_head="$git_rev"
 cd -
 
