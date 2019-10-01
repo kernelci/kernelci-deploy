@@ -1,4 +1,4 @@
-From e663c802c78be5e50ebc136546d5a258279f683a Mon Sep 17 00:00:00 2001
+From 7e0e9bb524378f9b42a28b744e845b32f8f8b036 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Mon, 2 Sep 2019 08:57:24 +0100
 Subject: [PATCH 4/5] STAGING kernelci.config.test: debug noise in filters
@@ -8,10 +8,10 @@ Subject: [PATCH 4/5] STAGING kernelci.config.test: debug noise in filters
  1 file changed, 12 insertions(+)
 
 diff --git a/kernelci/config/test.py b/kernelci/config/test.py
-index 3b81a0835ad5..d74d4ef322ca 100644
+index 451e9606d4a6..ac544f8d13c9 100644
 --- a/kernelci/config/test.py
 +++ b/kernelci/config/test.py
-@@ -392,6 +392,18 @@ class TestConfig(YAMLObject):
+@@ -401,6 +401,18 @@ class TestConfig(YAMLObject):
          return self._test_plans
  
      def match(self, arch, flags, config, plan=None):
@@ -28,7 +28,7 @@ index 3b81a0835ad5..d74d4ef322ca 100644
 +                all(f.match(**config) for f in self._filters)
 +            ))
          return (
-             plan is None or (
+             (plan is None or (
                  plan in self._test_plans and
 -- 
 2.20.1
