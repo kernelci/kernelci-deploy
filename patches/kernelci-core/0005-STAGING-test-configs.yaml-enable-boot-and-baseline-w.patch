@@ -1,0 +1,43 @@
+From f2d4c6fc8f5da66e35100c90420855912beee60e Mon Sep 17 00:00:00 2001
+From: "kernelci.org bot" <bot@kernelci.org>
+Date: Wed, 23 Oct 2019 13:58:34 +0100
+Subject: [PATCH 5/5] STAGING test-configs.yaml: enable boot and baseline with
+ clang
+
+---
+ test-configs.yaml | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/test-configs.yaml b/test-configs.yaml
+index b80f5c251210..d7a2dd647e9a 100644
+--- a/test-configs.yaml
++++ b/test-configs.yaml
+@@ -77,14 +77,14 @@ test_plans:
+   baseline:
+     rootfs: buildroot_baseline_ramdisk
+     filters:
+-      - blacklist: *kselftest_defconfig_clang_environment_filter
++      - blacklist: *kselftest_defconfig_filter
+ 
+   baseline_qemu:
+     base_name: baseline
+     rootfs: buildroot_baseline_ramdisk
+     pattern: 'baseline/generic-qemu-baseline-template.jinja2'
+     filters:
+-      - blacklist: *kselftest_defconfig_clang_environment_filter
++      - blacklist: *kselftest_defconfig_filter
+ 
+   baseline-fastboot:
+     rootfs: buildroot_baseline_ramdisk
+@@ -130,7 +130,7 @@ test_plans:
+   boot:
+     rootfs: buildroot_ramdisk
+     filters:
+-      - blacklist: *kselftest_defconfig_clang_environment_filter
++      - blacklist: *kselftest_defconfig_filter
+ 
+   boot-nfs:
+     rootfs: buildroot_nfs
+-- 
+2.20.1
+

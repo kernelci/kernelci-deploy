@@ -1,7 +1,7 @@
-From 37838d0cdcd08aed1a65698b88031d76c354a2b4 Mon Sep 17 00:00:00 2001
+From b9719ee38a9c8ce113fbc264591ebc714b47b5e6 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 14 Feb 2019 15:16:26 +0000
-Subject: [PATCH 3/4] STAGING build-configs.yaml: add kernelci_staging build
+Subject: [PATCH 3/5] STAGING build-configs.yaml: add kernelci_staging build
  config
 
 ---
@@ -9,10 +9,10 @@ Subject: [PATCH 3/4] STAGING build-configs.yaml: add kernelci_staging build
  1 file changed, 40 insertions(+)
 
 diff --git a/build-configs.yaml b/build-configs.yaml
-index 5c0d1ecf2336..f303bbc179e2 100644
+index c493d0d9ca5c..6cafac741e22 100644
 --- a/build-configs.yaml
 +++ b/build-configs.yaml
-@@ -503,6 +503,46 @@ build_configs:
+@@ -514,6 +514,46 @@ build_configs:
      branch: 'kernelci.org'
      variants: *stable_variants
  
