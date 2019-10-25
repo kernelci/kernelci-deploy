@@ -1,7 +1,7 @@
-From f2d4c6fc8f5da66e35100c90420855912beee60e Mon Sep 17 00:00:00 2001
+From 791c4e06ec4948b2bf23c20402de4f09bd406aaf Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Wed, 23 Oct 2019 13:58:34 +0100
-Subject: [PATCH 5/5] STAGING test-configs.yaml: enable boot and baseline with
+Subject: [PATCH 5/6] STAGING test-configs.yaml: enable boot and baseline with
  clang
 
 ---
