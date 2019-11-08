@@ -34,13 +34,17 @@ COLORS = {
     'blue': '\033[94m',
     'clear': '\033[0m',
 }
+NO_COLORS = 'NO_COLORS' in os.environ
 
 # Github API handler
 GITHUB = github.Github()
 
 
 def print_color(color, msg):
-    print(''.join([COLORS[color], msg, COLORS['clear']]))
+    if NO_COLORS:
+        print(msg)
+    else:
+        print(''.join([COLORS[color], msg, COLORS['clear']]))
 
 
 def shell_cmd(cmd):
