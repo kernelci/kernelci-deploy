@@ -1,4 +1,4 @@
-From 3cf5cacdad98fb5a116a019f7f04644a5014d7b8 Mon Sep 17 00:00:00 2001
+From 8e2a8445e5086d134403ef11541fe1edf6e6880c Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 25 Oct 2019 11:03:14 +0100
 Subject: [PATCH 6/6] STAGING build-configs.yaml: allmodconfig+defconfig arm64
@@ -8,10 +8,10 @@ Subject: [PATCH 6/6] STAGING build-configs.yaml: allmodconfig+defconfig arm64
  1 file changed, 1 insertion(+)
 
 diff --git a/build-configs.yaml b/build-configs.yaml
-index 5b6e0b57a39b..64654d56a733 100644
+index 8aebad047e73..501aeebd31a3 100644
 --- a/build-configs.yaml
 +++ b/build-configs.yaml
-@@ -554,6 +554,7 @@ build_configs:
+@@ -555,6 +555,7 @@ build_configs:
              fragments: [kselftest]
              extra_configs:
                - 'defconfig+CONFIG_CPU_BIG_ENDIAN=y'
