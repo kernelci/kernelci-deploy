@@ -1,4 +1,4 @@
-From 14f2401b1684204dd24f7cbcc397aa0c89f24e85 Mon Sep 17 00:00:00 2001
+From 126d39fc82a8d094accb5e578e57c851cb664f47 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 15 Nov 2018 11:05:51 +0000
 Subject: [PATCH 2/6] STAGING push-bisection-results: print the email
@@ -9,10 +9,10 @@ Subject: [PATCH 2/6] STAGING push-bisection-results: print the email
  1 file changed, 14 insertions(+)
 
 diff --git a/push-bisection-results.py b/push-bisection-results.py
-index 2ecf89e33bde..a9c891775720 100755
+index 267909d4769b..154a8bc076dd 100755
 --- a/push-bisection-results.py
 +++ b/push-bisection-results.py
-@@ -211,6 +211,20 @@ def send_report(args, log_file_name, token, api):
+@@ -214,6 +214,20 @@ def send_report(args, log_file_name, token, api):
      if all(check == 'PASS' for check in list(checks_dict(args).values())):
          add_git_recipients(kdir, 'refs/bisect/bad', to, cc)
      cc = cc.difference(to)
@@ -32,7 +32,7 @@ index 2ecf89e33bde..a9c891775720 100755
 +
      data.update({
          'report_type': 'bisect',
-         'log': log_file_name,
+         'type': 'boot' if args.plan == 'boot' else 'test',
 -- 
 2.20.1
 
