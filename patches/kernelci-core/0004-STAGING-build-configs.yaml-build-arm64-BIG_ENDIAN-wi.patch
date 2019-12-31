@@ -1,15 +1,15 @@
-From e8b90cd07908c017b82cacff10e432cf7288c3ce Mon Sep 17 00:00:00 2001
+From b0d79544ef0556726914b1f8f7764ad2561a2998 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Wed, 14 Aug 2019 23:16:36 +0200
 Subject: [PATCH 4/6] STAGING build-configs.yaml: build arm64 BIG_ENDIAN with
  gcc and clang
 
 ---
- build-configs.yaml | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ build-configs.yaml | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
 diff --git a/build-configs.yaml b/build-configs.yaml
-index 5a7b76a7e360..5e792d5438aa 100644
+index 5a7b76a7e360..07d091920a94 100644
 --- a/build-configs.yaml
 +++ b/build-configs.yaml
 @@ -541,10 +541,12 @@ build_configs:
@@ -26,7 +26,7 @@ index 5a7b76a7e360..5e792d5438aa 100644
            i386:
              base_defconfig: 'i386_defconfig'
              filters:
-@@ -564,7 +566,9 @@ build_configs:
+@@ -564,7 +566,11 @@ build_configs:
          build_environment: clang-8
          architectures:
            arm: *staging_arm
@@ -34,6 +34,8 @@ index 5a7b76a7e360..5e792d5438aa 100644
 +          arm64:
 +            extra_configs:
 +              - 'defconfig+CONFIG_CPU_BIG_ENDIAN=y'
++            filters:
++              - whitelist: {defconfig: ['defconfig+CONFIG_CPU_BIG_ENDIAN=y']}
  
    khilman:
      tree: khilman
