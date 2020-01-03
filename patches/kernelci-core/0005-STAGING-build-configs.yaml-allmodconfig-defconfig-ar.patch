@@ -1,7 +1,7 @@
-From 92194a95771731f40c1f0c88cfa332be7afb84a8 Mon Sep 17 00:00:00 2001
+From 85b5fd52ae80a4c6c335f0984969a73f585b460f Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 25 Oct 2019 11:03:14 +0100
-Subject: [PATCH 6/6] STAGING build-configs.yaml: allmodconfig+defconfig arm64
+Subject: [PATCH 5/6] STAGING build-configs.yaml: allmodconfig+defconfig arm64
 
 ---
  build-configs.yaml | 1 +
