@@ -5,7 +5,7 @@ set -e
 repo="${1}"
 target="${2}"
 git_rev="${3:-staging.kernelci.org}"
-user="${4:-admin}"
+user="${4:-kernelci}"
 key="${5:-$PWD/keys/id_rsa_staging.kernelci.org}"
 opts="${6}"
 
