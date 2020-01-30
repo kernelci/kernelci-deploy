@@ -1,7 +1,7 @@
-From e200134df57714c934d9be85d1f6c2df7fa08ca5 Mon Sep 17 00:00:00 2001
+From 5e780e8c9dc27ea2cdc936de4ae05d621253531e Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Wed, 23 Oct 2019 13:58:34 +0100
-Subject: [PATCH 4/6] STAGING test-configs.yaml: enable boot and baseline with
+Subject: [PATCH 4/7] STAGING test-configs.yaml: enable boot and baseline with
  clang
 
 ---
@@ -9,10 +9,10 @@ Subject: [PATCH 4/6] STAGING test-configs.yaml: enable boot and baseline with
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/test-configs.yaml b/test-configs.yaml
-index c45e7edbcaf7..82b99282153b 100644
+index 2af67d3a8dfa..96fca72dfea4 100644
 --- a/test-configs.yaml
 +++ b/test-configs.yaml
-@@ -77,14 +77,14 @@ test_plans:
+@@ -81,14 +81,14 @@ test_plans:
    baseline:
      rootfs: buildroot_baseline_ramdisk
      filters:
@@ -29,7 +29,7 @@ index c45e7edbcaf7..82b99282153b 100644
  
    baseline-fastboot:
      rootfs: buildroot_baseline_ramdisk
-@@ -130,7 +130,7 @@ test_plans:
+@@ -134,7 +134,7 @@ test_plans:
    boot:
      rootfs: buildroot_ramdisk
      filters:
