@@ -1,28 +1,29 @@
-From a56cb6f3a99a8db5ebc4a1aa3aa2ace527dfe221 Mon Sep 17 00:00:00 2001
+From b78ff42542fc68b7863eb60565d6d9f96d0d6427 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Thu, 30 Jan 2020 14:33:44 +0000
 Subject: [PATCH 7/7] STAGING only send emails for kernelci tree
 
 ---
- jenkins/kernel-arch-complete.sh | 5 +++++
- 1 file changed, 5 insertions(+)
+ jenkins/kernel-arch-complete.sh | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
 diff --git a/jenkins/kernel-arch-complete.sh b/jenkins/kernel-arch-complete.sh
-index c41d92ba4fa6..9545cbe9a2d1 100755
+index c41d92ba4fa6..aca085865e66 100755
 --- a/jenkins/kernel-arch-complete.sh
 +++ b/jenkins/kernel-arch-complete.sh
-@@ -2,6 +2,11 @@
+@@ -34,6 +34,12 @@ fi
  
- set -x
- 
+     echo "Build has now finished, reporting result to dashboard."
+     curl -X POST -H "Authorization: $EMAIL_AUTH_TOKEN" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "git_branch": "'$BRANCH'"}' ${API}/job
++
 +if [ "$TREE_NAME" != "kernelci" ]; then
 +    echo "Only dealing with kernelci tree on staging.kernelci.org"
 +    exit 0
 +fi
 +
- if [ "$PUBLISH" != "true" ]; then
-   echo "Skipping publish step.  PUBLISH != true."
-   exit 0
+     if [ "$EMAIL" != "true" ]; then
+         echo "Not sending emails because EMAIL was false"
+         exit 0
 -- 
 2.20.1
 
