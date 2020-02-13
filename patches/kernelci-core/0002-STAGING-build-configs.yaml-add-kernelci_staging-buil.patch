@@ -1,4 +1,4 @@
-From 0aae29d6d2d00c9bbb9a1c8fa166b9296507d740 Mon Sep 17 00:00:00 2001
+From 770c10c88fae4971e8921a31004acc806fa003f8 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 14 Feb 2019 15:16:26 +0000
 Subject: [PATCH 2/7] STAGING build-configs.yaml: add kernelci_staging build
@@ -9,7 +9,7 @@ Subject: [PATCH 2/7] STAGING build-configs.yaml: add kernelci_staging build
  1 file changed, 40 insertions(+)
 
 diff --git a/build-configs.yaml b/build-configs.yaml
-index fff2a2249fe9..745ef0b42d7e 100644
+index 6f111b2db49f..493a39aaafe6 100644
 --- a/build-configs.yaml
 +++ b/build-configs.yaml
 @@ -529,6 +529,46 @@ build_configs:
@@ -24,9 +24,9 @@ index fff2a2249fe9..745ef0b42d7e 100644
 +        build_environment: gcc-8
 +        architectures:
 +          arc:
-+            base_defconfig: 'nsim_hs_defconfig'
++            base_defconfig: 'haps_hs_smp_defconfig'
 +            filters:
-+              - whitelist: {defconfig: ['nsim_hs_defconfig']}
++              - whitelist: {defconfig: ['haps_hs_smp_defconfig']}
 +          arm: &staging_arm
 +            base_defconfig: 'multi_v7_defconfig'
 +            filters:
