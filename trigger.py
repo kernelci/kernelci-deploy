@@ -38,6 +38,8 @@ def main(args):
     if args.json:
         with open(args.json) as f:
             params = json.load(f)
+    else:
+        params = None
     api.build_job(args.job, params)
     return True
 
