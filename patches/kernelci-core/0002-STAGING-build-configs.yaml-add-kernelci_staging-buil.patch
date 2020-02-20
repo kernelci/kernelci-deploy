@@ -1,18 +1,18 @@
-From 770c10c88fae4971e8921a31004acc806fa003f8 Mon Sep 17 00:00:00 2001
+From 467f142f06483e24e8de1cbbc2e0d7213b585df5 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 14 Feb 2019 15:16:26 +0000
-Subject: [PATCH 2/7] STAGING build-configs.yaml: add kernelci_staging build
+Subject: [PATCH 2/6] STAGING build-configs.yaml: add kernelci_staging build
  config
 
 ---
- build-configs.yaml | 40 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ build-configs.yaml | 41 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
 
 diff --git a/build-configs.yaml b/build-configs.yaml
-index 6f111b2db49f..493a39aaafe6 100644
+index 44960ae9d798..b1f89646f832 100644
 --- a/build-configs.yaml
 +++ b/build-configs.yaml
-@@ -529,6 +529,46 @@ build_configs:
+@@ -523,6 +523,47 @@ build_configs:
      branch: 'kernelci.org'
      variants: *stable_variants
  
@@ -46,15 +46,16 @@ index 6f111b2db49f..493a39aaafe6 100644
 +          riscv:
 +            filters:
 +              - whitelist: {defconfig: ['defconfig']}
-+          x86_64:
++          x86_64: &staging_x86_64
 +            base_defconfig: 'x86_64_defconfig'
 +            filters:
 +              - whitelist: {defconfig: ['x86_64_defconfig']}
-+      clang-8:
-+        build_environment: clang-8
++      clang-9:
++        build_environment: clang-9
 +        architectures:
 +          arm: *staging_arm
 +          arm64: *staging_arm64
++          x86_64: *staging_x86_64
 +
    khilman:
      tree: khilman
