@@ -1,4 +1,4 @@
-From 25b7ae18d1788aa562c1acfc1688419db086575e Mon Sep 17 00:00:00 2001
+From 895de42f4b12d6a849d7c5841adb4926896675a7 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Thu, 30 Jan 2020 14:33:44 +0000
 Subject: [PATCH 6/6] STAGING only send emails for kernelci tree

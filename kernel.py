@@ -37,14 +37,19 @@ git commit --author='"kernelci.org bot" <bot@kernelci.org>' -am {msg}
 
 def main(args):
     path = os.path.join('checkout', args.project)
+    print("path: {}".format(path))
     repo_name = '/'.join([args.namespace, args.project])
+    print("repo: {}".format(repo_name))
     repo = kernelci.GITHUB.get_repo(repo_name)
+    print("checking out {} {}".format(args.from_url, args.from_branch))
     kernelci.checkout_repository(path, repo, args.from_url, args.from_branch)
     patches_path = os.path.join('patches', args.project, args.branch)
+    print("patches: {}".format(patches_path))
     if not kernelci.apply_patches(path, patches_path):
         print_color('red', "Aborting, all patches must apply.")
         return False
     tag = args.tag or kernelci.date_tag(path, args.tag_prefix)
+    print("tag: {}".format(tag))
     add_date_commit(path, tag, args.branch)
     kernelci.create_tag(path, tag)
     if args.push:
