@@ -1,15 +1,15 @@
-From c50f326fe3b478416e5f159ed8a6a8810249a861 Mon Sep 17 00:00:00 2001
+From b63617a948a60355fbd5586824b2546c8f28642d Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Thu, 20 Feb 2020 19:47:01 +0000
-Subject: [PATCH 3/6] STAGING build-configs.yaml: build arm64 BIG_ENDIAN with
- gcc and clang
+Subject: [PATCH] STAGING build-configs.yaml: build arm64 BIG_ENDIAN with gcc
+ and clang
 
 ---
  build-configs.yaml | 8 ++++++--
  1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/build-configs.yaml b/build-configs.yaml
-index b1f89646f832..3af697ec2f34 100644
+index f18e55052fdb..b0652b4f9d64 100644
 --- a/build-configs.yaml
 +++ b/build-configs.yaml
 @@ -538,10 +538,12 @@ build_configs:
