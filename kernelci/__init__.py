@@ -99,7 +99,7 @@ git remote set-url --push origin {push}
     shell_cmd("""\
 cd {path}
 git reset --quiet --hard --merge
-git fetch --quiet {origin} {branch}
+git fetch --quiet --tags {origin} {branch}
 git checkout FETCH_HEAD
 git config user.name "kernelci.org bot"
 git config user.email "bot@kernelci.org"
