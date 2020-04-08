@@ -1,0 +1,51 @@
+From eb41e6a8a1a0eec64404b91dbf957aefae1547ae Mon Sep 17 00:00:00 2001
+From: Hsin-Yi Wang <hsinyi@chromium.org>
+Date: Mon, 10 Feb 2020 14:35:20 +0800
+Subject: [PATCH 1/6] dt-bindings: arm64: dts: mediatek: Add mt8173 elm and
+ hana
+
+Elm is Acer Chromebook R13. Hana is Lenovo Chromebook. Both uses mt8173
+SoC.
+
+Signed-off-by: Hsin-Yi Wang <hsinyi@chromium.org>
+Reviewed-by: Rob Herring <robh@kernel.org>
+---
+ .../devicetree/bindings/arm/mediatek.yaml     | 22 +++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/arm/mediatek.yaml b/Documentation/devicetree/bindings/arm/mediatek.yaml
+index 4043c5046441..abc544dde692 100644
+--- a/Documentation/devicetree/bindings/arm/mediatek.yaml
++++ b/Documentation/devicetree/bindings/arm/mediatek.yaml
+@@ -84,6 +84,28 @@ properties:
+           - enum:
+               - mediatek,mt8135-evbp1
+           - const: mediatek,mt8135
++      - description: Google Elm (Acer Chromebook R13)
++        items:
++          - const: google,elm-rev8
++          - const: google,elm-rev7
++          - const: google,elm-rev6
++          - const: google,elm-rev5
++          - const: google,elm-rev4
++          - const: google,elm-rev3
++          - const: google,elm
++          - const: mediatek,mt8173
++      - description: Google Hana (Lenovo Chromebook N23 Yoga, C330, 300e,...)
++        items:
++          - const: google,hana-rev6
++          - const: google,hana-rev5
++          - const: google,hana-rev4
++          - const: google,hana-rev3
++          - const: google,hana
++          - const: mediatek,mt8173
++      - description: Google Hana rev7 (Poin2 Chromebook 11C)
++        items:
++          - const: google,hana-rev7
++          - const: mediatek,mt8173
+       - items:
+           - enum:
+               - mediatek,mt8173-evb
+-- 
+2.20.1
+

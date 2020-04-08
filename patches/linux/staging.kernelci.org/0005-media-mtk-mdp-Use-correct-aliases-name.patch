@@ -1,0 +1,35 @@
+From d32830eaf21813ea230cff3ac7dae125fe4eb941 Mon Sep 17 00:00:00 2001
+From: Hsin-Yi Wang <hsinyi@chromium.org>
+Date: Mon, 10 Feb 2020 14:35:24 +0800
+Subject: [PATCH 5/6] media: mtk-mdp: Use correct aliases name
+
+aliases property name must include only lowercase and '-'. Fix in dts
+and driver.
+
+Signed-off-by: Hsin-Yi Wang <hsinyi@chromium.org>
+---
+ drivers/media/platform/mtk-mdp/mtk_mdp_comp.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/media/platform/mtk-mdp/mtk_mdp_comp.c b/drivers/media/platform/mtk-mdp/mtk_mdp_comp.c
+index 14991685adb7..58abfbdfb82d 100644
+--- a/drivers/media/platform/mtk-mdp/mtk_mdp_comp.c
++++ b/drivers/media/platform/mtk-mdp/mtk_mdp_comp.c
+@@ -15,10 +15,10 @@
+ 
+ 
+ static const char * const mtk_mdp_comp_stem[MTK_MDP_COMP_TYPE_MAX] = {
+-	"mdp_rdma",
+-	"mdp_rsz",
+-	"mdp_wdma",
+-	"mdp_wrot",
++	"mdp-rdma",
++	"mdp-rsz",
++	"mdp-wdma",
++	"mdp-wrot",
+ };
+ 
+ struct mtk_mdp_comp_match {
+-- 
+2.20.1
+
