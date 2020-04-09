@@ -1,7 +1,7 @@
 From 5e43455a5144e4b327076545596a25cf2efe4877 Mon Sep 17 00:00:00 2001
 From: Hsin-Yi Wang <hsinyi@chromium.org>
 Date: Mon, 10 Feb 2020 14:35:23 +0800
-Subject: [PATCH 4/6] arm64: dts: mediatek: add mt8173 elm and hana board
+Subject: [PATCH 4/5] arm64: dts: mediatek: add mt8173 elm and hana board
 
 Elm is Acer Chromebook R13. Hana is Lenovo Chromebook. Both uses mt8173
 SoC.

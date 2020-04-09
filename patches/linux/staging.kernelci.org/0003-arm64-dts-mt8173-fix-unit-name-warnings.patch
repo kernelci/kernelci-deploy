@@ -1,7 +1,7 @@
 From 5397dda0399e53bcae01a473dc5ee69367709843 Mon Sep 17 00:00:00 2001
 From: Hsin-Yi Wang <hsinyi@chromium.org>
 Date: Mon, 10 Feb 2020 14:35:22 +0800
-Subject: [PATCH 3/6] arm64: dts: mt8173: fix unit name warnings
+Subject: [PATCH 3/5] arm64: dts: mt8173: fix unit name warnings
 
 Fixing several unit name warnings:
 

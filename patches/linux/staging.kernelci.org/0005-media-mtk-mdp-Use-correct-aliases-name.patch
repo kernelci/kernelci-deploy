@@ -1,7 +1,7 @@
 From d32830eaf21813ea230cff3ac7dae125fe4eb941 Mon Sep 17 00:00:00 2001
 From: Hsin-Yi Wang <hsinyi@chromium.org>
 Date: Mon, 10 Feb 2020 14:35:24 +0800
-Subject: [PATCH 5/6] media: mtk-mdp: Use correct aliases name
+Subject: [PATCH 5/5] media: mtk-mdp: Use correct aliases name
 
 aliases property name must include only lowercase and '-'. Fix in dts
 and driver.

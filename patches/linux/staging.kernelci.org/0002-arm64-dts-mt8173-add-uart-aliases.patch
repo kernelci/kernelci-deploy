@@ -1,7 +1,7 @@
 From 58655a17bebd118be92a7ed1b9bfa01270dc2a15 Mon Sep 17 00:00:00 2001
 From: Hsin-Yi Wang <hsinyi@chromium.org>
 Date: Mon, 10 Feb 2020 14:35:21 +0800
-Subject: [PATCH 2/6] arm64: dts: mt8173: add uart aliases
+Subject: [PATCH 2/5] arm64: dts: mt8173: add uart aliases
 
 Add serial as uart aliases in mt8173.
 

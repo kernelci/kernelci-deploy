@@ -1,7 +1,7 @@
 From eb41e6a8a1a0eec64404b91dbf957aefae1547ae Mon Sep 17 00:00:00 2001
 From: Hsin-Yi Wang <hsinyi@chromium.org>
 Date: Mon, 10 Feb 2020 14:35:20 +0800
-Subject: [PATCH 1/6] dt-bindings: arm64: dts: mediatek: Add mt8173 elm and
+Subject: [PATCH 1/5] dt-bindings: arm64: dts: mediatek: Add mt8173 elm and
  hana
 
 Elm is Acer Chromebook R13. Hana is Lenovo Chromebook. Both uses mt8173
