@@ -71,6 +71,7 @@ def date_tag(path, px, fmt="%Y%m%d"):
     try:
         n = int(shell_cmd("""
 cd {path}
+git fetch --quiet --tags origin
 git tag -l | grep -c {tag}
 """.format(path=path, tag=tag_name)))
     except subprocess.CalledProcessError:
@@ -99,7 +100,7 @@ git remote set-url --push origin {push}
     shell_cmd("""\
 cd {path}
 git reset --quiet --hard --merge
-git fetch --quiet --tags {origin} {branch}
+git fetch --quiet {origin} {branch}
 git checkout FETCH_HEAD
 git config user.name "kernelci.org bot"
 git config user.email "bot@kernelci.org"

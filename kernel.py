@@ -59,8 +59,6 @@ def main(args):
             print_color('red', "No SSH key provided.")
             return False
         kernelci.push_tag_and_branch(path, ssh_key, args.branch, tag)
-    else:
-        print("\nTag: {}".format(tag))
     return True
 
 
