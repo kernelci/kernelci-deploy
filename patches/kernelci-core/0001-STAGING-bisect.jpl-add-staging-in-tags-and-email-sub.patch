@@ -1,4 +1,4 @@
-From d7f17cd018cfc4e5910b0be7002e1c6b95287e10 Mon Sep 17 00:00:00 2001
+From 37138c619e3f549585dc8a715ad8b6235ec1119e Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Wed, 22 Nov 2017 15:09:05 +0000
 Subject: [PATCH 1/7] STAGING bisect.jpl: add -staging in tags and email
@@ -9,7 +9,7 @@ Subject: [PATCH 1/7] STAGING bisect.jpl: add -staging in tags and email
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/jenkins/bisect.jpl b/jenkins/bisect.jpl
-index c5d92d064e2a..bb9c7be7993e 100644
+index 43ee6188261e..57f1a81f1097 100644
 --- a/jenkins/bisect.jpl
 +++ b/jenkins/bisect.jpl
 @@ -123,7 +123,7 @@ def createTag(kdir, iteration) {

@@ -1,4 +1,4 @@
-From d3e87563d5ccfacca6ac7173ca2ecc5676b6275a Mon Sep 17 00:00:00 2001
+From 09688c937c896051194191575972b484634258e8 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Wed, 23 Oct 2019 13:58:34 +0100
 Subject: [PATCH 4/7] STAGING test-configs.yaml: enable boot and baseline with
@@ -9,7 +9,7 @@ Subject: [PATCH 4/7] STAGING test-configs.yaml: enable boot and baseline with
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/test-configs.yaml b/test-configs.yaml
-index cf90199c0006..f73327b9bb72 100644
+index a2e26205db20..2b9e98cac176 100644
 --- a/test-configs.yaml
 +++ b/test-configs.yaml
 @@ -81,14 +81,14 @@ test_plans:
