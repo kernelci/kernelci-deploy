@@ -1,4 +1,4 @@
-From 5b738cda47399e488a7fe49abfcfcd56fa29f6a5 Mon Sep 17 00:00:00 2001
+From b0e9071852b94940b90a0f67c362a31b0073c663 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Wed, 23 Oct 2019 13:58:34 +0100
 Subject: [PATCH 4/9] STAGING test-configs.yaml: enable boot and baseline with

@@ -1,4 +1,4 @@
-From f4ca201bdba16ddc120c8880b880fb6c19822529 Mon Sep 17 00:00:00 2001
+From 27c524d8fc1832eafefe7519ce1e09a7f55974ae Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Thu, 14 May 2020 15:56:37 +0100
 Subject: [PATCH 8/9] STAGING use buster-cros-ec images from staging

@@ -1,4 +1,4 @@
-From fd954e200e7b59bfa62c1444832b5baa94207f1a Mon Sep 17 00:00:00 2001
+From e638519dbd66df0deec1b75987d3cae04d7849d7 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Thu, 20 Feb 2020 19:47:01 +0000
 Subject: [PATCH 3/9] STAGING build-configs.yaml: build arm64 BIG_ENDIAN with

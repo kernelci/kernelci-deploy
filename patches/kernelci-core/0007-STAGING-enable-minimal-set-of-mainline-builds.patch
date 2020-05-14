@@ -1,4 +1,4 @@
-From be57fed04e6fd4250a5f07701195bda28514effa Mon Sep 17 00:00:00 2001
+From 02246d44d93f136ba069a1bec3b65d60500e78d4 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Wed, 8 Apr 2020 21:48:18 +0100
 Subject: [PATCH 7/9] STAGING enable minimal set of mainline builds
