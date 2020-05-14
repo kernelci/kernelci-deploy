@@ -1,0 +1,40 @@
+From 0b6065ed8ea2710ba15250373dddc84e305fc4a3 Mon Sep 17 00:00:00 2001
+From: "kernelci.org bot" <bot@kernelci.org>
+Date: Thu, 14 May 2020 15:56:37 +0100
+Subject: [PATCH 8/8] STAGING use buster-cros-ec images from staging
+
+---
+ test-configs.yaml | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/test-configs.yaml b/test-configs.yaml
+index 3355a24fe787..b283c8ba7626 100644
+--- a/test-configs.yaml
++++ b/test-configs.yaml
+@@ -20,6 +20,12 @@ file_system_types:
+       armhf: [{arch: arm}]
+       amd64: [{arch: x86_64}]
+ 
++  debian-staging:
++    url: 'http://storage.staging.kernelci.org/images/rootfs/debian'
++    arch_map:
++      armhf: [{arch: arm}]
++      amd64: [{arch: x86_64}]
++
+ 
+ file_systems:
+ 
+@@ -44,8 +50,8 @@ file_systems:
+     ramdisk: 'buster/20200424.0/{arch}/rootfs.cpio.gz'
+ 
+   debian_buster-cros-ec_ramdisk:
+-    type: debian
+-    ramdisk: 'buster-cros-ec/20200403.0/{arch}/rootfs.cpio.gz'
++    type: debian-staging
++    ramdisk: 'buster-cros-ec/20200514.0/{arch}/rootfs.cpio.gz'
+ 
+   debian_buster-igt_ramdisk:
+     type: debian
+-- 
+2.20.1
+
