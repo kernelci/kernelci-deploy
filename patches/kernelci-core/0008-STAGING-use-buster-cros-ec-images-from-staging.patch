@@ -1,7 +1,7 @@
-From 0b6065ed8ea2710ba15250373dddc84e305fc4a3 Mon Sep 17 00:00:00 2001
+From f4ca201bdba16ddc120c8880b880fb6c19822529 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Thu, 14 May 2020 15:56:37 +0100
-Subject: [PATCH 8/8] STAGING use buster-cros-ec images from staging
+Subject: [PATCH 8/9] STAGING use buster-cros-ec images from staging
 
 ---
  test-configs.yaml | 10 ++++++++--

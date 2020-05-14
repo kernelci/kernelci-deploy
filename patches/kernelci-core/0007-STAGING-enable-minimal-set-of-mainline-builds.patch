@@ -1,7 +1,7 @@
-From 95306920a313f868adb032ab5d93fe384992b765 Mon Sep 17 00:00:00 2001
+From be57fed04e6fd4250a5f07701195bda28514effa Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Wed, 8 Apr 2020 21:48:18 +0100
-Subject: [PATCH 7/8] STAGING enable minimal set of mainline builds
+Subject: [PATCH 7/9] STAGING enable minimal set of mainline builds
 
 ---
  build-configs.yaml              | 11 +++++++++++
