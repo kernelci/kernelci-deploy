@@ -1,15 +1,14 @@
-From 078e9b98987ccce86436228858c1abf8c5c74aa6 Mon Sep 17 00:00:00 2001
+From a5c6ab379f27aad80c89f224623280892df032f7 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Wed, 23 Oct 2019 13:58:34 +0100
-Subject: [PATCH 4/9] STAGING test-configs.yaml: enable boot and baseline with
- clang
+Subject: [PATCH 4/9] STAGING test-configs.yaml: enable baseline with clang
 
 ---
- test-configs.yaml | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ test-configs.yaml | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/test-configs.yaml b/test-configs.yaml
-index 742f42c4b9fd..9be0bd105bc9 100644
+index 91f5f6817695..c00427a87fd1 100644
 --- a/test-configs.yaml
 +++ b/test-configs.yaml
 @@ -81,14 +81,14 @@ test_plans:
@@ -29,15 +28,6 @@ index 742f42c4b9fd..9be0bd105bc9 100644
  
    baseline-fastboot:
      rootfs: buildroot_baseline_ramdisk
-@@ -134,7 +134,7 @@ test_plans:
-   boot:
-     rootfs: buildroot_ramdisk
-     filters:
--      - blacklist: *kselftest_defconfig_clang_environment_filter
-+      - blacklist: *kselftest_defconfig_filter
- 
-   boot-nfs:
-     rootfs: buildroot_nfs
 -- 
 2.20.1
 
