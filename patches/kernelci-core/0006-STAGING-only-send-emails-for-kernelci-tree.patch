@@ -1,21 +1,20 @@
-From 40cdafb6860ccf0e3b1dfd7f2558a6d1cdc2a3fc Mon Sep 17 00:00:00 2001
+From 9f71e9ada752c9d5dfd11962d5dfe01d65a0f88e Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Thu, 30 Jan 2020 14:33:44 +0000
 Subject: [PATCH 6/9] STAGING only send emails for kernelci tree
 
 ---
- jenkins/kernel-arch-complete.sh | 6 ++++++
- 1 file changed, 6 insertions(+)
+ jenkins/kernel-arch-complete.sh | 5 +++++
+ 1 file changed, 5 insertions(+)
 
 diff --git a/jenkins/kernel-arch-complete.sh b/jenkins/kernel-arch-complete.sh
-index 7ba6c5df435d..59b81ee89adb 100755
+index b6e61150d387..e9a720336eea 100755
 --- a/jenkins/kernel-arch-complete.sh
 +++ b/jenkins/kernel-arch-complete.sh
-@@ -34,6 +34,12 @@ fi
- 
+@@ -35,6 +35,11 @@ fi
      echo "Build has now finished, reporting result to dashboard."
      curl -X POST -H "Authorization: $EMAIL_AUTH_TOKEN" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "git_branch": "'$BRANCH'"}' ${API}/job
-+
+ 
 +if [ "$TREE_NAME" != "kernelci" ]; then
 +    echo "Only dealing with kernelci tree on staging.kernelci.org"
 +    exit 0

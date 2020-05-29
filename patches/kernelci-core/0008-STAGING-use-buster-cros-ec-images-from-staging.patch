@@ -1,4 +1,4 @@
-From 27c524d8fc1832eafefe7519ce1e09a7f55974ae Mon Sep 17 00:00:00 2001
+From 0e0c32c3c82eba29759b3d62e17e4b821247c31a Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Thu, 14 May 2020 15:56:37 +0100
 Subject: [PATCH 8/9] STAGING use buster-cros-ec images from staging
@@ -8,7 +8,7 @@ Subject: [PATCH 8/9] STAGING use buster-cros-ec images from staging
  1 file changed, 8 insertions(+), 2 deletions(-)
 
 diff --git a/test-configs.yaml b/test-configs.yaml
-index 3355a24fe787..b283c8ba7626 100644
+index 9be0bd105bc9..04998fc51df7 100644
 --- a/test-configs.yaml
 +++ b/test-configs.yaml
 @@ -20,6 +20,12 @@ file_system_types:

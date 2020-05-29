@@ -1,12 +1,11 @@
-From 02246d44d93f136ba069a1bec3b65d60500e78d4 Mon Sep 17 00:00:00 2001
+From 049f2d78a3110673c83e43771869e9711beaa025 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Wed, 8 Apr 2020 21:48:18 +0100
 Subject: [PATCH 7/9] STAGING enable minimal set of mainline builds
 
 ---
- build-configs.yaml              | 11 +++++++++++
- jenkins/kernel-arch-complete.sh |  2 +-
- 2 files changed, 12 insertions(+), 1 deletion(-)
+ build-configs.yaml | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
 diff --git a/build-configs.yaml b/build-configs.yaml
 index 01331d636b2c..d8a2da5a2992 100644
@@ -30,19 +29,6 @@ index 01331d636b2c..d8a2da5a2992 100644
  
    media:
      tree: media
-diff --git a/jenkins/kernel-arch-complete.sh b/jenkins/kernel-arch-complete.sh
-index 59b81ee89adb..e84c2fdc2938 100755
---- a/jenkins/kernel-arch-complete.sh
-+++ b/jenkins/kernel-arch-complete.sh
-@@ -243,7 +243,7 @@ fi
-         curl -X POST -H "Authorization: $EMAIL_AUTH_TOKEN" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "git_branch": "'$BRANCH'", "boot_report": 1, "format": ["txt"], "send_to": ["rafael@kernel.org", "linux-pm@vger.kernel.org", "kernel-build-reports@lists.linaro.org"], "delay": 2700}' ${API}/send
-         curl -X POST -H "Authorization: $EMAIL_AUTH_TOKEN" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "git_branch": "'$BRANCH'",  "report_type": "test", "plan": "baseline", "send_to": ["rafael@kernel.org", "linux-pm@vger.kernel.org", "kernel-build-reports@lists.linaro.org"], "format": ["txt"], "delay": 2700}' ${API}/send
-         curl -X POST -H "Authorization: $EMAIL_AUTH_TOKEN" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "git_branch": "'$BRANCH'",  "report_type": "test", "plan": "sleep", "send_to": ["rafael@kernel.org", "linux-pm@vger.kernel.org", "kernel-build-reports@lists.linaro.org"], "format": ["txt"], "delay": 3600}' ${API}/send
--    elif [ "$TREE_NAME" == "kernelci" ]; then
-+    elif [ "$TREE_NAME" == "kernelci" ] || [ "$TREE_NAME" == "mainline" ]; then
-         echo "Sending results to kernelci folks"
-         curl -X POST -H "Authorization: $EMAIL_AUTH_TOKEN" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "git_branch": "'$BRANCH'", "build_report": 1, "format": ["txt"], "send_to": ["gtucker@collabora.com", "kernelci-results-staging@groups.io"], "delay": 0}' ${API}/send
-         curl -X POST -H "Authorization: $EMAIL_AUTH_TOKEN" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "git_branch": "'$BRANCH'", "boot_report": 1, "format": ["txt"], "send_to": ["gtucker@collabora.com", "kernelci-results-staging@groups.io"], "delay": 1800}' ${API}/send
 -- 
 2.20.1
 
