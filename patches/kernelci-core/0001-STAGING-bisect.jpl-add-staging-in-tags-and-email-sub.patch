@@ -1,7 +1,7 @@
-From 45f381422620fbec86a489fbf48b813e727f5086 Mon Sep 17 00:00:00 2001
+From fe44e2eeadf364476fba3cb58fd59378bf3fa797 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Wed, 22 Nov 2017 15:09:05 +0000
-Subject: [PATCH 1/7] STAGING bisect.jpl: add -staging in tags and email
+Subject: [PATCH 1/8] STAGING bisect.jpl: add -staging in tags and email
  subjects
 
 ---
@@ -9,7 +9,7 @@ Subject: [PATCH 1/7] STAGING bisect.jpl: add -staging in tags and email
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/jenkins/bisect.jpl b/jenkins/bisect.jpl
-index 43ee6188261e..57f1a81f1097 100644
+index 22afdef4d879..c80cefc1c95f 100644
 --- a/jenkins/bisect.jpl
 +++ b/jenkins/bisect.jpl
 @@ -123,7 +123,7 @@ def createTag(kdir, iteration) {
@@ -30,7 +30,7 @@ index 43ee6188261e..57f1a81f1097 100644
  
      dir(kci_core) {
          withCredentials([string(credentialsId: params.KCI_TOKEN_ID,
-@@ -749,7 +749,7 @@ ${params_summary}""")
+@@ -748,7 +748,7 @@ ${params_summary}""")
              currentBuild.result = "FAILURE"
  
              def tree_branch = "${params.KERNEL_TREE}/${params.KERNEL_BRANCH}"
