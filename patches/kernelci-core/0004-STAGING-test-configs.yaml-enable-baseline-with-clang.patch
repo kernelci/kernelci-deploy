@@ -1,14 +1,14 @@
-From e9c0d3d9e86fa5e991d87a4324e971cc64973f94 Mon Sep 17 00:00:00 2001
+From a3be8b0aabc83b32270d9814307bca42c69dad31 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Wed, 23 Oct 2019 13:58:34 +0100
-Subject: [PATCH 4/8] STAGING test-configs.yaml: enable baseline with clang
+Subject: [PATCH 4/7] STAGING test-configs.yaml: enable baseline with clang
 
 ---
  test-configs.yaml | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/test-configs.yaml b/test-configs.yaml
-index 10a1236082ca..bd23a3bff8f7 100644
+index 36ce0fca0145..96922e2888b7 100644
 --- a/test-configs.yaml
 +++ b/test-configs.yaml
 @@ -81,14 +81,14 @@ test_plans:
