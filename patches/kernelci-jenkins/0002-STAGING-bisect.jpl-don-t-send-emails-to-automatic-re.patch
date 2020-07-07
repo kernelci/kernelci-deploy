@@ -1,0 +1,25 @@
+From 16c4f6839b84958c2c58d3746c9ee78a15213445 Mon Sep 17 00:00:00 2001
+From: "kernelci.org bot" <bot@kernelci.org>
+Date: Tue, 7 Jul 2020 21:56:45 +0100
+Subject: [PATCH 2/2] STAGING bisect.jpl: don't send emails to automatic
+ recipients
+
+---
+ jobs/bisect.jpl | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/jobs/bisect.jpl b/jobs/bisect.jpl
+index c80cefc1c95f..57f1a81f1097 100644
+--- a/jobs/bisect.jpl
++++ b/jobs/bisect.jpl
+@@ -531,6 +531,7 @@ PYTHON_EGG_CACHE=${egg_cache} \
+ --kdir=${kdir} \
+ --subject=\"${subject}\" \
+ --to=\"${params.EMAIL_RECIPIENTS}\" \
++--no-auto-recipients \
+ """)
+         }
+     }
+-- 
+2.20.1
+
