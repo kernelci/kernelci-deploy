@@ -1,31 +1,27 @@
-From 7759fb5d486007a9e15d596a6f99f5f29b657d50 Mon Sep 17 00:00:00 2001
+From 4f619b545f2c83ab4a90d00e6e14ad2657b0e2bd Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Thu, 20 Feb 2020 19:47:01 +0000
 Subject: [PATCH 2/5] STAGING build-configs.yaml: build arm64 BIG_ENDIAN with
  gcc and clang
 
 ---
- build-configs.yaml | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ build-configs.yaml | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/build-configs.yaml b/build-configs.yaml
-index e747dde491d8..18fd54e0c4ea 100644
+index da62f8057c09..f25e7df3e4f6 100644
 --- a/build-configs.yaml
 +++ b/build-configs.yaml
-@@ -632,9 +632,11 @@ build_configs:
-             base_defconfig: 'multi_v7_defconfig'
+@@ -636,6 +636,8 @@ build_configs:
+           arm64: &staging_arm64
              filters:
-               - whitelist: {defconfig: ['multi_v7_defconfig']}
--          arm64: &staging_arm64
-+          arm64:
-             filters:
-               - whitelist: {defconfig: ['defconfig']}
+               - passlist: {defconfig: ['defconfig']}
 +            extra_configs:
 +              - 'defconfig+CONFIG_CPU_BIG_ENDIAN=y'
            i386:
              base_defconfig: 'i386_defconfig'
              filters:
-@@ -654,7 +656,9 @@ build_configs:
+@@ -655,7 +657,9 @@ build_configs:
          build_environment: clang-9
          architectures:
            arm: *staging_arm
