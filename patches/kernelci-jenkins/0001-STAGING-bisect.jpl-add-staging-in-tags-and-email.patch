@@ -1,4 +1,4 @@
-From ea9f71fbe8e300a6ff40cbd67a5add5c5756f644 Mon Sep 17 00:00:00 2001
+From 79af277cce5270522b0cb6f84b5f4d1bf60fd386 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 7 Jul 2020 21:56:00 +0100
 Subject: [PATCH 1/2] STAGING bisect.jpl: add -staging in tags and email
@@ -8,7 +8,7 @@ Subject: [PATCH 1/2] STAGING bisect.jpl: add -staging in tags and email
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/jobs/bisect.jpl b/jobs/bisect.jpl
-index 22afdef4d879..c80cefc1c95f 100644
+index b12bd0cf4b58..e5aeb214a14b 100644
 --- a/jobs/bisect.jpl
 +++ b/jobs/bisect.jpl
 @@ -123,7 +123,7 @@ def createTag(kdir, iteration) {
@@ -28,7 +28,7 @@ index 22afdef4d879..c80cefc1c95f 100644
 +${params.TEST_CASE} on ${params.TARGET} #${env.BUILD_NUMBER}-staging"
  
      dir(kci_core) {
-         withCredentials([string(credentialsId: params.KCI_TOKEN_ID,
+         withCredentials([string(credentialsId: params.KCI_API_TOKEN_ID,
 @@ -748,7 +748,7 @@ ${params_summary}""")
              currentBuild.result = "FAILURE"
  
