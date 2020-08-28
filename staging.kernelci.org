@@ -1,0 +1,58 @@
+#!/bin/sh
+
+# Periodic job run on staging.kernelci.org to merge together all the pending
+# PRs and update the staging.kernelci.org branches, then update Docker images
+# and trigger a full build/test cycle with a kernel branch based on linux-next.
+
+set -e
+
+echo "Updating local repository"
+git pull --ff-only
+
+echo "Updating Jenkins jobs"
+./pending.py kernelci-jenkins --push
+
+echo "Triggering Jenkins seed job"
+python3 trigger.py job-dsl
+
+echo "Updating kernelci-core"
+./pending.py kernelci-core --push
+
+echo "Checking for missing indexes by finding COLLSCAN events"
+echo "db.system.profile.aggregate([{\$match: {ns: {\$in: ['kernel-ci.test_case', 'kernel-ci.test_group', 'kernel-ci.test_regression', 'kernel-ci.build']}, planSummary: 'COLLSCAN'}}, {\$group: {_id: {ns: '\$ns', planSummary: '\$planSummary'}}}])" | mongo kernel-ci
+
+echo "Dropping Mongo DB indexes"
+echo "db.test_case.dropIndexes(); db.test_group.dropIndexes(); db.test_regression.dropIndexes(); db.build.dropIndexes();" | mongo kernel-ci
+
+echo "Updating kernelci-backend"
+./pending.py kernelci-backend --push
+# ToDo: check if there were any changes to skip if there weren't any
+./ansible kernelci-backend api.staging.kernelci.org
+
+echo "Resetting and enabling the Mongo DB profiler"
+echo "db.setProfilingLevel(0); db.system.profile.drop(); db.setProfilingLevel(2);" | mongo kernel-ci
+
+echo "Updating kernelci-frontend"
+./pending.py kernelci-frontend --push
+# ToDo: check if there were any changes to skip if there weren't any
+./ansible kernelci-frontend staging.kernelci.org
+
+echo "Pushing kernel test branch"
+./kernel.py \
+    --push \
+    --from-url=https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git \
+    --from-branch=master
+
+echo "Updating Docker images"
+# ToDo: check if there were any changes to skip if there weren't any
+cd checkout/kernelci-core/jenkins/dockerfiles
+./build-and-push.sh -pbdik -t kernelci/staging-
+cd -
+
+echo "Triggering Jenkins build job"
+python3 \
+    trigger.py \
+    --json=data/staging-monitor.json \
+    kernel-tree-monitor
+
+exit 0
