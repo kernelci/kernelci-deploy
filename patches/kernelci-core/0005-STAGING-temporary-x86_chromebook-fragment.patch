@@ -1,4 +1,4 @@
-From 1623a6a80240e0fdd3e69c9a5b1e64cf4a441499 Mon Sep 17 00:00:00 2001
+From 99bfe418b2bcad3c7ec90751aac583aff44a909f Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 14 Jul 2020 00:17:17 +0100
 Subject: [PATCH 5/6] STAGING temporary x86_chromebook fragment
@@ -8,10 +8,10 @@ Subject: [PATCH 5/6] STAGING temporary x86_chromebook fragment
  1 file changed, 1 insertion(+)
 
 diff --git a/build-configs.yaml b/build-configs.yaml
-index 5109b173784c..70f48e9c4888 100644
+index f281e966f642..c0524d26dad4 100644
 --- a/build-configs.yaml
 +++ b/build-configs.yaml
-@@ -697,6 +697,7 @@ build_configs:
+@@ -690,6 +690,7 @@ build_configs:
                - passlist: {defconfig: ['defconfig']}
            x86_64: &staging_x86_64
              base_defconfig: 'x86_64_defconfig'

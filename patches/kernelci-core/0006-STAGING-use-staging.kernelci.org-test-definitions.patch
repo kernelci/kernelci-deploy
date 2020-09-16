@@ -1,4 +1,4 @@
-From e9e6c481599ea5399f28e19908f3a8f81054d40a Mon Sep 17 00:00:00 2001
+From 1b035c4ae7ab58398338066c15f4442ea5157894 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 15 Sep 2020 10:22:30 +0100
 Subject: [PATCH 6/6] STAGING use staging.kernelci.org test-definitions
