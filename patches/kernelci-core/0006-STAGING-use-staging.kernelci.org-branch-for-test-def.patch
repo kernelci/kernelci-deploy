@@ -1,0 +1,40 @@
+From f97f3929b5072f23db627d749eb0591b9cbc3583 Mon Sep 17 00:00:00 2001
+From: "kernelci.org bot" <bot@kernelci.org>
+Date: Tue, 15 Sep 2020 10:22:30 +0100
+Subject: [PATCH 6/6] STAGING use staging.kernelci.org branch for test
+ definitions
+
+---
+ templates/kselftest/kselftest.jinja2 | 2 +-
+ templates/sleep/sleep.jinja2         | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/templates/kselftest/kselftest.jinja2 b/templates/kselftest/kselftest.jinja2
+index c3ae8d75eddf..6812cac88eaa 100644
+--- a/templates/kselftest/kselftest.jinja2
++++ b/templates/kselftest/kselftest.jinja2
+@@ -17,7 +17,7 @@
+ 
+     - repository: https://github.com/kernelci/test-definitions.git
+       from: git
+-      revision: kernelci.org
++      revision: staging.kernelci.org
+       path: automated/linux/kselftest/kselftest.yaml
+       name: kselftest
+       parameters:
+diff --git a/templates/sleep/sleep.jinja2 b/templates/sleep/sleep.jinja2
+index 9e70b1b9fe48..b3e6ca4a204f 100644
+--- a/templates/sleep/sleep.jinja2
++++ b/templates/sleep/sleep.jinja2
+@@ -3,7 +3,7 @@
+       minutes: 5
+     definitions:
+     - repository: https://github.com/kernelci/kernelci-core
+-      branch: kernelci.org
++      branch: staging.kernelci.org
+       from: git
+       history: False
+       path: templates/sleep/sleep.yaml
+-- 
+2.20.1
+
