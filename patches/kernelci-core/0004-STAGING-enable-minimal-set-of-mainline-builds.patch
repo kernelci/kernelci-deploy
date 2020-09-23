@@ -1,4 +1,4 @@
-From a308292672c5be056ca6f98379af2de5f9664bc1 Mon Sep 17 00:00:00 2001
+From a768b5f6bee4baa6bbcbf71237145270544a6d0b Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Wed, 8 Apr 2020 21:48:18 +0100
 Subject: [PATCH 4/6] STAGING enable minimal set of mainline builds
@@ -8,10 +8,10 @@ Subject: [PATCH 4/6] STAGING enable minimal set of mainline builds
  1 file changed, 11 insertions(+)
 
 diff --git a/build-configs.yaml b/build-configs.yaml
-index ac7d4ab0b195..00ea4919a9d2 100644
+index c5548cc631a7..0d66f70f2dba 100644
 --- a/build-configs.yaml
 +++ b/build-configs.yaml
-@@ -757,6 +757,17 @@ build_configs:
+@@ -761,6 +761,17 @@ build_configs:
    mainline:
      tree: mainline
      branch: 'master'
