@@ -85,8 +85,11 @@ def main(args):
     if not kernelci.apply_patches(path, patches_path):
         print_color('red', "Aborting, all patches must apply.")
         return False
-    tag = args.tag or kernelci.date_tag(path, args.tag_prefix)
-    kernelci.create_tag(path, tag)
+    tag = None if args.no_tag else (
+        args.tag or kernelci.date_tag(path, args.tag_prefix)
+    )
+    if tag:
+        kernelci.create_tag(path, tag)
     if args.push:
         branch = args.branch or settings.get('branch')
         if not branch:
@@ -98,7 +101,7 @@ def main(args):
             print_color('red', "No SSH key provided.")
             return False
         kernelci.push_tag_and_branch(path, ssh_key, branch, tag)
-    else:
+    elif tag:
         print("\nTag: {}".format(tag))
     return True
 
@@ -112,6 +115,8 @@ Create staging.kernelci.org branch with all pending PRs")
                         help="Tag to create, default is to use current date")
     parser.add_argument("--tag-prefix", default="staging-",
                         help="Prefix to create date with current date")
+    parser.add_argument("--no-tag", action='store_true',
+                        help="Don't create any tag")
     parser.add_argument("--branch",
                         help="Name of the branch to force-push to")
     parser.add_argument("--master", default="master",

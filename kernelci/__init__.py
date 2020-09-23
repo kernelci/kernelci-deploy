@@ -129,7 +129,7 @@ def push_tag_and_branch(path, ssh_key, branch, tag):
     ssh_agent(ssh_key, """\
 cd {path}
 git push --quiet --force origin HEAD:{branch} {tag}
-""".format(path=path, branch=branch, tag=tag))
+""".format(path=path, branch=branch, tag=(tag or '')))
 
 
 class Settings:
