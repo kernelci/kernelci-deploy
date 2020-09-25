@@ -1,4 +1,4 @@
-From 7ab82f1576ecd4dd399e24037a07fcfa062d24b4 Mon Sep 17 00:00:00 2001
+From 367e51aba14caa4091c1391651ecbf072df44c13 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 14 Jul 2020 00:17:17 +0100
 Subject: [PATCH 5/6] STAGING temporary x86_chromebook fragment

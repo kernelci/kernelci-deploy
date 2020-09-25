@@ -1,4 +1,4 @@
-From d57cb9e2ca3ceefbf3af663cfd87a9b7cbbbb8ae Mon Sep 17 00:00:00 2001
+From 7455673960d194fc213efe17a40bb86340936ceb Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 15 Sep 2020 10:22:30 +0100
 Subject: [PATCH 6/6] STAGING use staging.kernelci.org branch for test
@@ -25,7 +25,7 @@ index c3ae8d75eddf..6812cac88eaa 100644
        name: kselftest
        parameters:
 diff --git a/templates/ltp/ltp.jinja2 b/templates/ltp/ltp.jinja2
-index d23205e5ddaf..403a7dca0cf1 100644
+index a916a511e453..0fd9cc679955 100644
 --- a/templates/ltp/ltp.jinja2
 +++ b/templates/ltp/ltp.jinja2
 @@ -5,7 +5,7 @@
@@ -35,7 +35,7 @@ index d23205e5ddaf..403a7dca0cf1 100644
 -         revision: kernelci.org
 +         revision: staging.kernelci.org
           path: automated/linux/ltp/ltp.yaml
-          name: ltp-ipc
+          name: {{ plan }}
           parameters:
 diff --git a/templates/preempt-rt/preempt-rt.jinja2 b/templates/preempt-rt/preempt-rt.jinja2
 index 75bbe27d13e7..9cfc451de3da 100644
