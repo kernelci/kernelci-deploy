@@ -1,7 +1,7 @@
-From 367e51aba14caa4091c1391651ecbf072df44c13 Mon Sep 17 00:00:00 2001
+From fe255cc7208d5b99d1718774a5e97e456828330e Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 14 Jul 2020 00:17:17 +0100
-Subject: [PATCH 5/6] STAGING temporary x86_chromebook fragment
+Subject: [PATCH 5/7] STAGING temporary x86_chromebook fragment
 
 ---
  build-configs.yaml | 1 +
