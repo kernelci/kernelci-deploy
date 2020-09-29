@@ -6,53 +6,91 @@
 
 set -e
 
-echo "Updating local repository"
-git pull --ff-only
+cmd_pull() {
+    echo "Updating local repository"
+    git pull --ff-only
+}
 
-echo "Updating Jenkins jobs"
-./pending.py kernelci-jenkins --push
+cmd_jenkins() {
+    echo "Updating Jenkins jobs"
+    ./pending.py kernelci-jenkins --push
 
-echo "Triggering Jenkins seed job"
-python3 trigger.py job-dsl
+    echo "Triggering Jenkins seed job"
+    python3 trigger.py job-dsl
+}
 
-echo "Updating kernelci-core"
-./pending.py kernelci-core --push
+cmd_core() {
+    echo "Updating kernelci-core"
+    ./pending.py kernelci-core --push
+}
 
-echo "Checking for missing indexes by finding COLLSCAN events"
-echo "db.system.profile.aggregate([{\$match: {ns: {\$in: ['kernel-ci.test_case', 'kernel-ci.test_group', 'kernel-ci.test_regression', 'kernel-ci.build']}, planSummary: 'COLLSCAN'}}, {\$group: {_id: {ns: '\$ns', planSummary: '\$planSummary'}}}])" | mongo kernel-ci
+cmd_backend() {
+    echo "Checking for missing indexes by finding COLLSCAN events"
+    echo "db.system.profile.aggregate([{\$match: {ns: {\$in: ['kernel-ci.test_case', 'kernel-ci.test_group', 'kernel-ci.test_regression', 'kernel-ci.build']}, planSummary: 'COLLSCAN'}}, {\$group: {_id: {ns: '\$ns', planSummary: '\$planSummary'}}}])" | mongo kernel-ci
 
-echo "Dropping Mongo DB indexes"
-echo "db.test_case.dropIndexes(); db.test_group.dropIndexes(); db.test_regression.dropIndexes(); db.build.dropIndexes();" | mongo kernel-ci
+    echo "Dropping Mongo DB indexes"
+    echo "db.test_case.dropIndexes(); db.test_group.dropIndexes(); db.test_regression.dropIndexes(); db.build.dropIndexes();" | mongo kernel-ci
 
-echo "Updating kernelci-backend"
-./pending.py kernelci-backend --push
-# ToDo: check if there were any changes to skip if there weren't any
-./ansible kernelci-backend api.staging.kernelci.org
+    echo "Updating kernelci-backend"
+    ./pending.py kernelci-backend --push
+    # ToDo: check if there were any changes to skip if there weren't any
+    ./ansible kernelci-backend api.staging.kernelci.org
 
-echo "Resetting and enabling the Mongo DB profiler"
-echo "db.setProfilingLevel(0); db.system.profile.drop(); db.setProfilingLevel(2);" | mongo kernel-ci
+    echo "Resetting and enabling the Mongo DB profiler"
+    echo "db.setProfilingLevel(0); db.system.profile.drop(); db.setProfilingLevel(2);" | mongo kernel-ci
+}
 
-echo "Updating kernelci-frontend"
-./pending.py kernelci-frontend --push
-# ToDo: check if there were any changes to skip if there weren't any
-./ansible kernelci-frontend staging.kernelci.org
+cmd_frontend() {
+    echo "Updating kernelci-frontend"
+    ./pending.py kernelci-frontend --push
+    # ToDo: check if there were any changes to skip if there weren't any
+    ./ansible kernelci-frontend staging.kernelci.org
+}
 
-echo "Pushing kernel test branch"
-./kernel.py \
-    --push \
-    --from-url=https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git \
-    --from-branch=master
+cmd_kernel() {
+    echo "Pushing kernel test branch"
+    ./kernel.py \
+        --push \
+        --ssh-key=keys/id_rsa_staging.kernelci.org \
+        --from-url=https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git \
+        --from-branch=master
+}
 
-echo "Updating Docker images"
-# ToDo: check if there were any changes to skip if there weren't any
-cd checkout/kernelci-core/jenkins/dockerfiles
-./build-and-push.sh -pbdik -t kernelci/staging-
-cd -
+cmd_docker() {
+    echo "Updating Docker images"
+    # ToDo: check if there were any changes to skip if there weren't any
+    cd checkout/kernelci-core/jenkins/dockerfiles
+    ./build-and-push.sh -pbdik -t kernelci/staging-
+    cd -
+}
 
-echo "Triggering Jenkins build job"
-python3 \
-    trigger.py \
-    --json=data/staging-monitor.json \
-    kernel-tree-monitor
+cmd_monitor() {
+    echo "Triggering Jenkins kernel-tree-monitor job"
+    python3 \
+        trigger.py \
+        --json=data/staging-monitor.json \
+        kernel-tree-monitor
+}
+
+cmd_all() {
+    cmd_pull
+    cmd_jenkins
+    cmd_core
+    cmd_backend
+    cmd_frontend
+    cmd_kernel
+    cmd_docker
+    cmd_monitor
+}
+
+cmd="${1}"
+
+if [ -n "$cmd" ]; then
+    shift 1
+else
+    cmd="all"
+fi
+
+"cmd_"$cmd $@
 
 exit 0
