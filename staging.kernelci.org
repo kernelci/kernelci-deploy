@@ -48,12 +48,36 @@ cmd_frontend() {
 }
 
 cmd_kernel() {
-    echo "Pushing kernel test branch"
+    tree="${1:-next}"
+
+    echo "Pushing kernel test branch for ${tree}"
+
+    case $tree in
+        next)
+            url=https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+            branch=master
+            ;;
+        mainline)
+            url=https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+            branch=master
+            ;;
+        stable)
+            url=https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+            branch=linux-5.8.y
+            ;;
+        *)
+            echo "Unknown tree"
+            exit 1
+            ;;
+    esac
+
     ./kernel.py \
         --push \
         --ssh-key=keys/id_rsa_staging.kernelci.org \
-        --from-url=https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git \
-        --from-branch=master
+        --from-url=$url \
+        --from-branch=$branch \
+        --branch=kernelci-staging-"$tree" \
+        --tag-prefix=kernelci-staging-"$tree"-
 }
 
 cmd_docker() {
@@ -73,12 +97,14 @@ cmd_monitor() {
 }
 
 cmd_all() {
+    tree="${1:-next}"
+
     cmd_pull
     cmd_jenkins
     cmd_core
     cmd_backend
     cmd_frontend
-    cmd_kernel
+    cmd_kernel $tree
     cmd_docker
     cmd_monitor
 }
