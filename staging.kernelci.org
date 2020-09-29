@@ -96,8 +96,37 @@ cmd_monitor() {
         kernel-tree-monitor
 }
 
+cmd_rotate_tree() {
+    if [ -e .tree ]; then
+        last=$(cat .tree)
+    else
+        last=
+    fi
+
+    case $last in
+        next)
+            tree=mainline
+            ;;
+        mainline)
+            tree=stable
+            ;;
+        stable)
+            tree=next
+            ;;
+        *)
+            tree=next
+            ;;
+    esac
+
+    echo $tree > .tree
+    echo $tree
+}
+
 cmd_all() {
-    tree="${1:-next}"
+    tree="$1"
+
+    [ -z $tree ] && tree=$(cmd_rotate_tree)
+    echo "Kernel tree: $tree"
 
     cmd_pull
     cmd_jenkins
