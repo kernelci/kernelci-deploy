@@ -1,7 +1,7 @@
-From d749c76e0910e06b8f293ddab0ebdaf23b7b97ac Mon Sep 17 00:00:00 2001
+From 365eaf528680abb0486b172a9a9e214d58e4bc37 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 15 Sep 2020 10:22:30 +0100
-Subject: [PATCH 6/7] STAGING use staging.kernelci.org branch for test
+Subject: [PATCH 6/6] STAGING use staging.kernelci.org branch for test
  definitions
 
 ---

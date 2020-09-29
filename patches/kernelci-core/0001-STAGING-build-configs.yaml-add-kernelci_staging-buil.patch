@@ -1,61 +1,59 @@
-From 2a22664d6415377848b193ecf8df9e2b3ce8a6f2 Mon Sep 17 00:00:00 2001
+From ced699faed720a374f7e80398c4a105174072201 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 14 Feb 2019 15:16:26 +0000
-Subject: [PATCH 1/7] STAGING build-configs.yaml: add kernelci_staging build
- config
+Subject: [PATCH 1/6] STAGING build-configs.yaml: add kernelci_staging-* build
+ configs
 
 ---
- build-configs.yaml | 41 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 41 insertions(+)
+ build-configs.yaml | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
 diff --git a/build-configs.yaml b/build-configs.yaml
-index 0c30930fed5f..c5548cc631a7 100644
+index 0c30930fed5f..4cc2f4871425 100644
 --- a/build-configs.yaml
 +++ b/build-configs.yaml
-@@ -682,6 +682,47 @@ build_configs:
+@@ -682,6 +682,45 @@ build_configs:
      branch: 'kernelci.org'
      variants: *stable_variants
  
-+  kernelci_staging:
++  kernelci_staging-mainline:
 +    tree: kernelci
-+    branch: 'staging.kernelci.org'
++    branch: 'kernelci-staging-mainline'
 +    variants:
-+      gcc-8:
++      gcc-8: &staging_gcc
 +        build_environment: gcc-8
-+        fragments: ['kselftest']
++        fragments: [kselftest]
 +        architectures:
-+          arc:
-+            base_defconfig: 'haps_hs_smp_defconfig'
-+            filters:
-+              - passlist: {defconfig: ['haps_hs_smp_defconfig']}
-+          arm: &staging_arm
-+            base_defconfig: 'multi_v7_defconfig'
-+            filters:
-+              - passlist: {defconfig: ['multi_v7_defconfig']}
-+          arm64: &staging_arm64
-+            filters:
-+              - passlist: {defconfig: ['defconfig']}
-+          i386:
-+            base_defconfig: 'i386_defconfig'
-+            filters:
-+              - passlist: {defconfig: ['i386_defconfig']}
-+          mips:
-+            base_defconfig: '32r2el_defconfig'
-+            filters:
-+              - passlist: {defconfig: ['32r2el_defconfig']}
-+          riscv:
-+            filters:
-+              - passlist: {defconfig: ['defconfig']}
-+          x86_64: &staging_x86_64
-+            base_defconfig: 'x86_64_defconfig'
-+            filters:
-+              - passlist: {defconfig: ['x86_64_defconfig']}
++          arc: *arc_defconfig
++          arm: *arm_defconfig
++          arm64: *arm64_defconfig
++          i386: *i386_defconfig
++          mips: *mips_defconfig
++          riscv: *riscv_defconfig
++          x86_64: *x86_64_defconfig
++      clang-10: &staging_clang
++        build_environment: clang-10
++        fragments: [kselftest]
++        architectures:
++          arm: *arm_defconfig
++          arm64: *arm64_defconfig
++          x86_64: *x86_64_defconfig
++
++  kernelci_staging-next:
++    tree: kernelci
++    branch: 'kernelci-staging-next'
++    variants:
++      gcc-8: *staging_gcc
 +      clang-11:
++        <<: *staging_clang
 +        build_environment: clang-11
-+        architectures:
-+          arm: *staging_arm
-+          arm64: *staging_arm64
-+          x86_64: *staging_x86_64
++
++  kernelci_staging-stable:
++    tree: kernelci
++    branch: 'kernelci-staging-stable'
++    variants:
++      gcc-8: *staging_gcc
++      clang-10: *staging_clang
 +
    khilman:
      tree: khilman
