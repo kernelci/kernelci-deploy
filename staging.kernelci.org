@@ -76,8 +76,8 @@ cmd_kernel() {
         --ssh-key=keys/id_rsa_staging.kernelci.org \
         --from-url=$url \
         --from-branch=$branch \
-        --branch=kernelci-staging-"$tree" \
-        --tag-prefix=kernelci-staging-"$tree"-
+        --branch=staging-"$tree" \
+        --tag-prefix=staging-"$tree"-
 }
 
 cmd_docker() {
