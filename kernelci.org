@@ -1,0 +1,81 @@
+#!/bin/sh
+
+# Tool to update the kernelci.org production instance
+
+set -e
+
+cmd_pull() {
+    echo "Updating local repository"
+    git pull --ff-only
+}
+
+cmd_core() {
+    # First, manually push to kernelci-core/kernelci.org branch
+
+    echo "Getting kernelci.org branch from kernelci-core"
+    cd checkout/kernelci-core
+    git remote update origin
+    git checkout origin/kernelci.org
+    cd -
+}
+
+cmd_rootfs() {
+    echo "Updating debos Docker image"
+    cd checkout/kernelci-core/jenkins/dockerfiles
+    while true; do
+        ./build-and-push.sh -pd && break || { echo "Retrying..."; sleep 3; }
+    done
+    cd -
+
+    echo "Starting rootfs build jobs"
+    python3 \
+        trigger.py \
+        --settings=data/prod-jenkins.ini \
+        rootfs-build-trigger
+}
+
+cmd_backend() {
+    # First, manually update kernelci-backend kernelci.org branch
+
+    rev="${1:-kernelci.org}"
+    echo "Updating kernelci-backend to $rev"
+    ./ansible kernelci-backend api.kernelci.org $rev
+}
+
+cmd_frontend() {
+    # First, manually update kernelci-frontend kernelci.org branch
+
+    rev="${1:-kernelci.org}"
+    echo "Updating kernelci-frontend to $rev"
+    ./ansible kernelci-frontend kernelci.org $rev
+}
+
+cmd_docker() {
+    echo "Updating Docker images"
+    cd checkout/kernelci-core/jenkins/dockerfiles
+    while true; do
+        ./build-and-push.sh -pbik && break || { echo "Retrying..."; sleep 3; }
+    done
+    cd -
+}
+
+cmd_all() {
+    cmd_pull
+    cmd_core
+    cmd_rootfs
+    cmd_backend
+    cmd_frontend
+    cmd_docker
+}
+
+cmd="${1}"
+
+if [ -n "$cmd" ]; then
+    shift 1
+else
+    cmd="all"
+fi
+
+"cmd_"$cmd $@
+
+exit 0
