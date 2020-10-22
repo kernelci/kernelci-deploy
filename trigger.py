@@ -39,7 +39,7 @@ def main(args):
         with open(args.json) as f:
             params = json.load(f)
     else:
-        params = None
+        params = {'_': ''}  # silly...
     api.build_job(args.job, params)
     return True
 
