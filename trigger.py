@@ -38,6 +38,8 @@ def main(args):
     if args.json:
         with open(args.json) as f:
             params = json.load(f)
+    elif args.no_params:
+        params = None
     else:
         params = {'_': ''}  # silly...
     api.build_job(args.job, params)
@@ -56,6 +58,8 @@ if __name__ == '__main__':
                         help="Jenkins API token")
     parser.add_argument("--json",
                         help="Path to a JSON file with job parameters")
+    parser.add_argument("--no-params", action='store_true',
+                        help="Trigger job with no parameters")
     parser.add_argument("--settings", default="data/staging-jenkins.ini",
                         help="Path to a settings file")
     parser.add_argument("--section", default="jenkins",
