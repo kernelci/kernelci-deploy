@@ -63,7 +63,7 @@ cmd_kernel() {
             ;;
         stable)
             url=https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-            branch=linux-5.8.y
+            branch=linux-5.4.y
             ;;
         *)
             echo "Unknown tree"
