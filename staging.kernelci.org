@@ -135,6 +135,7 @@ cmd_all() {
     cmd_frontend
     cmd_kernel $tree
     cmd_docker
+    sleep 300 # wait for MongoDB indexes to get re-created
     cmd_monitor
 }
 
