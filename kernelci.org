@@ -59,10 +59,12 @@ cmd_frontend() {
 }
 
 cmd_docker() {
-    echo "Updating Docker images"
     cd checkout/kernelci-core/jenkins/dockerfiles
+    echo "Re-building Docker images"
+    ./build-and-push.sh -bikn
+    echo "Pushing Docker images"
     while true; do
-        ./build-and-push.sh -pbikn && break || { echo "Retrying..."; sleep 3; }
+        ./build-and-push.sh -bikp && break || { echo "Retrying..."; sleep 3; }
     done
     cd -
 }
