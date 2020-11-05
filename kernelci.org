@@ -77,6 +77,17 @@ cmd_docker() {
     cd -
 }
 
+cmd_kernel() {
+    echo "Pushing kernelci.org LTS kernel branch"
+    ./kernel.py \
+        --from-url=git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git \
+        --from-branch=linux-5.4.y \
+        --branch=kernelci.org \
+        --tag-prefix=kernelci- \
+        --ssh-key=$PWD/keys/id_rsa_kernelci.org \
+        --push
+}
+
 cmd_all() {
     cmd_pull
     cmd_core
