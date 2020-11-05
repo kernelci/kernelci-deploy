@@ -47,7 +47,11 @@ cmd_backend() {
 
     rev="${1:-kernelci.org}"
     echo "Updating kernelci-backend to $rev"
-    ./ansible kernelci-backend api.kernelci.org $rev
+    ./ansible \
+        kernelci-backend \
+        api.kernelci.org \
+        $rev \
+        $PWD/keys/id_rsa_kernelci.org
 }
 
 cmd_frontend() {
@@ -55,7 +59,11 @@ cmd_frontend() {
 
     rev="${1:-kernelci.org}"
     echo "Updating kernelci-frontend to $rev"
-    ./ansible kernelci-frontend kernelci.org $rev
+    ./ansible \
+        kernelci-frontend \
+        kernelci.org \
+        $rev \
+        $PWD/keys/id_rsa_kernelci.org
 }
 
 cmd_docker() {
