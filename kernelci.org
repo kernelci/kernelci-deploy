@@ -24,7 +24,7 @@ cmd_rootfs() {
     echo "Updating debos Docker image"
     cd checkout/kernelci-core/jenkins/dockerfiles
     while true; do
-        ./build-and-push.sh -pd && break || { echo "Retrying..."; sleep 3; }
+        ./build-and-push.sh -pdn && break || { echo "Retrying..."; sleep 3; }
     done
     cd -
 
@@ -55,7 +55,7 @@ cmd_docker() {
     echo "Updating Docker images"
     cd checkout/kernelci-core/jenkins/dockerfiles
     while true; do
-        ./build-and-push.sh -pbik && break || { echo "Retrying..."; sleep 3; }
+        ./build-and-push.sh -pbikn && break || { echo "Retrying..."; sleep 3; }
     done
     cd -
 }
