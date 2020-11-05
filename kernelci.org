@@ -12,10 +12,11 @@ cmd_pull() {
 cmd_core() {
     # First, manually push to kernelci-core/kernelci.org branch
 
-    echo "Getting kernelci.org branch from kernelci-core"
+    branch="${1:-kernelci.org}"
+    echo "Getting $branch branch from kernelci-core"
     cd checkout/kernelci-core
     git remote update origin
-    git checkout origin/kernelci.org
+    git checkout origin/$branch
     cd -
 }
 
