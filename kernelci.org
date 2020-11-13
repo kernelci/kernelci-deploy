@@ -77,6 +77,32 @@ cmd_docker() {
     cd -
 }
 
+cmd_test_definitions() {
+    if [ ! -d 'checkout/test-definitions' ]; then
+        git clone \
+            https://github.com/kernelci/test-definitions.git \
+            checkout/test-definitions
+        cd checkout/test-definitions
+        git remote \
+            set-url origin --push \
+            git@github.com:kernelci/test-definitions.git
+        git remote \
+            add linaro \
+            https://github.com/Linaro/test-definitions.git
+        cd -
+    fi
+
+    cd checkout/test-definitions
+    git remote update origin
+    git remote update linaro
+    git checkout linaro/master
+    tag=kernelci-$(date +%Y%m%d)
+    echo "tag: [$tag]"
+    git tag -a "$tag" -m "$tag"
+    git push --force origin HEAD:kernelci.org "$tag"
+    cd -
+}
+
 cmd_kernel() {
     echo "Pushing kernelci.org LTS kernel branch"
     ./kernel.py \
