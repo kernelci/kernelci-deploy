@@ -30,14 +30,14 @@ cmd_core() {
 cmd_rootfs() {
     echo "Updating debos Docker image"
     cd checkout/kernelci-core/jenkins/dockerfiles
+    ./build-and-push.sh -dn
     while true; do
-        ./build-and-push.sh -pdn && break || { echo "Retrying..."; sleep 3; }
+        ./build-and-push.sh -dp && break || { echo "Retrying..."; sleep 3; }
     done
     cd -
 
     echo "Starting rootfs build jobs"
-    python3 \
-        trigger.py \
+    python3 trigger.py \
         --settings=data/prod-jenkins.ini \
         rootfs-build-trigger
 }
