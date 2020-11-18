@@ -114,6 +114,14 @@ cmd_kernel() {
         --push
 }
 
+cmd_trigger() {
+    echo "Starting Jenkins kernel-build-trigger job"
+    python3 trigger.py \
+        --settings=data/prod-jenkins.ini \
+        --json=data/prod-trigger.json \
+        kernel-build-trigger
+}
+
 cmd_all() {
     cmd_pull
     cmd_core
