@@ -75,6 +75,17 @@ def iterate_prs(repo, skip, users, path):
     print()
 
 
+def delete_old_tags(args, path):
+    tags = kernelci.list_tags(path, args.tag_prefix + "*")
+    if len(tags) > args.tag_limit:
+        limit = args.tag_limit * -1
+        to_delete = tags[:limit]
+        print("Deleting {} tags: {}{}".format(
+            len(to_delete), to_delete[0],
+            "...{}".format(to_delete[-1]) if len(to_delete) > 1 else ""))
+        kernelci.delete_tags(path, to_delete, args.ssh_key)
+
+
 def do_push(args, settings, path):
     tag = args.tag or kernelci.date_tag(path, args.tag_prefix)
     kernelci.create_tag(path, tag)
@@ -117,6 +128,8 @@ def main(args):
         return False
 
     if args.push:
+        if args.tag_limit:
+            delete_old_tags(args, path)
         do_push(args, settings, path)
 
     return True
@@ -131,6 +144,8 @@ Create staging.kernelci.org branch with all pending PRs")
                         help="Tag to create, default is to use current date")
     parser.add_argument("--tag-prefix", default="staging-",
                         help="Prefix to create date with current date")
+    parser.add_argument("--tag-limit", default="20", type=int,
+                        help="Number of previous tags to keep, 0 for all")
     parser.add_argument("--branch",
                         help="Name of the branch to force-push to")
     parser.add_argument("--master", default="master",

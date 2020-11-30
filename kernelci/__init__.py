@@ -89,6 +89,49 @@ git tag -a {tag} -m {tag}
     return tag
 
 
+def list_tags(path, pattern=None):
+    shell_cmd("""\
+cd {}
+git tag -l | xargs git tag -d
+git fetch -q --tags origin
+""".format(path))
+    cmd = "cd {}; git tag --list""".format(path)
+    if pattern:
+        cmd += "  \"{}\"".format(pattern)
+    tags = sorted(shell_cmd(cmd).split())
+    return tags
+
+
+def delete_tags(path, tags, ssh_key):
+    slices = []
+    index = 0
+    n_tags = len(tags)
+    slice_max_len = 100
+    while index != n_tags:
+        slice_len = min((n_tags - index), slice_max_len)
+        slices.append(tags[index:index+slice_len])
+        index += slice_len
+    for tags_slice in slices:
+        tags_str = ' '.join(tags_slice)
+        print("Deleting {}".format(tags_str))
+        cmd = "cd {}; echo {} | xargs git tag -d".format(path, tags_str)
+        shell_cmd(cmd)
+        tags_push_str = ' :'.join(tags_slice)
+        cmd = "cd {}; echo :{} | xargs git push origin".format(
+            path, tags_push_str)
+        shell_cmd(cmd)
+    return
+    for tag in tags:
+        shell_cmd("""\
+cd {path}
+git tag -d {tag}
+""".format(path=path, tag=tag))
+        ssh_agent(ssh_key, """\
+cd {path}
+git push origin :{tag}
+""".format(path=path, tag=tag))
+
+
 def checkout_repository(path, repo, origin="origin", branch="master"):
     if not os.path.exists(path):
         shell_cmd("""\
