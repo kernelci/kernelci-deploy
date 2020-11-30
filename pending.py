@@ -75,6 +75,19 @@ def iterate_prs(repo, skip, users, path):
     print()
 
 
+def do_push(args, settings, tag, path):
+    branch = args.branch or settings.get('branch')
+    if not branch:
+        print_color('red', "No destination branch provided.")
+        return False
+    print("\nPushing tag ({}) and branch ({})".format(tag, branch))
+    ssh_key = kernelci.default_ssh_key(args.ssh_key, branch)
+    if not ssh_key:
+        print_color('red', "No SSH key provided.")
+        return False
+    kernelci.push_tag_and_branch(path, ssh_key, branch, tag)
+
+
 def main(args):
     settings = kernelci.Settings(args.settings, args.project)
     path = os.path.join('checkout', args.project)
@@ -82,36 +95,35 @@ def main(args):
     repo_name = '/'.join([namespace, args.project])
     repo = kernelci.GITHUB.get_repo(repo_name)
     kernelci.checkout_repository(path, repo)
+
     skip = get_skip_list(args, settings)
+
     print("\n{:4} {:16} {:32} {}".format("PR", "User", "Branch", "Status"))
     print("-------------------------------------------------------------")
+
     users = settings.get('users', as_list=True)
     if not users:
         print_color('red', "Aborting, no list of trusted users")
         return False
+
     iterate_prs(repo, skip, users, path)
+
     patches_path = os.path.join('patches', args.project)
     if not kernelci.apply_patches(path, patches_path):
         print_color('red', "Aborting, all patches must apply.")
         return False
+
     tag = None if args.no_tag else (
         args.tag or kernelci.date_tag(path, args.tag_prefix)
     )
     if tag:
         kernelci.create_tag(path, tag)
+
     if args.push:
-        branch = args.branch or settings.get('branch')
-        if not branch:
-            print_color('red', "No destination branch provided.")
-            return False
-        print("\nPushing tag ({}) and branch ({})".format(tag, branch))
-        ssh_key = kernelci.default_ssh_key(args.ssh_key, branch)
-        if not ssh_key:
-            print_color('red', "No SSH key provided.")
-            return False
-        kernelci.push_tag_and_branch(path, ssh_key, branch, tag)
+        do_push(args, settings, tag, path)
     elif tag:
         print("\nTag: {}".format(tag))
+
     return True
 
 
