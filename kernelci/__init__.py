@@ -44,7 +44,7 @@ def print_color(color, msg):
 
 
 def shell_cmd(cmd):
-    return subprocess.check_output(cmd, shell=True)
+    return subprocess.check_output(cmd, shell=True).decode()
 
 
 def default_ssh_key(ssh_key, branch):
