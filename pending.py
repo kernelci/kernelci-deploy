@@ -45,6 +45,15 @@ git reset --merge
     return True
 
 
+def get_skip_list(args, settings):
+    raw_skip = args.skip or settings.get('skip', as_list=True) or []
+    skip = []
+    for user_branch in raw_skip:
+        user, _, branch = user_branch.partition('/')
+        skip.append((user, branch))
+    return skip
+
+
 def main(args):
     settings = kernelci.Settings(args.settings, args.project)
     path = os.path.join('checkout', args.project)
@@ -52,12 +61,8 @@ def main(args):
     repo_name = '/'.join([namespace, args.project])
     repo = kernelci.GITHUB.get_repo(repo_name)
     kernelci.checkout_repository(path, repo)
+    skip = get_skip_list(args, settings)
     prs = repo.get_pulls()
-    raw_skip = args.skip or settings.get('skip', as_list=True) or []
-    skip = []
-    for user_branch in raw_skip:
-        user, _, branch = user_branch.partition('/')
-        skip.append((user, branch))
     print("\n{:4} {:16} {:32} {}".format("PR", "User", "Branch", "Status"))
     print("-------------------------------------------------------------")
     users = settings.get('users', as_list=True)
