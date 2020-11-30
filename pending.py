@@ -54,21 +54,8 @@ def get_skip_list(args, settings):
     return skip
 
 
-def main(args):
-    settings = kernelci.Settings(args.settings, args.project)
-    path = os.path.join('checkout', args.project)
-    namespace = args.namespace or settings.get('namespace') or 'kernelci'
-    repo_name = '/'.join([namespace, args.project])
-    repo = kernelci.GITHUB.get_repo(repo_name)
-    kernelci.checkout_repository(path, repo)
-    skip = get_skip_list(args, settings)
+def iterate_prs(repo, skip, users, path):
     prs = repo.get_pulls()
-    print("\n{:4} {:16} {:32} {}".format("PR", "User", "Branch", "Status"))
-    print("-------------------------------------------------------------")
-    users = settings.get('users', as_list=True)
-    if not users:
-        print_color('red', "Aborting, no list of trusted users")
-        return False
     for pr in reversed(list(prs)):
         branch = pr.head.ref
         user = pr.head.repo.owner.login
@@ -86,6 +73,23 @@ def main(args):
             if pull(args, pr, path):
                 print_color('green', "OK")
     print()
+
+
+def main(args):
+    settings = kernelci.Settings(args.settings, args.project)
+    path = os.path.join('checkout', args.project)
+    namespace = args.namespace or settings.get('namespace') or 'kernelci'
+    repo_name = '/'.join([namespace, args.project])
+    repo = kernelci.GITHUB.get_repo(repo_name)
+    kernelci.checkout_repository(path, repo)
+    skip = get_skip_list(args, settings)
+    print("\n{:4} {:16} {:32} {}".format("PR", "User", "Branch", "Status"))
+    print("-------------------------------------------------------------")
+    users = settings.get('users', as_list=True)
+    if not users:
+        print_color('red', "Aborting, no list of trusted users")
+        return False
+    iterate_prs(repo, skip, users, path)
     patches_path = os.path.join('patches', args.project)
     if not kernelci.apply_patches(path, patches_path):
         print_color('red', "Aborting, all patches must apply.")
