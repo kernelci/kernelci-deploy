@@ -87,13 +87,20 @@ def delete_old_tags(args, path):
 
 
 def do_push(args, settings, path):
-    tag = args.tag or kernelci.date_tag(path, args.tag_prefix)
-    kernelci.create_tag(path, tag)
-
     branch = args.branch or settings.get('branch')
     if not branch:
         print_color('red', "No destination branch provided.")
         return False
+
+    diff = kernelci.origin_diff(path, branch)
+    if not diff:
+        print_color('yellow', "No changes, not pushing.")
+        return True
+    print(diff)
+
+    tag = args.tag or kernelci.date_tag(path, args.tag_prefix)
+    kernelci.create_tag(path, tag)
+
     print("\nPushing tag ({}) and branch ({})".format(tag, branch))
     ssh_key = kernelci.default_ssh_key(args.ssh_key, branch)
     if not ssh_key:

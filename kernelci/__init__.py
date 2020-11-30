@@ -150,6 +150,18 @@ git config user.email "bot@kernelci.org"
 """.format(path=path, origin=origin, branch=branch))
 
 
+def origin_diff(path, branch):
+    shell_cmd("""\
+cd {path}
+git remote update origin
+""".format(path=path))
+    diff = shell_cmd("""\
+cd {path}
+git diff origin/{branch}..HEAD
+""".format(path=path, branch=branch))
+    return diff
+
+
 def apply_patches(path, patches_path):
     patches = sorted(glob.glob(os.path.join(patches_path, '*.patch')))
     for patch in patches:
