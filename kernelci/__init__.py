@@ -119,17 +119,7 @@ def delete_tags(path, tags, ssh_key):
         tags_push_str = ' :'.join(tags_slice)
         cmd = "cd {}; echo :{} | xargs git push origin".format(
             path, tags_push_str)
-        shell_cmd(cmd)
-    return
-    for tag in tags:
-        shell_cmd("""\
-cd {path}
-git tag -d {tag}
-""".format(path=path, tag=tag))
-        ssh_agent(ssh_key, """\
-cd {path}
-git push origin :{tag}
-""".format(path=path, tag=tag))
+        ssh_agent(ssh_key, cmd)
 
 
 def checkout_repository(path, repo, origin="origin", branch="master"):
