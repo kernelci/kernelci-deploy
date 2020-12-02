@@ -75,7 +75,7 @@ def iterate_prs(repo, skip, users, path):
     print()
 
 
-def delete_old_tags(args, path):
+def delete_old_tags(args, path, ssh_key):
     tags = kernelci.list_tags(path, args.tag_prefix + "*")
     if len(tags) > args.tag_limit:
         limit = args.tag_limit * -1
@@ -83,11 +83,10 @@ def delete_old_tags(args, path):
         print("Deleting {} tags: {}{}".format(
             len(to_delete), to_delete[0],
             "...{}".format(to_delete[-1]) if len(to_delete) > 1 else ""))
-        kernelci.delete_tags(path, to_delete, args.ssh_key)
+        kernelci.delete_tags(path, to_delete, ssh_key)
 
 
-def do_push(args, settings, path):
-    branch = args.branch or settings.get('branch')
+def do_push(args, settings, path, branch, ssh_key):
     if not branch:
         print_color('red', "No destination branch provided.")
         return False
@@ -102,10 +101,6 @@ def do_push(args, settings, path):
     kernelci.create_tag(path, tag)
 
     print("\nPushing tag ({}) and branch ({})".format(tag, branch))
-    ssh_key = kernelci.default_ssh_key(args.ssh_key, branch)
-    if not ssh_key:
-        print_color('red', "No SSH key provided.")
-        return False
     kernelci.push_tag_and_branch(path, ssh_key, branch, tag)
 
 
@@ -135,9 +130,15 @@ def main(args):
         return False
 
     if args.push:
+        target_branch = args.branch or settings.get('branch')
+        ssh_key = kernelci.default_ssh_key(args.ssh_key, target_branch)
+        if not ssh_key:
+            print_color('red', "No SSH key provided, cannot push.")
+            return False
+
         if args.tag_limit:
-            delete_old_tags(args, path)
-        do_push(args, settings, path)
+            delete_old_tags(args, path, ssh_key)
+        do_push(args, settings, path, target_branch, ssh_key)
 
     return True
 
