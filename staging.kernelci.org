@@ -24,6 +24,11 @@ cmd_core() {
     ./pending.py kernelci-core --push
 }
 
+cmd_test_definitions() {
+    echo "Updating test-definitions"
+    ./pending.py test-definitions --push
+}
+
 cmd_backend() {
     opt="$1"
 
@@ -135,6 +140,7 @@ cmd_all() {
     cmd_pull
     cmd_jenkins
     cmd_core
+    cmd_test_definitions
     cmd_backend
     cmd_frontend
     cmd_kernel $tree
