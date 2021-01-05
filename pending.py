@@ -58,10 +58,13 @@ def iterate_prs(repo, skip, users, path):
     prs = repo.get_pulls()
     for pr in reversed(list(prs)):
         branch = pr.head.ref
-        user = pr.head.repo.owner.login
+        repo = pr.head.repo
+        user = pr.head.repo.owner.login if repo else "(unknown)"
         labels = list(label.name for label in pr.labels)
         print("{:4} {:16} {:32} ".format(pr.number, user, branch), end='')
-        if user not in users:
+        if repo is None:
+            print_color('red', "SKIP unknown repository")
+        elif user not in users:
             print_color('red', "SKIP untrusted user")
         elif (user, branch) in skip:
             print_color('yellow', "SKIP")
