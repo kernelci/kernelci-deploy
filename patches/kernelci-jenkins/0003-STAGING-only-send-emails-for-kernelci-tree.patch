@@ -1,16 +1,16 @@
-From 86c1c5dabfef35dc6f1290934ab68c2b5e6fae7e Mon Sep 17 00:00:00 2001
+From 908d1629b254a7261146dd3273c3df0ed3f8a11b Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Thu, 30 Jan 2020 14:33:44 +0000
-Subject: [PATCH 5/6] STAGING only send emails for kernelci tree
+Subject: [PATCH 3/3] STAGING only send emails for kernelci tree
 
 ---
- jenkins/kernel-arch-complete.sh | 5 +++++
+ scripts/kernel-arch-complete.sh | 5 +++++
  1 file changed, 5 insertions(+)
 
-diff --git a/jenkins/kernel-arch-complete.sh b/jenkins/kernel-arch-complete.sh
-index 6971ece7e76d..dc6e39e8c34d 100755
---- a/jenkins/kernel-arch-complete.sh
-+++ b/jenkins/kernel-arch-complete.sh
+diff --git a/scripts/kernel-arch-complete.sh b/scripts/kernel-arch-complete.sh
+index be8076730ced..e18afdb1c7e1 100755
+--- a/scripts/kernel-arch-complete.sh
++++ b/scripts/kernel-arch-complete.sh
 @@ -35,6 +35,11 @@ fi
      echo "Build has now finished, reporting result to dashboard."
      curl -X POST -H "Authorization: $EMAIL_AUTH_TOKEN" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "git_branch": "'$BRANCH'"}' ${API}/job

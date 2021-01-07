@@ -1,7 +1,7 @@
-From 9ec1ebfb5c83b9f6e7a8bb5ef662025c370cb7bf Mon Sep 17 00:00:00 2001
+From d94d3bb8c95ede6e38f4ae00c70fcbe3f7a940f6 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 7 Jul 2020 21:56:45 +0100
-Subject: [PATCH 2/2] STAGING bisect.jpl: don't send emails to automatic
+Subject: [PATCH 2/3] STAGING bisect.jpl: don't send emails to automatic
  recipients
 
 ---
@@ -9,10 +9,10 @@ Subject: [PATCH 2/2] STAGING bisect.jpl: don't send emails to automatic
  1 file changed, 1 insertion(+)
 
 diff --git a/jobs/bisect.jpl b/jobs/bisect.jpl
-index e5aeb214a14b..d52b0ffdf163 100644
+index fb68a07c4fe4..ed776a524bb3 100644
 --- a/jobs/bisect.jpl
 +++ b/jobs/bisect.jpl
-@@ -531,6 +531,7 @@ PYTHON_EGG_CACHE=${egg_cache} \
+@@ -543,6 +543,7 @@ PYTHON_EGG_CACHE=${egg_cache} \
  --kdir=${kdir} \
  --subject=\"${subject}\" \
  --to=\"${params.EMAIL_RECIPIENTS}\" \
