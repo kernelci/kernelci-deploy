@@ -1,7 +1,7 @@
-From 908d1629b254a7261146dd3273c3df0ed3f8a11b Mon Sep 17 00:00:00 2001
+From c1bcea1850a45abbc603fde7701eb61c6ccf627c Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Thu, 30 Jan 2020 14:33:44 +0000
-Subject: [PATCH 3/3] STAGING only send emails for kernelci tree
+Subject: [PATCH 2/2] STAGING only send emails for kernelci tree
 
 ---
  scripts/kernel-arch-complete.sh | 5 +++++
