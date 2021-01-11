@@ -1,4 +1,4 @@
-From 9453b869ffa2092e5e74c5001bc7972405880573 Mon Sep 17 00:00:00 2001
+From 32fcc61c2e5f73bc337a8daa51ed9716d0edc0a2 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 29 Sep 2020 23:12:00 +0100
 Subject: [PATCH 3/5] STAGING build-configs.yaml: add x86_chromebook fragment
