@@ -1,4 +1,4 @@
-From fea0421d606871e96735399d988bc51c6159e6cb Mon Sep 17 00:00:00 2001
+From 88dea140335c1b0ed34de5f95adfa3fe1918c1ea Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 15 Sep 2020 10:22:30 +0100
 Subject: [PATCH 5/5] STAGING use staging.kernelci.org branch for test
@@ -12,17 +12,17 @@ Subject: [PATCH 5/5] STAGING use staging.kernelci.org branch for test
  4 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/templates/kselftest/kselftest.jinja2 b/templates/kselftest/kselftest.jinja2
-index c3ae8d75eddf..6812cac88eaa 100644
+index ec5561d715e9..fd883d13392d 100644
 --- a/templates/kselftest/kselftest.jinja2
 +++ b/templates/kselftest/kselftest.jinja2
-@@ -17,7 +17,7 @@
+@@ -16,7 +16,7 @@
  
      - repository: https://github.com/kernelci/test-definitions.git
        from: git
 -      revision: kernelci.org
 +      revision: staging.kernelci.org
        path: automated/linux/kselftest/kselftest.yaml
-       name: kselftest
+       name: {{ plan }}
        parameters:
 diff --git a/templates/ltp/ltp.jinja2 b/templates/ltp/ltp.jinja2
 index 3b3c8f92f881..4a242cbc44f3 100644
