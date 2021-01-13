@@ -68,7 +68,7 @@ def iterate_prs(repo, skip, users, path):
             print_color('red', "SKIP untrusted user")
         elif (user, branch) in skip:
             print_color('yellow', "SKIP")
-        elif pr.base.ref != args.master:
+        elif pr.base.ref != args.main:
             print_color('yellow', "SKIP base: {}".format(pr.base.ref))
         elif args.skip_label and args.skip_label in labels:
             print_color('yellow', "SKIP label: {}".format(args.skip_label))
@@ -159,8 +159,8 @@ Create staging.kernelci.org branch with all pending PRs")
                         help="Number of previous tags to keep, 0 for all")
     parser.add_argument("--branch",
                         help="Name of the branch to force-push to")
-    parser.add_argument("--master", default="master",
-                        help="Name of the master branch to filter PRs")
+    parser.add_argument("--main", default="main",
+                        help="Name of the main branch to filter PRs")
     parser.add_argument("--namespace",
                         help="Github project namespace, default is kernelci")
     parser.add_argument("--skip", nargs='+', default=[],

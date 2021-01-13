@@ -122,7 +122,7 @@ def delete_tags(path, tags, ssh_key):
         ssh_agent(ssh_key, cmd)
 
 
-def checkout_repository(path, repo, origin="origin", branch="master"):
+def checkout_repository(path, repo, origin="origin", branch="main"):
     if not os.path.exists(path):
         shell_cmd("""\
 git clone {url} {path}
