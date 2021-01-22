@@ -1,20 +1,20 @@
-From 88dea140335c1b0ed34de5f95adfa3fe1918c1ea Mon Sep 17 00:00:00 2001
+From fb873c77c0e44d4d61fd405c1b570f6dc091e7b9 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 15 Sep 2020 10:22:30 +0100
 Subject: [PATCH 5/5] STAGING use staging.kernelci.org branch for test
  definitions
 
 ---
- templates/kselftest/kselftest.jinja2   | 2 +-
- templates/ltp/ltp.jinja2               | 2 +-
- templates/preempt-rt/preempt-rt.jinja2 | 2 +-
- templates/sleep/sleep.jinja2           | 2 +-
+ config/jobs/lava/kselftest/kselftest.jinja2   | 2 +-
+ config/jobs/lava/ltp/ltp.jinja2               | 2 +-
+ config/jobs/lava/preempt-rt/preempt-rt.jinja2 | 2 +-
+ config/jobs/lava/sleep/sleep.jinja2           | 2 +-
  4 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/templates/kselftest/kselftest.jinja2 b/templates/kselftest/kselftest.jinja2
-index ec5561d715e9..fd883d13392d 100644
---- a/templates/kselftest/kselftest.jinja2
-+++ b/templates/kselftest/kselftest.jinja2
+diff --git a/config/jobs/lava/kselftest/kselftest.jinja2 b/config/jobs/lava/kselftest/kselftest.jinja2
+index 6e590c1d2e54..72c3692db310 100644
+--- a/config/jobs/lava/kselftest/kselftest.jinja2
++++ b/config/jobs/lava/kselftest/kselftest.jinja2
 @@ -16,7 +16,7 @@
  
      - repository: https://github.com/kernelci/test-definitions.git
@@ -24,10 +24,10 @@ index ec5561d715e9..fd883d13392d 100644
        path: automated/linux/kselftest/kselftest.yaml
        name: {{ plan }}
        parameters:
-diff --git a/templates/ltp/ltp.jinja2 b/templates/ltp/ltp.jinja2
+diff --git a/config/jobs/lava/ltp/ltp.jinja2 b/config/jobs/lava/ltp/ltp.jinja2
 index 3b3c8f92f881..4a242cbc44f3 100644
---- a/templates/ltp/ltp.jinja2
-+++ b/templates/ltp/ltp.jinja2
+--- a/config/jobs/lava/ltp/ltp.jinja2
++++ b/config/jobs/lava/ltp/ltp.jinja2
 @@ -5,7 +5,7 @@
      definitions:
         - repository: https://github.com/kernelci/test-definitions
@@ -37,10 +37,10 @@ index 3b3c8f92f881..4a242cbc44f3 100644
           path: automated/linux/ltp/ltp.yaml
           name: {{ plan }}
           parameters:
-diff --git a/templates/preempt-rt/preempt-rt.jinja2 b/templates/preempt-rt/preempt-rt.jinja2
+diff --git a/config/jobs/lava/preempt-rt/preempt-rt.jinja2 b/config/jobs/lava/preempt-rt/preempt-rt.jinja2
 index 75bbe27d13e7..9cfc451de3da 100644
---- a/templates/preempt-rt/preempt-rt.jinja2
-+++ b/templates/preempt-rt/preempt-rt.jinja2
+--- a/config/jobs/lava/preempt-rt/preempt-rt.jinja2
++++ b/config/jobs/lava/preempt-rt/preempt-rt.jinja2
 @@ -17,7 +17,7 @@
  
      - repository: https://github.com/kernelci/test-definitions.git
@@ -50,10 +50,10 @@ index 75bbe27d13e7..9cfc451de3da 100644
        path: automated/linux/cyclictest/cyclictest.yaml
        name: cyclictest
        parameters:
-diff --git a/templates/sleep/sleep.jinja2 b/templates/sleep/sleep.jinja2
+diff --git a/config/jobs/lava/sleep/sleep.jinja2 b/config/jobs/lava/sleep/sleep.jinja2
 index 9e70b1b9fe48..b3e6ca4a204f 100644
---- a/templates/sleep/sleep.jinja2
-+++ b/templates/sleep/sleep.jinja2
+--- a/config/jobs/lava/sleep/sleep.jinja2
++++ b/config/jobs/lava/sleep/sleep.jinja2
 @@ -3,7 +3,7 @@
        minutes: 5
      definitions:
