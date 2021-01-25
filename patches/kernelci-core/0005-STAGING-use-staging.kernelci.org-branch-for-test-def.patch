@@ -1,4 +1,4 @@
-From fb873c77c0e44d4d61fd405c1b570f6dc091e7b9 Mon Sep 17 00:00:00 2001
+From 72cac3d2021ae7a1c99d281c2e1e7ae8291d083c Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 15 Sep 2020 10:22:30 +0100
 Subject: [PATCH 5/5] STAGING use staging.kernelci.org branch for test
@@ -51,7 +51,7 @@ index 75bbe27d13e7..9cfc451de3da 100644
        name: cyclictest
        parameters:
 diff --git a/config/jobs/lava/sleep/sleep.jinja2 b/config/jobs/lava/sleep/sleep.jinja2
-index 9e70b1b9fe48..b3e6ca4a204f 100644
+index a9e21c4a6cfc..a4147261c798 100644
 --- a/config/jobs/lava/sleep/sleep.jinja2
 +++ b/config/jobs/lava/sleep/sleep.jinja2
 @@ -3,7 +3,7 @@
@@ -62,7 +62,7 @@ index 9e70b1b9fe48..b3e6ca4a204f 100644
 +      branch: staging.kernelci.org
        from: git
        history: False
-       path: templates/sleep/sleep.yaml
+       path: config/jobs/lava/sleep/sleep.yaml
 -- 
 2.20.1
 
