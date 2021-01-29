@@ -1,17 +1,17 @@
-From 382920816e5d47b0b9ca2c0b5074d6bcbb188e27 Mon Sep 17 00:00:00 2001
+From 9e2dff7289ef456d91643cb1a58a8ae3b15fbfe8 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 29 Sep 2020 23:12:00 +0100
-Subject: [PATCH 3/5] STAGING build-configs.yaml: add x86_chromebook fragment
+Subject: [PATCH 3/6] STAGING build-configs.yaml: add x86_chromebook fragment
 
 ---
  config/build-configs.yaml | 8 ++++++--
  1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/config/build-configs.yaml b/config/build-configs.yaml
-index 69d8927dc129..c78445d50b38 100644
+index 38bd7b28..6eb19f24 100644
 --- a/config/build-configs.yaml
 +++ b/config/build-configs.yaml
-@@ -770,14 +770,18 @@ build_configs:
+@@ -767,14 +767,18 @@ build_configs:
            i386: *i386_defconfig
            mips: *mips_defconfig
            riscv: *riscv_defconfig
