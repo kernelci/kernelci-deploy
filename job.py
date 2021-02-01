@@ -21,6 +21,7 @@ import argparse
 import jenkins
 import json
 import sys
+import time
 
 import kernelci
 
@@ -28,6 +29,7 @@ ACTIONS = [
     "trigger",
     "enable",
     "disable",
+    "flush",
 ]
 
 
@@ -48,6 +50,37 @@ def cmd_enable(args, api):
 
 def cmd_disable(args, api):
     api.disable_job(args.job)
+
+
+def cmd_flush(args, api):
+    job_info = api.get_job_info(args.job)
+    builds = job_info['builds']
+    building = set()
+
+    while True:
+        print("looking for {} jobs currently building...".format(args.job))
+        for build in builds[:100]:
+            build_number = build['number']
+            build_info = api.get_build_info(args.job, build['number'])
+            build_status = build_info['building']
+            if build_status:
+                print(build_number)
+                building.add(build_number)
+
+        if not building:
+            print("all done.")
+            break
+
+        while building:
+            print("still building: {}".format(len(building)))
+            print("waiting...")
+            time.sleep(15)
+            still_building = set()
+            for number in building:
+                is_building = api.get_build_info(args.job, number)['building']
+                if is_building:
+                    still_building.add(number)
+            building = still_building
 
 
 def main(args):
