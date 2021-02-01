@@ -24,6 +24,31 @@ import sys
 
 import kernelci
 
+ACTIONS = [
+    "trigger",
+    "enable",
+    "disable",
+]
+
+
+def cmd_trigger(args, api):
+    if args.json:
+        with open(args.json) as f:
+            params = json.load(f)
+    elif args.no_params:
+        params = None
+    else:
+        params = {'_': ''}  # silly...
+    api.build_job(args.job, params)
+
+
+def cmd_enable(args, api):
+    api.enable_job(args.job)
+
+
+def cmd_disable(args, api):
+    api.disable_job(args.job)
+
 
 def main(args):
     settings = kernelci.Settings(args.settings, args.section)
@@ -35,21 +60,18 @@ def main(args):
         return False
 
     api = jenkins.Jenkins(url, user, token)
-    if args.json:
-        with open(args.json) as f:
-            params = json.load(f)
-    elif args.no_params:
-        params = None
-    else:
-        params = {'_': ''}  # silly...
-    api.build_job(args.job, params)
+    cmd = "_".join(["cmd", args.action])
+    globals()[cmd](args, api)
+
     return True
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser("Trigger a Jenkins job")
+    parser = argparse.ArgumentParser("Control Jenkins jobs")
+    parser.add_argument("action", choices=ACTIONS,
+                        help="action to perform")
     parser.add_argument("job",
-                        help="Name of the Jenkins job to trigger")
+                        help="Name of the Jenkins job")
     parser.add_argument("--url",
                         help="Jenkins API URL")
     parser.add_argument("--user",
