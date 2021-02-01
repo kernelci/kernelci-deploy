@@ -37,8 +37,9 @@ cmd_rootfs() {
     cd -
 
     echo "Starting rootfs build jobs"
-    python3 trigger.py \
+    python3 job.py \
         --settings=data/prod-jenkins.ini \
+        trigger \
         rootfs-build-trigger
 }
 
@@ -116,9 +117,10 @@ cmd_kernel() {
 
 cmd_trigger() {
     echo "Starting Jenkins kernel-build-trigger job"
-    python3 trigger.py \
+    python3 run.py \
         --settings=data/prod-jenkins.ini \
         --json=data/prod-trigger.json \
+        trigger \
         kernel-build-trigger
 }
 

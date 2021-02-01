@@ -16,7 +16,7 @@ cmd_jenkins() {
     ./pending.py kernelci-jenkins --push
 
     echo "Triggering Jenkins seed job"
-    python3 trigger.py --no-params job-dsl
+    python3 job.py --no-params trigger job-dsl
 }
 
 cmd_core() {
@@ -100,8 +100,9 @@ cmd_docker() {
 cmd_monitor() {
     echo "Triggering Jenkins kernel-tree-monitor job"
     python3 \
-        trigger.py \
+        job.py \
         --json=data/staging-monitor.json \
+        trigger \
         kernel-tree-monitor
 }
 
