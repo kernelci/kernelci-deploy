@@ -52,25 +52,26 @@ def cmd_disable(args, api):
     api.disable_job(args.job)
 
 
-def cmd_flush(args, api):
-    job_info = api.get_job_info(args.job)
+def _get_building_jobs(api, job_name, depth=100):
+    job_info = api.get_job_info(job_name)
     builds = job_info['builds']
     building = set()
 
-    while True:
-        print("looking for {} jobs currently building...".format(args.job))
-        for build in builds[:100]:
-            build_number = build['number']
-            build_info = api.get_build_info(args.job, build['number'])
-            build_status = build_info['building']
-            if build_status:
-                print(build_number)
-                building.add(build_number)
+    for build in builds[:depth]:
+        build_number = build['number']
+        build_info = api.get_build_info(job_name, build['number'])
+        build_status = build_info['building']
+        if build_status:
+            print("building: {} #{}".format(job_name, build_number))
+            building.add(build_number)
 
-        if not building:
-            print("all done.")
-            break
+    return building
 
+
+def cmd_flush(args, api):
+    building = _get_building_jobs(api, args.job)
+
+    while building:
         while building:
             print("still building: {}".format(len(building)))
             print("waiting...")
@@ -80,7 +81,10 @@ def cmd_flush(args, api):
                 is_building = api.get_build_info(args.job, number)['building']
                 if is_building:
                     still_building.add(number)
-            building = still_building
+                building = still_building
+        building = _get_building_jobs(api, args.job)
+
+    print("No more {} jobs running.".format(args.job))
 
 
 def main(args):
