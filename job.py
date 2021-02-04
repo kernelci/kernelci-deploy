@@ -30,6 +30,7 @@ ACTIONS = [
     "enable",
     "disable",
     "flush",
+    "abort",
 ]
 
 
@@ -85,6 +86,16 @@ def cmd_flush(args, api):
         building = _get_building_jobs(api, args.job)
 
     print("No more {} jobs running.".format(args.job))
+
+
+def cmd_abort(args, api):
+    building = _get_building_jobs(api, args.job)
+
+    for number in building:
+        print("aborting {} #{}".format(args.job, number))
+        api.stop_build(args.job, number)
+
+    print("All running {} jobs have been aborted.".format(args.job))
 
 
 def main(args):
