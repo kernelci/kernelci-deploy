@@ -56,6 +56,16 @@ cmd_frontend() {
     ./ansible kernelci-frontend staging.kernelci.org
 }
 
+cmd_website() {
+    echo "Updating static website"
+    ./pending.py kernelci-project --push
+    cd checkout/kernelci-project/kernelci.org
+    git-lfs checkout
+    git submodule update --init --recursive
+    ./docker-hugo -D
+    cd -
+}
+
 cmd_kernel() {
     tree="${1:-next}"
 
@@ -144,6 +154,7 @@ cmd_all() {
     cmd_test_definitions
     cmd_backend
     cmd_frontend
+    cmd_website
     cmd_kernel $tree
     cmd_docker
     cmd_monitor
