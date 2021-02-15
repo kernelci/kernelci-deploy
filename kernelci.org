@@ -144,9 +144,14 @@ cmd_trigger() {
         kernel-build-trigger
 }
 
-cmd_all() {
+cmd_part1() {
     cmd_pull
     cmd_flush_kernel
+    # ToDo: automate this step with SSH access to the nodes"
+    echo "Now restart Jenkins"
+}
+
+cmd_part2() {
     cmd_core
     cmd_dsl
     cmd_rootfs
@@ -164,8 +169,9 @@ cmd="${1}"
 
 if [ -n "$cmd" ]; then
     shift 1
-else
-    cmd="all"
+# ToDo: fix issues mentioned in cmd_part1 and cmd_part2
+#else
+#    cmd="all"
 fi
 
 "cmd_"$cmd $@
