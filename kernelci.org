@@ -35,6 +35,12 @@ cmd_core() {
     cd -
 }
 
+cmd_dsl() {
+    echo "Running Jenkins DSL seed job"
+    python3 job.py --settings data/prod-jenkins.ini \
+            trigger job-dsl --no-params
+}
+
 cmd_rootfs() {
     echo "Updating debos Docker image"
     cd checkout/kernelci-core/jenkins/dockerfiles
@@ -142,6 +148,7 @@ cmd_all() {
     cmd_pull
     cmd_flush_kernel
     cmd_core
+    cmd_dsl
     cmd_rootfs
     cmd_backend
     cmd_frontend
