@@ -9,6 +9,14 @@ cmd_pull() {
     git pull --ff-only
 }
 
+cmd_flush_kernel() {
+    echo "Flushing all current kernel builds"
+    python3 job.py --settings data/prod-jenkins.ini \
+            disable kernel-tree-monitor
+    python3 job.py --settings data/prod-jenkins.ini \
+            flush kernel-build-trigger
+}
+
 cmd_core() {
     # First, manually push to kernelci-core/kernelci.org branch
 
@@ -126,6 +134,7 @@ cmd_trigger() {
 
 cmd_all() {
     cmd_pull
+    cmd_flush_kernel
     cmd_core
     cmd_rootfs
     cmd_backend
