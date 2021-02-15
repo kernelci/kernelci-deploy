@@ -114,13 +114,19 @@ cmd_test_definitions() {
 
 cmd_kernel() {
     echo "Pushing kernelci.org LTS kernel branch"
-    ./kernel.py \
+    python3 kernel.py \
         --from-url=git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git \
         --from-branch=linux-5.4.y \
         --branch=kernelci.org \
         --tag-prefix=kernelci- \
         --ssh-key=$PWD/keys/id_rsa_kernelci.org \
         --push
+}
+
+cmd_flush_rootfs() {
+    echo "Waiting for rootfs jobs to complete"
+    python3 job.py --settings data/prod-jenkins.ini \
+            flush rootfs-trigger
 }
 
 cmd_trigger() {
@@ -140,6 +146,11 @@ cmd_all() {
     cmd_backend
     cmd_frontend
     cmd_docker
+    cmd_test_definitions
+    cmd_kernel
+    cmd_flush_rootfs
+    # ToDo: automate this step:
+    echo "Now update the rootlfs URLs in rootfs-configs.yaml"
 }
 
 cmd="${1}"
