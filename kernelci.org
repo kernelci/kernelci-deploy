@@ -17,6 +17,14 @@ cmd_flush_kernel() {
             flush kernel-build-trigger
 }
 
+cmd_abort_bisections() {
+    echo "Aborting any on-going bisections"
+    python3 job.py --settings data/prod-jenkins.ini \
+            disable lava-bisection
+    python3 job.py --settings data/prod-jenkins.ini \
+            abort lava-bisection
+}
+
 cmd_core() {
     # First, manually push to kernelci-core/kernelci.org branch
 
@@ -147,6 +155,7 @@ cmd_trigger() {
 cmd_part1() {
     cmd_pull
     cmd_flush_kernel
+    cmd_abort_bisections
     # ToDo: automate this step with SSH access to the nodes"
     echo "Now restart Jenkins"
 }
