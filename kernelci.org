@@ -49,7 +49,7 @@ cmd_dsl() {
             trigger job-dsl --no-params
 }
 
-cmd_rootfs() {
+cmd_rootfs_docker() {
     echo "Updating debos Docker image"
     cd checkout/kernelci-core/jenkins/dockerfiles
     ./build-and-push.sh -dn
@@ -57,12 +57,20 @@ cmd_rootfs() {
         ./build-and-push.sh -dp && break || { echo "Retrying..."; sleep 3; }
     done
     cd -
+}
 
+cmd_rootfs_builds() {
     echo "Starting rootfs build jobs"
     python3 job.py \
         --settings=data/prod-jenkins.ini \
         trigger \
         rootfs-build-trigger
+}
+
+cmd_rootfs_flush() {
+    echo "Waiting for rootfs jobs to complete"
+    python3 job.py --settings data/prod-jenkins.ini \
+            flush rootfs-build-trigger
 }
 
 cmd_backend() {
@@ -137,12 +145,6 @@ cmd_kernel() {
         --push
 }
 
-cmd_flush_rootfs() {
-    echo "Waiting for rootfs jobs to complete"
-    python3 job.py --settings data/prod-jenkins.ini \
-            flush rootfs-trigger
-}
-
 cmd_trigger() {
     echo "Starting Jenkins kernel-build-trigger job"
     python3 job.py \
@@ -163,13 +165,14 @@ cmd_part1() {
 cmd_part2() {
     cmd_core
     cmd_dsl
-    cmd_rootfs
+    cmd_rootfs_docker
+    cmd_rootfs_builds
     cmd_backend
     cmd_frontend
     cmd_docker
     cmd_test_definitions
     cmd_kernel
-    cmd_flush_rootfs
+    cmd_rootfs_flush
     # ToDo: automate this step:
     echo "Now update the rootlfs URLs in rootfs-configs.yaml"
 }
