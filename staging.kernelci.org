@@ -59,11 +59,19 @@ cmd_frontend() {
 cmd_website() {
     echo "Updating static website"
     ./pending.py kernelci-project --push
+    topd=$PWD
     cd checkout/kernelci-project/kernelci.org
     git-lfs checkout
     git submodule update --init --recursive
+    for d in external/*; do
+        echo "Checking out staging branch for $d"
+        cd "$d"
+        git remote update origin
+        git checkout origin/staging.kernelci.org
+        cd -
+    done
     ./docker-hugo -D
-    cd -
+    cd "$topd"
 }
 
 cmd_kernel() {
