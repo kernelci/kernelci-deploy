@@ -51,7 +51,7 @@ cmd_dsl() {
 
 cmd_rootfs_docker() {
     echo "Updating debos Docker image"
-    cd checkout/kernelci-core/jenkins/dockerfiles
+    cd checkout/kernelci-core/config/docker
     ./build-and-push.sh -dn
     while true; do
         ./build-and-push.sh -dp && break || { echo "Retrying..."; sleep 3; }
@@ -98,7 +98,7 @@ cmd_frontend() {
 }
 
 cmd_docker() {
-    cd checkout/kernelci-core/jenkins/dockerfiles
+    cd checkout/kernelci-core/config/docker
     echo "Re-building Docker images"
     ./build-and-push.sh -bikn
     echo "Pushing Docker images"
