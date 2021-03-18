@@ -24,6 +24,11 @@ cmd_core() {
     ./pending.py kernelci-core --push
 }
 
+cmd_bootrr() {
+    echo "Updating bootrr"
+    ./pending.py bootrr --push
+}
+
 cmd_test_definitions() {
     echo "Updating test-definitions"
     ./pending.py test-definitions --push
@@ -159,6 +164,7 @@ cmd_all() {
     cmd_pull
     cmd_jenkins
     cmd_core
+    cmd_bootrr
     cmd_test_definitions
     cmd_backend
     cmd_frontend
