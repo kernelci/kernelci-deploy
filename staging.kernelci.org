@@ -29,6 +29,11 @@ cmd_bootrr() {
     ./pending.py bootrr --push
 }
 
+cmd_buildroot() {
+    echo "Updating buildroot"
+    ./pending.py buildroot --push
+}
+
 cmd_test_definitions() {
     echo "Updating test-definitions"
     ./pending.py test-definitions --push
@@ -165,6 +170,7 @@ cmd_all() {
     cmd_jenkins
     cmd_core
     cmd_bootrr
+    cmd_buildroot
     cmd_test_definitions
     cmd_backend
     cmd_frontend
