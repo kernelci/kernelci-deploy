@@ -1,26 +1,27 @@
-From 2aecc7754b56c7771f7635c7fe8ca0eb106b3fe4 Mon Sep 17 00:00:00 2001
+From f81ad7c401f437b928a3ef9ac5f6baf357d2cc22 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
-Date: Thu, 18 Mar 2021 14:48:25 +0000
+Date: Thu, 25 Mar 2021 14:48:08 +0000
 Subject: [PATCH] STAGING skip hash for bootrr
 
 ---
- package/bootrr/bootrr.mk | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ package/bootrr/bootrr.mk | 4 ++++
+ 1 file changed, 4 insertions(+)
 
 diff --git a/package/bootrr/bootrr.mk b/package/bootrr/bootrr.mk
-index a4a321765c4c..041a94e681b4 100644
+index e10abbc237ff..d5518c759bfa 100644
 --- a/package/bootrr/bootrr.mk
 +++ b/package/bootrr/bootrr.mk
-@@ -5,7 +5,8 @@
- ################################################################################
- 
- BOOTRR_SITE = https://github.com/kernelci/bootrr.git
--BOOTRR_VERSION = 190921182ef98da0ff9028beff5beb367a6c26d9
-+BOOTRR_VERSION = staging.kernelci.org
-+BR_NO_CHECK_HASH_FOR += $(BOOTRR_SOURCE)
+@@ -9,6 +9,10 @@ BOOTRR_VERSION = f15e3f8b13254bcf586130b2603f1bdddfcf630d
  BOOTRR_SITE_METHOD = git
  BOOTRR_LICENSE = LGPL-2.1+
  
++# Stkip the hash on staging
++BOOTRR_VERSION = "$(shell git ls-remote origin staging.kernelci.org | awk '{ print $$1 }')"
++BR_NO_CHECK_HASH_FOR += $(BOOTRR_SOURCE)
++
+ define BOOTRR_INSTALL_TARGET_CMDS
+ 	DESTDIR=$(TARGET_DIR)/opt/bootrr $(MAKE) -C $(@D) install
+ endef
 -- 
 2.20.1
 
