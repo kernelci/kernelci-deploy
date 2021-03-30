@@ -1,19 +1,18 @@
-From fd2a364278f02090bea9c53b19f66e00fbf25e77 Mon Sep 17 00:00:00 2001
+From 5a8e604d6899d6570608ea8a2bad0387222ba13b Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
-Date: Mon, 1 Mar 2021 19:22:13 +0000
+Date: Tue, 30 Mar 2021 23:27:58 +0100
 Subject: [PATCH] STAGING use staging.kernelci.org as base URL
 
 ---
  kernelci.org/config.toml            | 2 +-
  kernelci.org/content/en/_index.html | 4 ++--
- kernelci.org/external/kernelci-core | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/kernelci.org/config.toml b/kernelci.org/config.toml
-index 27a8b3bcb4f2..a60523a03e7c 100644
+index 0f162af36dd1..db8bcb91b812 100644
 --- a/kernelci.org/config.toml
 +++ b/kernelci.org/config.toml
-@@ -74,7 +74,7 @@ footer_about_disable = false
+@@ -76,7 +76,7 @@ footer_about_disable = false
    [[menu.main]]
      identifier = "dashboard"
      name = "Dashboard"
@@ -23,7 +22,7 @@ index 27a8b3bcb4f2..a60523a03e7c 100644
    [[menu.main]]
      identifier = "lf"
 diff --git a/kernelci.org/content/en/_index.html b/kernelci.org/content/en/_index.html
-index 800f0978b7a4..180b9f8378b5 100644
+index 0f476b0d718c..6290db21c2bc 100644
 --- a/kernelci.org/content/en/_index.html
 +++ b/kernelci.org/content/en/_index.html
 @@ -5,7 +5,7 @@ linkTitle = "KernelCI"
@@ -44,13 +43,6 @@ index 800f0978b7a4..180b9f8378b5 100644
  See the latest KernelCI test results.
  {{% /blocks/feature %}}
  
-diff --git a/kernelci.org/external/kernelci-core b/kernelci.org/external/kernelci-core
-index 13d16f557232..754cdb2b51f9 160000
---- a/kernelci.org/external/kernelci-core
-+++ b/kernelci.org/external/kernelci-core
-@@ -1 +1 @@
--Subproject commit 13d16f557232ac6ebd0308850bf535761c95528d
-+Subproject commit 754cdb2b51f9f5ccc3627cfeacebccb55eeeb9dc
 -- 
 2.20.1
 
