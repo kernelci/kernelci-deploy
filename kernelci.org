@@ -97,6 +97,31 @@ cmd_frontend() {
         $PWD/keys/id_rsa_kernelci.org
 }
 
+cmd_website() {
+    branch="${1:-kernelci.org}"
+
+    [ -d checkout/kernelci-project ] || {
+        echo "Cloning kernelci-project"
+        mkdir -p checkout
+        git clone \
+            https://github.com/kernelci/kernelci-project.git \
+            checkout/kernelci-project \
+            -b $branch
+    }
+
+    echo "Updating Git LFS and submodules"
+    cd checkout/kernelci-project/kernelci.org
+    git remote update origin
+    git checkout origin/$branch
+    git-lfs fetch
+    git-lfs checkout
+    git submodule update --init --recursive
+    ./docker-hugo -D
+    rm -rf /data/kernelci.org/*
+    cp -R public/* /data/kernelci.org/
+    cd -
+}
+
 cmd_docker() {
     cd checkout/kernelci-core/config/docker
     echo "Re-building Docker images"
