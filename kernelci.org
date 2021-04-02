@@ -92,7 +92,7 @@ cmd_frontend() {
     echo "Updating kernelci-frontend to $rev"
     ./ansible \
         kernelci-frontend \
-        kernelci.org \
+        linux.kernelci.org \
         $rev \
         $PWD/keys/id_rsa_kernelci.org
 }
