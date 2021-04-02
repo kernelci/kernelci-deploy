@@ -1,7 +1,7 @@
-From 5a8e604d6899d6570608ea8a2bad0387222ba13b Mon Sep 17 00:00:00 2001
+From 179bb5367cdb717cf3f3f6aca5c3d7fcde8a13b1 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
-Date: Tue, 30 Mar 2021 23:27:58 +0100
-Subject: [PATCH] STAGING use staging.kernelci.org as base URL
+Date: Fri, 2 Apr 2021 08:28:55 +0100
+Subject: [PATCH] STAGING set dashboard URL to staging.kernelci.org
 
 ---
  kernelci.org/config.toml            | 2 +-
@@ -9,27 +9,27 @@ Subject: [PATCH] STAGING use staging.kernelci.org as base URL
  2 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/kernelci.org/config.toml b/kernelci.org/config.toml
-index 0f162af36dd1..db8bcb91b812 100644
+index bb34935af37f..5b425d2b8daf 100644
 --- a/kernelci.org/config.toml
 +++ b/kernelci.org/config.toml
 @@ -76,7 +76,7 @@ footer_about_disable = false
    [[menu.main]]
      identifier = "dashboard"
      name = "Dashboard"
--    url = "https://kernelci.org/job/"
-+    url = "https://staging.kernelci.org/job/"
+-    url = "https://linux.kernelci.org/job"
++    url = "https://staging.kernelci.org/job"
  
    [[menu.main]]
      identifier = "lf"
 diff --git a/kernelci.org/content/en/_index.html b/kernelci.org/content/en/_index.html
-index 0f476b0d718c..6290db21c2bc 100644
+index 93e2afc5bda6..6290db21c2bc 100644
 --- a/kernelci.org/content/en/_index.html
 +++ b/kernelci.org/content/en/_index.html
 @@ -5,7 +5,7 @@ linkTitle = "KernelCI"
  
  {{< blocks/cover title="Welcome to KernelCI" image_anchor="top" height="full" color="blue" >}}
  <div class="mx-auto">
--  <a class="btn btn-lg btn-primary mr-3 mb-4" href="https://kernelci.org/job/">
+-  <a class="btn btn-lg btn-primary mr-3 mb-4" href="https://linux.kernelci.org/job/">
 +  <a class="btn btn-lg btn-primary mr-3 mb-4" href="https://staging.kernelci.org/job/">
      Dashboard <i class="fas fa-arrow-alt-circle-right ml-2"></i>
    </a>
@@ -38,7 +38,7 @@ index 0f476b0d718c..6290db21c2bc 100644
  {{% /blocks/lead %}}
  
  {{< blocks/section color="dark" >}}
--{{% blocks/feature icon="fa-chart-line" title="Dashboard" url="https://kernelci.org/job/" %}}
+-{{% blocks/feature icon="fa-chart-line" title="Dashboard" url="https://linux.kernelci.org/job/" %}}
 +{{% blocks/feature icon="fa-chart-line" title="Dashboard" url="https://staging.kernelci.org/job/" %}}
  See the latest KernelCI test results.
  {{% /blocks/feature %}}
