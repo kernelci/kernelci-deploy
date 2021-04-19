@@ -31,6 +31,7 @@ ACTIONS = [
     "disable",
     "flush",
     "abort",
+    "flush_kernel_trigger_jobs",
 ]
 
 
@@ -60,13 +61,26 @@ def _get_building_jobs(api, job_name, depth=100):
 
     for build in builds[:depth]:
         build_number = build['number']
-        build_info = api.get_build_info(job_name, build['number'])
+        build_info = api.get_build_info(job_name, build_number)
         build_status = build_info['building']
         if build_status:
             print("building: {} #{}".format(job_name, build_number))
             building.add(build_number)
 
     return building
+
+
+def cmd_flush_kernel_trigger_jobs(args, api):
+    """Abort jobs with no artifacts, useful mostly for kernel build triggers"""
+    job_info = api.get_job_info(args.job)
+    builds = job_info['builds']
+    for build in builds:
+        build_number = build['number']
+        build_info = api.get_build_info(args.job, build_number)
+        artifacts = build_info['artifacts']
+        if not artifacts:
+            print("Aborting {}".format(build_number))
+            api.stop_build(args.job, build_number)
 
 
 def cmd_flush(args, api):
