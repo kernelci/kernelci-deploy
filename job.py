@@ -29,7 +29,7 @@ ACTIONS = [
     "trigger",
     "enable",
     "disable",
-    "flush",
+    "wait",
     "abort",
     "flush_kernel_trigger_jobs",
 ]
@@ -83,7 +83,7 @@ def cmd_flush_kernel_trigger_jobs(args, api):
             api.stop_build(args.job, build_number)
 
 
-def cmd_flush(args, api):
+def cmd_wait(args, api):
     building = _get_building_jobs(api, args.job)
 
     while building:

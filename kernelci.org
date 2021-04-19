@@ -70,7 +70,7 @@ cmd_rootfs_builds() {
 cmd_rootfs_flush() {
     echo "Waiting for rootfs jobs to complete"
     python3 job.py --settings data/prod-jenkins.ini \
-            flush rootfs-build-trigger
+            wait rootfs-build-trigger
 }
 
 cmd_backend() {
