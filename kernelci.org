@@ -151,7 +151,8 @@ cmd_test_definitions() {
     cd checkout/test-definitions
     git remote update origin
     git remote update linaro
-    git checkout linaro/master
+    git checkout origin/main
+    git pull --rebase linaro master
     tag=kernelci-$(date +%Y%m%d)
     echo "tag: [$tag]"
     git tag -a "$tag" -m "$tag"
