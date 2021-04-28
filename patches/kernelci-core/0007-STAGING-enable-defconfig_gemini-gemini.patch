@@ -1,0 +1,29 @@
+From 77a0a3584d71b884a5e508d3f605203473ca6766 Mon Sep 17 00:00:00 2001
+From: "kernelci.org bot" <bot@kernelci.org>
+Date: Wed, 28 Apr 2021 16:48:24 +0100
+Subject: [PATCH 7/7] STAGING enable defconfig_gemini+gemini
+
+---
+ config/core/build-configs.yaml | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/config/core/build-configs.yaml b/config/core/build-configs.yaml
+index f81faf42f175..1693b1cee516 100644
+--- a/config/core/build-configs.yaml
++++ b/config/core/build-configs.yaml
+@@ -774,7 +774,11 @@ build_configs:
+         fragments: [kselftest]
+         architectures:
+           arc: *arc_defconfig
+-          arm: *arm_defconfig
++          arm:
++            <<: *arm_defconfig
++            fragments: [gemini]
++            filters: [passlist: {defconfig: ['multi_v7', 'gemini']}]
++            extra_configs: ['gemini_defconfig+gemini']
+           arm64: *arm64_defconfig
+           i386: *i386_defconfig
+           mips: *mips_defconfig
+-- 
+2.20.1
+
