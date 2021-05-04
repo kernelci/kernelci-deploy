@@ -15,6 +15,35 @@ cmd_jenkins() {
     echo "Updating Jenkins jobs"
     ./pending.py kernelci-jenkins --push
 
+    [ -d checkout/kernelci-jenkins/data ] || {
+        # To set this up:
+        # git clone https://github.com/kernelci/kernelci-jenkins-data.git data
+        # cd data; git-crypt unlock
+        # cd ..; ln -s data/bot.staging.kernelci.org/env .env
+
+        echo "Encrypted kernelci-jenkins-data repository not set up"
+        return 1
+    }
+
+    echo "Updating encrypted data checkout"
+    topdir=$(pwd)
+    cd checkout/kernelci-jenkins/data
+    git remote update origin
+    data_diff=$(git diff origin/main)
+    if [ -n "$data_diff" ]; then
+        git checkout origin/main
+        cd "$topdir/checkout/kernelci-jenkins"
+        echo "Recreating Jenkins container"
+        docker-compose down
+        docker-compose up --build -d
+        sleep 60  # magic - another way to do this would be to poll something
+    else
+        cd "$topdir/checkout/kernelci-jenkins"
+        # ToDo: restart the container but only when there were some changes in
+        # kernelci-jenkins to avoid aborting running jobs unnecessarily
+    fi
+    cd "$topdir"
+
     echo "Triggering Jenkins seed job"
     python3 job.py --no-params trigger job-dsl
 }
