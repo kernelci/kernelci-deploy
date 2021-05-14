@@ -1,24 +1,24 @@
-From 6b0416fd10946716d563419e6b760ed0cab5222c Mon Sep 17 00:00:00 2001
+From a46fd34330f663ed4201c35cb1149d1af383347a Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 29 Sep 2020 23:12:00 +0100
-Subject: [PATCH 3/7] STAGING build-configs.yaml: add x86_chromebook fragment
+Subject: [PATCH 3/7] STAGING build-configs.yaml: build x86-chromebook fragment
 
 ---
  config/core/build-configs.yaml | 8 ++++++--
  1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/config/core/build-configs.yaml b/config/core/build-configs.yaml
-index 50d50ef3021c..f81faf42f175 100644
+index a66c9bf4f279..693e1f7a6751 100644
 --- a/config/core/build-configs.yaml
 +++ b/config/core/build-configs.yaml
-@@ -779,14 +779,18 @@ build_configs:
+@@ -780,14 +780,18 @@ build_configs:
            i386: *i386_defconfig
            mips: *mips_defconfig
            riscv: *riscv_defconfig
 -          x86_64: *x86_64_defconfig
 +          x86_64:
 +            <<: *x86_64_defconfig
-+            fragments: [x86_chromebook]
++            fragments: [x86-chromebook]
        clang-10: &staging_clang
          build_environment: clang-10
          fragments: [kselftest]
@@ -28,7 +28,7 @@ index 50d50ef3021c..f81faf42f175 100644
 -          x86_64: *x86_64_defconfig
 +          x86_64:
 +            <<: *x86_64_defconfig
-+            fragments: [x86_chromebook]
++            fragments: [x86-chromebook]
  
    kernelci_staging-next:
      tree: kernelci
