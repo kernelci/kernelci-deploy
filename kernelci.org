@@ -45,6 +45,10 @@ cmd_core() {
     cd -
 }
 
+cmd_jenkins() {
+    # ToDo...
+}
+
 cmd_dsl() {
     echo "Running Jenkins DSL seed job"
     python3 job.py --settings data/prod-jenkins.ini \
