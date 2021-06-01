@@ -1,7 +1,7 @@
-From fb1db512991bb6ae2dfbf77c21d5335e922a4d76 Mon Sep 17 00:00:00 2001
+From b6e94f212ccd6521818fe5beb99c863cf840d0da Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Almeida?= <andrealmeid@collabora.com>
 Date: Thu, 27 May 2021 13:56:33 -0300
-Subject: [PATCH] selftests: futex: Create futex wait tests
+Subject: [PATCH 1/2] selftests: futex: Create futex wait tests
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -230,5 +230,5 @@ index 000000000000..3635271c6679
 +	return ret;
 +}
 -- 
-2.31.1
+2.20.1
 
