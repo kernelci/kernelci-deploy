@@ -1,5 +1,4 @@
 *.pyc
 checkout
 keys
-patches/linux
 .tree
