@@ -1,4 +1,4 @@
-From 4c7f19be5683270b44dd53a2485c7478d934d96d Mon Sep 17 00:00:00 2001
+From b5f3649f767fa0c66cac48bda8ae9ac2df7fe038 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Wed, 28 Apr 2021 16:48:24 +0100
 Subject: [PATCH 7/7] STAGING enable defconfig_gemini+gemini
@@ -8,10 +8,10 @@ Subject: [PATCH 7/7] STAGING enable defconfig_gemini+gemini
  1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/config/core/build-configs.yaml b/config/core/build-configs.yaml
-index a345d8d08ae9..11cf067eecf4 100644
+index d416b5c61a0f..90b2b599ab1c 100644
 --- a/config/core/build-configs.yaml
 +++ b/config/core/build-configs.yaml
-@@ -792,7 +792,11 @@ build_configs:
+@@ -801,7 +801,11 @@ build_configs:
          fragments: [kselftest]
          architectures:
            arc: *arc_defconfig
