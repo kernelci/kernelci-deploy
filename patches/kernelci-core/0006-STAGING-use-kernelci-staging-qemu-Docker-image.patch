@@ -1,4 +1,4 @@
-From b73422a9065f6a17f5a805e86776995364d0cb3a Mon Sep 17 00:00:00 2001
+From 4056e6a97fe0a723e48e9b0503365ac0d4a18fd6 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 29 Jan 2021 15:50:42 +0000
 Subject: [PATCH 6/7] STAGING use kernelci/staging-qemu Docker image

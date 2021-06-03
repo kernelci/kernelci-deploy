@@ -1,4 +1,4 @@
-From 38ce83ff80f952c4a291e3fe34bb742e5d12518f Mon Sep 17 00:00:00 2001
+From 2ea88dfc94fdf7e46ef89cd424dff012a57e29d7 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 29 Sep 2020 23:12:00 +0100
 Subject: [PATCH 3/7] STAGING build-configs.yaml: build x86-chromebook fragment
@@ -8,7 +8,7 @@ Subject: [PATCH 3/7] STAGING build-configs.yaml: build x86-chromebook fragment
  1 file changed, 9 insertions(+), 2 deletions(-)
 
 diff --git a/config/core/build-configs.yaml b/config/core/build-configs.yaml
-index 7efb098bc05e..a12582488606 100644
+index b268756f8d00..c7680434ebbd 100644
 --- a/config/core/build-configs.yaml
 +++ b/config/core/build-configs.yaml
 @@ -849,14 +849,21 @@ build_configs:
