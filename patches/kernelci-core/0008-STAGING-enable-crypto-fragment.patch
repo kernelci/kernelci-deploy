@@ -1,0 +1,38 @@
+From 6e25d80fe51d66d3edf6170c2bf00e8e28187863 Mon Sep 17 00:00:00 2001
+From: "kernelci.org bot" <bot@kernelci.org>
+Date: Thu, 3 Jun 2021 10:39:55 +0100
+Subject: [PATCH 8/8] STAGING enable crypto fragment
+
+---
+ config/core/build-configs.yaml | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/config/core/build-configs.yaml b/config/core/build-configs.yaml
+index 20af65982fd6..66bdac236ac6 100644
+--- a/config/core/build-configs.yaml
++++ b/config/core/build-configs.yaml
+@@ -835,16 +835,18 @@ build_configs:
+           arc: *arc_defconfig
+           arm:
+             <<: *arm_defconfig
+-            fragments: [gemini]
++            fragments: [gemini, crypto]
+             filters: [passlist: {defconfig: ['multi_v7', 'gemini']}]
+             extra_configs: ['gemini_defconfig+gemini']
+-          arm64: *arm64_defconfig
++          arm64:
++            <<: *arm64_defconfig
++            fragments: [crypto]
+           i386: *i386_defconfig
+           mips: *mips_defconfig
+           riscv: *riscv_defconfig
+           x86_64:
+             <<: *x86_64_defconfig
+-            fragments: [x86-chromebook]
++            fragments: [x86-chromebook, crypto]
+             extra_configs: ['x86_64_defconfig+x86-chromebook+kselftest']
+       clang-10: &staging_clang
+         build_environment: clang-10
+-- 
+2.20.1
+
