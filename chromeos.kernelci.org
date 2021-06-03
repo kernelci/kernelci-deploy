@@ -1,0 +1,93 @@
+#!/bin/sh
+
+# Periodic job run on staging.kernelci.org to merge together all the pending
+# PRs and update the staging.kernelci.org branches, then update Docker images
+# and trigger a full build/test cycle with a kernel branch based on linux-next.
+
+set -e
+
+CHROMEOS_SETTINGS="data/chromeos.ini"
+
+cmd_pull() {
+    echo "Updating local repository"
+    git pull --ff-only
+}
+
+cmd_jenkins() {
+    echo "Updating Jenkins jobs"
+    ./pending.py kernelci-jenkins --settings=${CHROMEOS_SETTINGS} --main=chromeos.kernelci.org --push
+}
+
+cmd_core() {
+    echo "Updating kernelci-core"
+    ./pending.py kernelci-core --settings=${CHROMEOS_SETTINGS} --main=chromeos.kernelci.org --push
+}
+
+cmd_test_definitions() {
+    echo "Updating test-definitions"
+    ./pending.py test-definitions --settings=${CHROMEOS_SETTINGS} --main=chromeos.kernelci.org --push
+}
+
+cmd_backend() {
+    echo "Updating kernelci-backend"
+    ./pending.py kernelci-backend --settings=${CHROMEOS_SETTINGS} --main=chromeos.kernelci.org --push
+    # ToDo: check if there were any changes to skip if there weren't any
+    ./ansible kernelci-backend api.chromeos.kernelci.org
+}
+
+cmd_frontend() {
+    echo "Updating kernelci-frontend"
+    ./pending.py kernelci-frontend --settings=${CHROMEOS_SETTINGS} --main=chromeos.kernelci.org --push
+    # ToDo: check if there were any changes to skip if there weren't any
+    ./ansible kernelci-frontend chromeos.kernelci.org
+}
+
+cmd_kernel() {
+    tree="${1:-next}"
+
+    echo "Pushing kernel test branch for ${tree}"
+    url=https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+    branch=linux-5.12.y
+
+    ./kernel.py \
+        --push \
+        --ssh-key=keys/id_rsa_staging.kernelci.org \
+        --from-url=$url \
+        --from-branch=$branch \
+        --branch=chromeos-"$tree" \
+        --tag-prefix=chromeos-"$tree"-
+}
+
+cmd_monitor() {
+    echo "Triggering Jenkins kernel-tree-monitor job"
+    python3 \
+        job.py \
+        --json=data/staging-monitor.json \
+        trigger \
+        kernel-tree-monitor
+}
+
+cmd_all() {
+    tree="$1"
+
+    cmd_pull
+    cmd_jenkins
+#    cmd_core
+#    cmd_test_definitions
+#    cmd_backend
+#    cmd_frontend
+#    cmd_kernel $tree
+#    cmd_monitor
+}
+
+cmd="${1}"
+
+if [ -n "$cmd" ]; then
+    shift 1
+else
+    cmd="all"
+fi
+
+"cmd_"$cmd $@
+
+exit 0
