@@ -113,7 +113,7 @@ def main(args):
     namespace = args.namespace or settings.get('namespace') or 'kernelci'
     repo_name = '/'.join([namespace, args.project])
     repo = kernelci.GITHUB.get_repo(repo_name)
-    kernelci.checkout_repository(path, repo)
+    kernelci.checkout_repository(path, repo, branch=args.main)
 
     skip = get_skip_list(args, settings)
 
