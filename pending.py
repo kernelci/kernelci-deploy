@@ -127,7 +127,7 @@ def main(args):
 
     iterate_prs(repo, skip, users, path)
 
-    patches_path = os.path.join('patches', args.project)
+    patches_path = os.path.join('patches', args.project, args.branch or '')
     if not kernelci.apply_patches(path, patches_path):
         print_color('red', "Aborting, all patches must apply.")
         return False
