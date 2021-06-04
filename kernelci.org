@@ -88,6 +88,7 @@ cmd_backend() {
         kernelci-backend \
         api.kernelci.org \
         $rev \
+        main \
         $PWD/keys/id_rsa_kernelci.org
 }
 
@@ -100,6 +101,7 @@ cmd_frontend() {
         kernelci-frontend \
         linux.kernelci.org \
         $rev \
+        main \
         $PWD/keys/id_rsa_kernelci.org
 }
 
