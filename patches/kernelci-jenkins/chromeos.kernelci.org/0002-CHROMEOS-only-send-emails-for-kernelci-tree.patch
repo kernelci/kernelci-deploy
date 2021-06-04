@@ -1,0 +1,28 @@
+From b185cd831ecf5dc272334dfb76e2177cff1be4d6 Mon Sep 17 00:00:00 2001
+From: "kernelci.org bot" <bot@kernelci.org>
+Date: Thu, 30 Jan 2020 14:33:44 +0000
+Subject: [PATCH 2/2] CHROMEOS only send emails for kernelci tree
+
+---
+ scripts/kernel-arch-complete.sh | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/scripts/kernel-arch-complete.sh b/scripts/kernel-arch-complete.sh
+index 3be017318a8e..60e9b98d2682 100755
+--- a/scripts/kernel-arch-complete.sh
++++ b/scripts/kernel-arch-complete.sh
+@@ -35,6 +35,11 @@ fi
+     echo "Build has now finished, reporting result to dashboard."
+     curl -X POST -H "Authorization: $EMAIL_AUTH_TOKEN" -H "Content-Type: application/json" -d '{"job": "'$TREE_NAME'", "kernel": "'$GIT_DESCRIBE'", "git_branch": "'$BRANCH'"}' ${API}/job
+ 
++if [ "$TREE_NAME" != "kernelci" ]; then
++    echo "Only dealing with kernelci tree on chromeos.kernelci.org for now"
++    exit 0
++fi
++
+     if [ "$EMAIL" != "true" ]; then
+         echo "Not sending emails because EMAIL was false"
+         exit 0
+-- 
+2.20.1
+
