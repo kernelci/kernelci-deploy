@@ -127,13 +127,13 @@ def main(args):
 
     iterate_prs(repo, skip, users, path)
 
-    patches_path = os.path.join('patches', args.project, args.branch or '')
+    target_branch = args.branch or settings.get('branch') or ''
+    patches_path = os.path.join('patches', args.project, target_branch)
     if not kernelci.apply_patches(path, patches_path):
         print_color('red', "Aborting, all patches must apply.")
         return False
 
     if args.push:
-        target_branch = args.branch or settings.get('branch')
         ssh_key = kernelci.default_ssh_key(args.ssh_key, target_branch)
         if not ssh_key:
             print_color('red', "No SSH key provided, cannot push.")
