@@ -5,8 +5,9 @@ set -e
 repo="${1}"
 target="${2}"
 git_rev="${3:-staging.kernelci.org}"
-key="${4:-$PWD/keys/id_rsa_staging.kernelci.org}"
-opts="${5}"
+ansible_rev="${4:-main}"
+key="${5:-$PWD/keys/id_rsa_staging.kernelci.org}"
+opts="${6}"
 
 [ "$repo" = "kernelci-backend" ] || \
 [ "$repo" = "kernelci-frontend" ] || \
@@ -29,6 +30,7 @@ path="checkout/$repo-config"
 [ -e "$key" ] && key_arg="--private-key $key" || key_arg=""
 
 cd "$path"
+git checkout "$ansible_rev"
 git pull --ff-only
 ansible-playbook \
     site.yml \
