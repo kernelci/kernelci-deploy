@@ -1,7 +1,7 @@
-From 7de817ffeab5c882d510065731c7412aeddbd922 Mon Sep 17 00:00:00 2001
+From 1fd5921aec04eac405606550ed7396e9f537dffb Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Fri, 11 Jun 2021 19:16:53 +0100
-Subject: [PATCH 5/5] CHROMEOS enable chromeos_configs
+Subject: [PATCH 5/6] CHROMEOS enable chromeos_configs
 
 ---
  config/core/build-configs.yaml | 2 ++
