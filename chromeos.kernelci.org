@@ -86,9 +86,9 @@ cmd_frontend() {
 }
 
 cmd_kernel() {
-    tree=stable
-    url=https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-    branch=linux-5.12.y
+    tree=mainline
+    url=git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+    branch=master
 
     echo "Pushing kernel test branch for ${tree}"
     ./kernel.py \
