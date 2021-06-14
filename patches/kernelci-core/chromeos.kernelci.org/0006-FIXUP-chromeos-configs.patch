@@ -1,20 +1,21 @@
-From 2ff66121d586534d77e05fc755099a42f7b4a3c4 Mon Sep 17 00:00:00 2001
+From 260a5e1a755476fbe52396495ab654a1f6f9e264 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 11 Jun 2021 19:27:14 +0100
 Subject: [PATCH 6/6] FIXUP chromeos-configs
 
 ---
- config/core/build-configs.yaml | 49 +++++++++++++++++-----------------
- 1 file changed, 25 insertions(+), 24 deletions(-)
+ config/core/build-configs.yaml | 55 +++++++++++++++++++---------------
+ 1 file changed, 31 insertions(+), 24 deletions(-)
 
 diff --git a/config/core/build-configs.yaml b/config/core/build-configs.yaml
-index b56603366ce9..c0c2b9539494 100644
+index b56603366ce9..47f8471fbac4 100644
 --- a/config/core/build-configs.yaml
 +++ b/config/core/build-configs.yaml
-@@ -455,6 +455,27 @@ android_variants: &android_variants
+@@ -455,6 +455,33 @@ android_variants: &android_variants
        riscv: *riscv_arch
  
  
++
 +chromeos_variants:
 +  clang-13: &chromeos-configs
 +        build_environment: clang-13
@@ -23,23 +24,28 @@ index b56603366ce9..c0c2b9539494 100644
 +              base_defconfig: 'cros://chromeos-5.10/armel/chromiumos-arm.flavour.config'
 +              extra_configs:
 +                - 'cros://chromeos-5.10/armel/chromiumos-rockchip.flavour.config'
++              filters: &cros-filters
++                - regex: { defconfig: 'cros' }
 +            arm64:
 +              base_defconfig: 'cros://chromeos-5.10/arm64/chromiumos-arm64.flavour.config'
 +              extra_configs:
 +                - 'cros://chromeos-5.10/arm64/chromiumos-mediatek.flavour.config'
 +                - 'cros://chromeos-5.10/arm64/chromiumos-qualcomm.flavour.config'
 +                - 'cros://chromeos-5.10/arm64/chromiumos-rockchip64.flavour.config'
++              filters: *cros-filters
 +            x86_64:
 +              base_defconfig: 'cros://chromeos-5.10/x86_64/chromiumos-x86_64.flavour.config'
 +              extra_configs:
 +                - 'cros://chromeos-5.10/x86_64/chromeos-amd-stoneyridge.flavour.config'
 +                - 'cros://chromeos-5.10/x86_64/chromeos-intel-denverton.flavour.config'
 +                - 'cros://chromeos-5.10/x86_64/chromeos-intel-pineview.flavour.config'
++              filters: *cros-filters
++
 +
  build_configs:
  
    agross:
-@@ -807,8 +828,8 @@ build_configs:
+@@ -807,8 +834,8 @@ build_configs:
              <<: *x86_64_defconfig
              fragments: [x86-chromebook]
              extra_configs: ['x86_64_defconfig+x86-chromebook+kselftest']
@@ -50,7 +56,7 @@ index b56603366ce9..c0c2b9539494 100644
  
    kernelci_chromeos-next:
      tree: kernelci
-@@ -862,26 +883,6 @@ build_configs:
+@@ -862,26 +889,6 @@ build_configs:
        clang-10:
          build_environment: clang-10
          architectures: *arch_clang_configs
@@ -77,7 +83,7 @@ index b56603366ce9..c0c2b9539494 100644
  
    media:
      tree: media
-@@ -949,8 +950,8 @@ build_configs:
+@@ -949,8 +956,8 @@ build_configs:
                    defconfig: *riscv_clang_configs
  
        # ChromeOS configs

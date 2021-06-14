@@ -1,4 +1,4 @@
-From d95b7576691f6f779f54c2d496e6aee490b7014c Mon Sep 17 00:00:00 2001
+From f0a52388d2d1fb6b79f069d4fe8a6dbed8d55d19 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 3 Jan 2020 16:09:40 +0000
 Subject: [PATCH 2/6] CHROMEOS ensure no public bisection email reports are

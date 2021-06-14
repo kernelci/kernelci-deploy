@@ -1,4 +1,4 @@
-From b8f790f27f258d5885902fc3b9130c845e72d28f Mon Sep 17 00:00:00 2001
+From ccfe16648a751f7c9c6d5dc2ce86e9c810ac5f05 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 29 Jan 2021 15:50:42 +0000
 Subject: [PATCH 4/6] CHROMEOS use kernelci/staging-qemu Docker image
