@@ -1,7 +1,7 @@
-From 0c0349592ee4e8cb3aac86f7a0f7dce32f68358b Mon Sep 17 00:00:00 2001
+From ea055d52c5a4da0b57da27aa2f4cc07b88489f83 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 15 Sep 2020 10:22:30 +0100
-Subject: [PATCH 3/6] CHROMEOS use chromeos.kernelci.org branch for test
+Subject: [PATCH 3/4] CHROMEOS use chromeos.kernelci.org branch for test
  definitions
 
 ---
