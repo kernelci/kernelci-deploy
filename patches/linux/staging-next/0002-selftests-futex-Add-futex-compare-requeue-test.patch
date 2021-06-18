@@ -1,7 +1,7 @@
-From bccaa7ea526e1bcdeca4ef33f0cb7810d09e0a7a Mon Sep 17 00:00:00 2001
+From f12a5907f4f8c165ca92cf522640ab62c6fc0b7c Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Almeida?= <andrealmeid@collabora.com>
 Date: Fri, 28 May 2021 10:17:19 -0300
-Subject: [PATCH 2/3] selftests: futex: Add futex compare requeue test
+Subject: [PATCH 2/4] selftests: futex: Add futex compare requeue test
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -197,5 +197,5 @@ index d5e1430bcdca..11a9d62290f5 100755
 +echo
 +./futex_requeue $COLOR
 -- 
-2.31.1
+2.20.1
 

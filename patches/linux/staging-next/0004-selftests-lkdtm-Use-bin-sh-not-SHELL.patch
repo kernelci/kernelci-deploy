@@ -1,0 +1,33 @@
+From 938d62fa3d7023469f6c55566ac146dc23bbb408 Mon Sep 17 00:00:00 2001
+From: Kees Cook <keescook@chromium.org>
+Date: Thu, 17 Jun 2021 16:10:27 -0700
+Subject: [PATCH 4/4] selftests/lkdtm: Use /bin/sh not $SHELL
+
+Some environments (e.g. kerneci.org) do not set $SHELL for their test
+environment. There's no need to use $SHELL here anyway, so just replace
+it with hard-coded /bin/sh instead. Without this, the LKDTM tests would
+never actually run on kerneci.org.
+
+Fixes: 46d1a0f03d66 ("selftests/lkdtm: Add tests for LKDTM targets")
+Cc: stable@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ tools/testing/selftests/lkdtm/run.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/testing/selftests/lkdtm/run.sh b/tools/testing/selftests/lkdtm/run.sh
+index bb7a1775307b..968ff3cf5667 100755
+--- a/tools/testing/selftests/lkdtm/run.sh
++++ b/tools/testing/selftests/lkdtm/run.sh
+@@ -79,7 +79,7 @@ dmesg > "$DMESG"
+ # Most shells yell about signals and we're expecting the "cat" process
+ # to usually be killed by the kernel. So we have to run it in a sub-shell
+ # and silence errors.
+-($SHELL -c 'cat <(echo '"$test"') >'"$TRIGGER" 2>/dev/null) || true
++(/bin/sh -c 'cat <(echo '"$test"') >'"$TRIGGER" 2>/dev/null) || true
+ 
+ # Record and dump the results
+ dmesg | comm --nocheck-order -13 "$DMESG" - > "$LOG" || true
+-- 
+2.20.1
+
