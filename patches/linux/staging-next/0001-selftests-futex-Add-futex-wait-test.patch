@@ -1,7 +1,7 @@
-From dc7a39ec6eda014852428cddec26a404d08a6e9a Mon Sep 17 00:00:00 2001
+From e79ab0b5edd88cadb8c634b242f9fa726fa571d8 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andr=C3=A9=20Almeida?= <andrealmeid@collabora.com>
 Date: Thu, 27 May 2021 13:56:33 -0300
-Subject: [PATCH 1/3] selftests: futex: Add futex wait test
+Subject: [PATCH 1/4] selftests: futex: Add futex wait test
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -238,5 +238,5 @@ index 1acb6ace1680..d5e1430bcdca 100755
 +echo
 +./futex_wait $COLOR
 -- 
-2.31.1
+2.20.1
 
