@@ -1,0 +1,32 @@
+From 8c795d723e20ae708b360f561d2e1a97a2e11070 Mon Sep 17 00:00:00 2001
+From: Kees Cook <keescook@chromium.org>
+Date: Wed, 23 Jun 2021 13:39:30 -0700
+Subject: [PATCH 1003/1009] selftests/lkdtm: Fix expected text for free poison
+
+Freed memory poisoning can be tested a few ways, so update the expected
+text to reflect the non-Oopsing alternative.
+
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ tools/testing/selftests/lkdtm/tests.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/tools/testing/selftests/lkdtm/tests.txt b/tools/testing/selftests/lkdtm/tests.txt
+index a5fce7fd4520..a94d4d8eeb5c 100644
+--- a/tools/testing/selftests/lkdtm/tests.txt
++++ b/tools/testing/selftests/lkdtm/tests.txt
+@@ -17,9 +17,9 @@ CORRUPT_PAC
+ UNALIGNED_LOAD_STORE_WRITE
+ #OVERWRITE_ALLOCATION Corrupts memory on failure
+ #WRITE_AFTER_FREE Corrupts memory on failure
+-READ_AFTER_FREE
++READ_AFTER_FREE call trace:|Memory correctly poisoned
+ #WRITE_BUDDY_AFTER_FREE Corrupts memory on failure
+-READ_BUDDY_AFTER_FREE
++READ_BUDDY_AFTER_FREE call trace:|Memory correctly poisoned
+ SLAB_FREE_DOUBLE
+ SLAB_FREE_CROSS
+ SLAB_FREE_PAGE
+-- 
+2.20.1
+

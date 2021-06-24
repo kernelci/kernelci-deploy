@@ -1,0 +1,33 @@
+From 208e44d1f5992a75383f4d5677b7818304bfd535 Mon Sep 17 00:00:00 2001
+From: Kees Cook <keescook@chromium.org>
+Date: Wed, 23 Jun 2021 13:39:33 -0700
+Subject: [PATCH 1006/1009] lkdtm: Enable DOUBLE_FAULT on all architectures
+
+Where feasible, I prefer to have all tests visible on all architectures,
+but to have them wired to XFAIL. DOUBLE_FAIL was set up to XFAIL, but
+wasn't actually being added to the test list.
+
+Fixes: cea23efb4de2 ("lkdtm/bugs: Make double-fault test always available")
+Cc: stable@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ drivers/misc/lkdtm/core.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/misc/lkdtm/core.c b/drivers/misc/lkdtm/core.c
+index 645b31e98c77..2c89fc18669f 100644
+--- a/drivers/misc/lkdtm/core.c
++++ b/drivers/misc/lkdtm/core.c
+@@ -178,9 +178,7 @@ static const struct crashtype crashtypes[] = {
+ 	CRASHTYPE(STACKLEAK_ERASING),
+ 	CRASHTYPE(CFI_FORWARD_PROTO),
+ 	CRASHTYPE(FORTIFIED_STRSCPY),
+-#ifdef CONFIG_X86_32
+ 	CRASHTYPE(DOUBLE_FAULT),
+-#endif
+ #ifdef CONFIG_PPC_BOOK3S_64
+ 	CRASHTYPE(PPC_SLB_MULTIHIT),
+ #endif
+-- 
+2.20.1
+

@@ -1,7 +1,7 @@
-From eb030e0cf049f1d6a69f6332c923aabb1fdf6c96 Mon Sep 17 00:00:00 2001
+From b4335e803435791e85f6547fbde7bf067a39b263 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Ricardo=20Ca=C3=B1uelo?= <ricardo.canuelo@collabora.com>
 Date: Mon, 31 May 2021 14:47:42 -0400
-Subject: [PATCH 3/4] unicode: Implement UTF-8 tests as a KUnit test
+Subject: [PATCH 3/3] unicode: Implement UTF-8 tests as a KUnit test
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
