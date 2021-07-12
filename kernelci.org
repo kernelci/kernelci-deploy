@@ -57,11 +57,16 @@ cmd_dsl() {
 }
 
 cmd_rootfs_docker() {
-    echo "Updating debos Docker image"
+    echo "Updating rootfs builder Docker images"
     cd checkout/kernelci-core/config/docker
-    ./build-and-push.sh -dn
+    ./build-and-push.sh -drn
     while true; do
-        ./build-and-push.sh -dp && break || { echo "Retrying..."; sleep 3; }
+        if ./build-and-push.sh -drp; then
+            break
+        else
+            echo "Retrying..."
+            sleep 3
+        fi
     done
     cd -
 }
@@ -134,10 +139,15 @@ cmd_website() {
 cmd_docker() {
     cd checkout/kernelci-core/config/docker
     echo "Re-building Docker images"
-    ./build-and-push.sh -bikn
+    ./build-and-push.sh -bikQn
     echo "Pushing Docker images"
     while true; do
-        ./build-and-push.sh -bikp && break || { echo "Retrying..."; sleep 3; }
+        if ./build-and-push.sh -bikQp; then
+            break
+        else
+            echo "Retrying..."
+            sleep 3
+        fi
     done
     cd -
 }
