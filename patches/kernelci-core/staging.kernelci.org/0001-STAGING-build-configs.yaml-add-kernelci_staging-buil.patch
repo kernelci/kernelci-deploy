@@ -1,18 +1,18 @@
-From 8b10380c3ec430c843a01d7332755889e1d1915e Mon Sep 17 00:00:00 2001
+From df56ae980eac0b2744d52784d7e266744d658cb5 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 14 Feb 2019 15:16:26 +0000
-Subject: [PATCH 1/8] STAGING build-configs.yaml: add kernelci_staging-* build
+Subject: [PATCH 1/7] STAGING build-configs.yaml: add kernelci_staging-* build
  configs
 
 ---
- config/core/build-configs.yaml | 39 ++++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+ config/core/build-configs.yaml | 46 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
 
 diff --git a/config/core/build-configs.yaml b/config/core/build-configs.yaml
-index 041dc8ccb442..0d3010e1c592 100644
+index b05beb3feb87..446ed9925b9d 100644
 --- a/config/core/build-configs.yaml
 +++ b/config/core/build-configs.yaml
-@@ -847,6 +847,45 @@ build_configs:
+@@ -898,6 +898,52 @@ build_configs:
      branch: 'kernelci.org'
      variants: *stable_variants
  
@@ -30,14 +30,21 @@ index 041dc8ccb442..0d3010e1c592 100644
 +          i386: *i386_defconfig
 +          mips: *mips_defconfig
 +          riscv: *riscv_defconfig
-+          x86_64: *x86_64_defconfig
++          x86_64:
++            <<: *x86_64_defconfig
++            fragments: [x86-chromebook]
++            extra_configs: ['x86_64_defconfig+x86-chromebook+kselftest']
 +      clang-10: &staging_clang
 +        build_environment: clang-10
 +        fragments: [kselftest]
 +        architectures:
 +          arm: *arm_defconfig
 +          arm64: *arm64_defconfig
-+          x86_64: *x86_64_defconfig
++          x86_64:
++            <<: *x86_64_defconfig
++            fragments: [x86-chromebook]
++            extra_configs: ['x86_64_defconfig+x86-chromebook+kselftest']
++
 +
 +  kernelci_staging-next:
 +    tree: kernelci

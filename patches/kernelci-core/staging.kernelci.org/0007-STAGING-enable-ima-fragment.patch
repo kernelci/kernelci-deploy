@@ -1,26 +1,35 @@
-From 3657f2aa78295a307a17079c9ed7f53c8e5a323c Mon Sep 17 00:00:00 2001
+From d3a89f3b20ec7b6f820758d53cf918c6e27dbb6b Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 11 Jun 2021 15:59:42 +0100
-Subject: [PATCH 8/8] STAGING enable ima fragment
+Subject: [PATCH 7/7] STAGING enable ima fragment
 
 ---
- config/core/build-configs.yaml | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ config/core/build-configs.yaml | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/config/core/build-configs.yaml b/config/core/build-configs.yaml
-index 076d144bd368..582362461caf 100644
+index 5ecce5635640..491d1e9ff94e 100644
 --- a/config/core/build-configs.yaml
 +++ b/config/core/build-configs.yaml
-@@ -867,10 +867,11 @@ build_configs:
+@@ -830,7 +830,7 @@ build_configs:
+         architectures:
+           arm: *arm_arch
+           arm64: *arm64_arch
+-          x86_64: 
++          x86_64:
+             <<: *x86_64_arch
+             fragments: [x86_4.19.y_cip]
+ 
+@@ -918,10 +918,11 @@ build_configs:
            riscv: *riscv_defconfig
            x86_64: &x86_64_defconfig-staging
              <<: *x86_64_defconfig
 -            fragments: [x86-chromebook, crypto]
-+            fragments: [x86-chromebook, crypto, ltp-ima]
++            fragments: [x86-chromebook, crypto, ima]
              extra_configs:
                - x86_64_defconfig+x86-chromebook+kselftest
                - x86_64_defconfig+x86-chromebook+crypto
-+              - x86_64_defconfig+x86-chromebook+ltp-ima
++              - x86_64_defconfig+x86-chromebook+ima
        clang-10: &staging_clang
          build_environment: clang-10
          fragments: [kselftest]
