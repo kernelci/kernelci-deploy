@@ -199,7 +199,7 @@ cmd_trigger() {
         kernel-build-trigger
 }
 
-cmd_part1() {
+cmd_pause() {
     cmd_pull
     cmd_flush_kernel
     cmd_abort_bisections
@@ -207,13 +207,14 @@ cmd_part1() {
     echo "Now restart Jenkins"
 }
 
-cmd_part2() {
+cmd_update() {
     cmd_core
     cmd_dsl
     cmd_rootfs_docker
     cmd_rootfs_builds
     cmd_backend
     cmd_frontend
+    cmd_website
     cmd_docker
     cmd_test_definitions
     cmd_kernel
