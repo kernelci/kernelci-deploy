@@ -1,4 +1,4 @@
-From c5637a636804b1553dfe3d2d2e0de4a948ca6f4d Mon Sep 17 00:00:00 2001
+From e7960279573f467a7c6d0ac0b773e284d8ead249 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 15 Sep 2020 10:22:30 +0100
 Subject: [PATCH 4/7] STAGING use staging.kernelci.org branch for test
@@ -13,7 +13,7 @@ Subject: [PATCH 4/7] STAGING use staging.kernelci.org branch for test
  5 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/config/lava/kselftest/kselftest.jinja2 b/config/lava/kselftest/kselftest.jinja2
-index 44c534751761..1379f356780a 100644
+index 776131a8590b..68dca119531f 100644
 --- a/config/lava/kselftest/kselftest.jinja2
 +++ b/config/lava/kselftest/kselftest.jinja2
 @@ -16,7 +16,7 @@
