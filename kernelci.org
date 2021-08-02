@@ -194,9 +194,14 @@ cmd_trigger() {
         kernel-build-trigger
 }
 
-cmd_pull() {
+# -----------------------------------------------------------------------------
+# Main commands
+#
+
+cmd_checkout() {
     echo "Updating local repository"
-    git pull --ff-only
+    git remote update origin
+    git checkout origin/main
 }
 
 cmd_pause() {
