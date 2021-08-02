@@ -4,11 +4,6 @@
 
 set -e
 
-cmd_pull() {
-    echo "Updating local repository"
-    git pull --ff-only
-}
-
 cmd_flush_kernel() {
     echo "Flushing all current kernel builds"
     python3 job.py --settings data/prod-jenkins.ini \
@@ -199,8 +194,12 @@ cmd_trigger() {
         kernel-build-trigger
 }
 
+cmd_pull() {
+    echo "Updating local repository"
+    git pull --ff-only
+}
+
 cmd_pause() {
-    cmd_pull
     cmd_flush_kernel
     cmd_abort_bisections
     # ToDo: automate this step with SSH access to the nodes"
