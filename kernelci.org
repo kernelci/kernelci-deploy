@@ -204,27 +204,32 @@ cmd_checkout() {
     git checkout origin/main
 }
 
+cmd_rootfs() {
+    cmd_rootfs_docker
+    cmd_rootfs_builds
+    cmd_rootfs_flush
+    # ToDo: automate this step:
+    echo "Now update the rootlfs URLs in rootfs-configs.yaml"
+}
+
 cmd_pause() {
     cmd_flush_kernel
     cmd_abort_bisections
-    # ToDo: automate this step with SSH access to the nodes"
+    # ToDo: automate this step with SSH access to the nodes
     echo "Now restart Jenkins"
+    # ToDo: automate waiting for Jenkins to be back online
 }
 
 cmd_update() {
     cmd_core
     cmd_dsl
-    cmd_rootfs_docker
-    cmd_rootfs_builds
     cmd_backend
     cmd_frontend
     cmd_website
-    cmd_docker
     cmd_test_definitions
+    cmd_docker
     cmd_kernel
-    cmd_rootfs_flush
-    # ToDo: automate this step:
-    echo "Now update the rootlfs URLs in rootfs-configs.yaml"
+    cmd_trigger
 }
 
 cmd="${1}"
