@@ -134,10 +134,10 @@ cmd_website() {
 cmd_docker() {
     cd checkout/kernelci-core/config/docker
     echo "Re-building Docker images"
-    ./build-and-push.sh -bikQn
+    ./build-and-push.sh -bkQn
     echo "Pushing Docker images"
     while true; do
-        if ./build-and-push.sh -bikQp; then
+        if ./build-and-push.sh -bkQp; then
             break
         else
             echo "Retrying..."
