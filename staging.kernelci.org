@@ -109,7 +109,7 @@ cmd_website() {
         git checkout origin/staging.kernelci.org
         cd -
     done
-    ./docker-hugo -D -b https://staging.kernelci.org:8080
+    ./docker-hugo -D -b https://static.staging.kernelci.org/
     cd "$topd"
 }
 
