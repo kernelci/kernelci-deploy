@@ -1,4 +1,4 @@
-From 951911ad83c61c1b15f2b34e7224724ee1d81e90 Mon Sep 17 00:00:00 2001
+From 9c6fd9f07d75814d0a2c9ad3d8244e0890b71e3c Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Thu, 3 Jun 2021 10:39:55 +0100
 Subject: [PATCH 6/7] STAGING enable crypto fragment
@@ -8,10 +8,10 @@ Subject: [PATCH 6/7] STAGING enable crypto fragment
  1 file changed, 12 insertions(+), 10 deletions(-)
 
 diff --git a/config/core/build-configs.yaml b/config/core/build-configs.yaml
-index dcc0f907cfa4..fdfd635beae6 100644
+index b100f94596b6..200d9b8d7ab5 100644
 --- a/config/core/build-configs.yaml
 +++ b/config/core/build-configs.yaml
-@@ -874,26 +874,28 @@ build_configs:
+@@ -839,26 +839,28 @@ build_configs:
          fragments: [kselftest]
          architectures:
            arc: *arc_defconfig
