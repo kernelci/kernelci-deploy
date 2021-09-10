@@ -150,7 +150,7 @@ cmd_docker() {
     echo "Updating Docker images"
     # ToDo: check if there were any changes to skip if there weren't any
     cd checkout/kernelci-core/config/docker
-    ./build-and-push.sh -pbdikQr -t kernelci/staging-
+    ./build-and-push.sh -pbdikQrce -t kernelci/staging-
     cd -
 }
 
