@@ -66,6 +66,7 @@ cmd_buildroot() {
 cmd_test_definitions() {
     echo "Updating test-definitions"
     ./pending.py test-definitions --push
+    ./pending.py iec-security --push
 }
 
 cmd_backend() {

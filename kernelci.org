@@ -147,31 +147,46 @@ cmd_docker() {
     cd -
 }
 
-cmd_test_definitions() {
-    if [ ! -d 'checkout/test-definitions' ]; then
+_rebase_upstream() {
+    repo="$1"
+    upstream_url="$2"
+    branch="${3:-master}"
+
+    if [ ! -d "checkout/$repo" ]; then
         git clone \
-            https://github.com/kernelci/test-definitions.git \
-            checkout/test-definitions
-        cd checkout/test-definitions
+            https://github.com/kernelci/"$repo".git \
+            checkout/"$repo"
+        cd checkout/"$repo"
         git remote \
             set-url origin --push \
-            git@github.com:kernelci/test-definitions.git
+            git@github.com:kernelci/"$repo".git
         git remote \
-            add linaro \
-            https://github.com/Linaro/test-definitions.git
+            add upstream \
+            "$upstream_url"
+        git fetch --tags origin
+        git fetch --tags upstream
         cd -
     fi
 
-    cd checkout/test-definitions
+    cd checkout/"$repo"
     git remote update origin
-    git remote update linaro
+    git remote update upstream
     git checkout origin/main
-    git pull --rebase linaro master
+    git pull --rebase upstream "$branch"
     tag=kernelci-$(date +%Y%m%d)
     echo "tag: [$tag]"
     git tag -a "$tag" -m "$tag"
-    git push --force origin HEAD:kernelci.org "$tag"
+    git push --force origin HEAD:kernelci.org HEAD:main "$tag"
     cd -
+}
+
+cmd_test_definitions() {
+    _rebase_upstream \
+        test-definitions \
+        https://github.com/Linaro/test-definitions.git
+    _rebase_upstream \
+        iec-security \
+        https://gitlab.com/cip-project/cip-testing/cip-security-tests.git
 }
 
 cmd_kernel() {
