@@ -193,7 +193,7 @@ cmd_kernel() {
     echo "Pushing kernelci.org LTS kernel branch"
     python3 kernel.py \
         --from-url=git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git \
-        --from-branch=linux-5.13.y \
+        --from-branch=linux-5.14.y \
         --branch=kernelci.org \
         --tag-prefix=kernelci- \
         --ssh-key=$PWD/keys/id_rsa_kernelci.org \
