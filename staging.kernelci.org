@@ -206,7 +206,7 @@ cmd_all() {
     cmd_frontend
     cmd_website
     cmd_kernel $tree
-    # cmd_docker Disabled while upgrading to Bullseye manually
+    cmd_docker
     cmd_monitor
 }
 
