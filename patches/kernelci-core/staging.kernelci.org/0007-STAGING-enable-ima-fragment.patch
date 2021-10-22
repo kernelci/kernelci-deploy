@@ -1,4 +1,4 @@
-From 14acb85957abc66bde5d0b2e362b632d78091300 Mon Sep 17 00:00:00 2001
+From 40e8ee06e8c230e0e9e8eacca86f31f4320f066b Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 11 Jun 2021 15:59:42 +0100
 Subject: [PATCH 7/7] STAGING enable ima fragment
@@ -8,10 +8,10 @@ Subject: [PATCH 7/7] STAGING enable ima fragment
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/config/core/build-configs.yaml b/config/core/build-configs.yaml
-index 760829ebdb80..79e8b86d9ee9 100644
+index 8f72c8969178..cbc6208afbea 100644
 --- a/config/core/build-configs.yaml
 +++ b/config/core/build-configs.yaml
-@@ -860,10 +860,11 @@ build_configs:
+@@ -842,10 +842,11 @@ build_configs:
            riscv: *riscv_defconfig
            x86_64: &x86_64_defconfig-staging
              <<: *x86_64_defconfig

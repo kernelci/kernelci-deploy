@@ -1,4 +1,4 @@
-From 32da116bfe040642ef3c73106960d43febf995f7 Mon Sep 17 00:00:00 2001
+From 849395e6d94aaf480ffc41b8e0a9644d62629d5f Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Wed, 8 Apr 2020 21:48:18 +0100
 Subject: [PATCH 2/7] STAGING build-configs.yaml: enable minimal set of
@@ -9,10 +9,10 @@ Subject: [PATCH 2/7] STAGING build-configs.yaml: enable minimal set of
  1 file changed, 10 insertions(+), 2 deletions(-)
 
 diff --git a/config/core/build-configs.yaml b/config/core/build-configs.yaml
-index a8dface3e933..6d73f5956169 100644
+index 05b5c14f0eb3..61d8453472aa 100644
 --- a/config/core/build-configs.yaml
 +++ b/config/core/build-configs.yaml
-@@ -918,10 +918,18 @@ build_configs:
+@@ -900,10 +900,18 @@ build_configs:
      tree: mainline
      branch: 'master'
      variants:
