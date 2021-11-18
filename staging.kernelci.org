@@ -107,7 +107,7 @@ cmd_website() {
         echo "Checking out staging branch for $d"
         cd "$d"
         git remote update origin
-        git checkout origin/staging.kernelci.org
+        git checkout origin/staging.kernelci.org || echo "Never mind"
         cd -
     done
     ./docker-hugo -D -b https://static.staging.kernelci.org/
