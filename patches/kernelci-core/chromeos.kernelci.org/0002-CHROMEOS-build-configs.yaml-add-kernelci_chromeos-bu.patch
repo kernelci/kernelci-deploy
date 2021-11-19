@@ -1,4 +1,4 @@
-From d0d4040da63d516ebdad38d8944608f242bb07bc Mon Sep 17 00:00:00 2001
+From 5977552dedd36d3c360570caa6b633d11a8ca51d Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 14 Feb 2019 15:16:26 +0000
 Subject: [PATCH 2/4] CHROMEOS build-configs.yaml: add kernelci_chromeos-*
@@ -9,12 +9,12 @@ Subject: [PATCH 2/4] CHROMEOS build-configs.yaml: add kernelci_chromeos-*
  1 file changed, 47 insertions(+)
 
 diff --git a/config/core/build-configs.yaml b/config/core/build-configs.yaml
-index d49ccfc4b6b2..f37ed31bcdec 100644
+index d04e07c2bd12..a19693cf8aca 100644
 --- a/config/core/build-configs.yaml
 +++ b/config/core/build-configs.yaml
-@@ -805,6 +805,53 @@ build_configs:
-     branch: 'kernelci.org'
-     variants: *stable_variants
+@@ -662,6 +662,53 @@ build_configs:
+     tree: evalenti
+     branch: 'for-kernelci'
  
 +  kernelci_chromeos-mainline:
 +    tree: kernelci
