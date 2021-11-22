@@ -69,6 +69,11 @@ cmd_test_definitions() {
     ./pending.py iec-security --push
 }
 
+cmd_kcidb() {
+    echo "Updating KCIDB"
+    ./pending.py kcidb --push
+}
+
 cmd_backend() {
     opt="$1"
 
@@ -202,6 +207,7 @@ cmd_all() {
     cmd_bootrr
     cmd_buildroot
     cmd_test_definitions
+    cmd_kcidb
     cmd_backend
     cmd_frontend
     cmd_website
