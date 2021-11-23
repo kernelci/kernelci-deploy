@@ -1,29 +1,28 @@
-From 5bd606ff2d8ffd880666d359a2d8c0fa2b3cede3 Mon Sep 17 00:00:00 2001
+From 21697beb61b7e3c209872aae93e76f8e666c2864 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
-Date: Fri, 11 Jun 2021 15:59:42 +0100
-Subject: [PATCH 7/8] STAGING enable ima fragment
+Date: Tue, 23 Nov 2021 14:23:20 +0000
+Subject: [PATCH 8/8] STAGING enable amdgpu fragment
 
 ---
  config/core/build-configs.yaml | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/config/core/build-configs.yaml b/config/core/build-configs.yaml
-index e9e9f643d..92f706861 100644
+index 92f706861..664acfa0c 100644
 --- a/config/core/build-configs.yaml
 +++ b/config/core/build-configs.yaml
-@@ -684,10 +684,11 @@ build_configs:
+@@ -684,9 +684,10 @@ build_configs:
            riscv: *riscv_defconfig
            x86_64: &x86_64_defconfig-staging
              <<: *x86_64_defconfig
--            fragments: [x86-chromebook, crypto]
-+            fragments: [x86-chromebook, crypto, ima]
+-            fragments: [x86-chromebook, crypto, ima]
++            fragments: [amdgpu, x86-chromebook, crypto, ima]
              extra_configs:
                - x86_64_defconfig+x86-chromebook+kselftest
++              - x86_64_defconfig+x86-chromebook+amdgpu
                - x86_64_defconfig+x86-chromebook+crypto
-+              - x86_64_defconfig+x86-chromebook+ima
+               - x86_64_defconfig+x86-chromebook+ima
        clang-10: &staging_clang
-         build_environment: clang-10
-         fragments: [kselftest]
 -- 
 2.20.1
 
