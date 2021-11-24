@@ -1,17 +1,17 @@
-From 21697beb61b7e3c209872aae93e76f8e666c2864 Mon Sep 17 00:00:00 2001
+From b044f49ad0f04c1c96405851ae5b3a531ee7d158 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 23 Nov 2021 14:23:20 +0000
-Subject: [PATCH 8/8] STAGING enable amdgpu fragment
+Subject: [PATCH 8/9] STAGING enable amdgpu fragment
 
 ---
  config/core/build-configs.yaml | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/config/core/build-configs.yaml b/config/core/build-configs.yaml
-index 92f706861..664acfa0c 100644
+index 41f0fda2c461..62b7e4cc4ea9 100644
 --- a/config/core/build-configs.yaml
 +++ b/config/core/build-configs.yaml
-@@ -684,9 +684,10 @@ build_configs:
+@@ -625,9 +625,10 @@ build_configs:
            riscv: *riscv_defconfig
            x86_64: &x86_64_defconfig-staging
              <<: *x86_64_defconfig
