@@ -1,7 +1,7 @@
-From b044f49ad0f04c1c96405851ae5b3a531ee7d158 Mon Sep 17 00:00:00 2001
+From 0be28e3c4feec1a28efe5664e83db20fd0557e86 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 23 Nov 2021 14:23:20 +0000
-Subject: [PATCH 8/9] STAGING enable amdgpu fragment
+Subject: [PATCH 08/10] STAGING enable amdgpu fragment
 
 ---
  config/core/build-configs.yaml | 3 ++-

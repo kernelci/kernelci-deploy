@@ -1,8 +1,8 @@
-From bb8d3f924e66a2be04dd613a17539052882610c3 Mon Sep 17 00:00:00 2001
+From ef645e637c0b0e0d4bc8e27d2142fb1a9d2fddae Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 14 Feb 2019 15:16:26 +0000
-Subject: [PATCH 1/9] STAGING build-configs.yaml: add kernelci_staging-* build
- configs
+Subject: [PATCH 01/10] STAGING build-configs.yaml: add kernelci_staging-*
+ build configs
 
 ---
  config/core/build-configs.yaml | 46 ++++++++++++++++++++++++++++++++++

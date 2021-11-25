@@ -1,7 +1,7 @@
-From 3c9f1e70737e116649eb6d1fd90e62cb8b446bcc Mon Sep 17 00:00:00 2001
+From 3dbfa2b34593a831712c2a43650ffe42f3d7255c Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Wed, 24 Nov 2021 14:07:24 +0000
-Subject: [PATCH 9/9] STAGING build-configs.yaml: add staging-cip
+Subject: [PATCH 09/10] STAGING build-configs.yaml: add staging-cip
 
 ---
  config/core/build-configs.yaml | 6 ++++++

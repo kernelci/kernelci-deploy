@@ -1,7 +1,7 @@
-From c7488651f110c364d5f6d1376c590bfac808b9b1 Mon Sep 17 00:00:00 2001
+From 4c36c3ce70149103cdf04e9d1b0dbdfb85e75b3e Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Thu, 3 Jun 2021 10:39:55 +0100
-Subject: [PATCH 6/9] STAGING enable crypto fragment
+Subject: [PATCH 06/10] STAGING enable crypto fragment
 
 ---
  config/core/build-configs.yaml | 22 ++++++++++++----------

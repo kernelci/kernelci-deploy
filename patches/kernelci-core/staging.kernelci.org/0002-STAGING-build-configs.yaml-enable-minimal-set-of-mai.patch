@@ -1,7 +1,7 @@
-From 0d7ee6e9f3ee3e0767c85d64c5d2aa37afe07ae5 Mon Sep 17 00:00:00 2001
+From 9deaaf7e0cdb5a7879c4829ece8b36ec1fee1a89 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Wed, 8 Apr 2020 21:48:18 +0100
-Subject: [PATCH 2/9] STAGING build-configs.yaml: enable minimal set of
+Subject: [PATCH 02/10] STAGING build-configs.yaml: enable minimal set of
  mainline builds
 
 ---

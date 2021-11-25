@@ -1,7 +1,7 @@
-From 8144fa52a0426ecbd8dc5171c3a6645b4cc18ef3 Mon Sep 17 00:00:00 2001
+From cdb692f385e00d3d9e128e57bc614e4d51912186 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 11 Jun 2021 15:59:42 +0100
-Subject: [PATCH 7/9] STAGING enable ima fragment
+Subject: [PATCH 07/10] STAGING enable ima fragment
 
 ---
  config/core/build-configs.yaml | 3 ++-
