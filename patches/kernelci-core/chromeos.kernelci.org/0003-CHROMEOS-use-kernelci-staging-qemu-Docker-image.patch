@@ -1,7 +1,7 @@
-From a3731980129fd4cbeabc1e19cffa04eca2fcb3c3 Mon Sep 17 00:00:00 2001
+From baa271e1fed1a1741517d0f4bd27e39bdf924632 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 29 Jan 2021 15:50:42 +0000
-Subject: [PATCH 4/4] CHROMEOS use kernelci/staging-qemu Docker image
+Subject: [PATCH 3/3] CHROMEOS use kernelci/staging-qemu Docker image
 
 ---
  config/lava/boot/generic-qemu-boot-template.jinja2 | 2 +-
