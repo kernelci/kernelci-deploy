@@ -1,4 +1,4 @@
-From 0be28e3c4feec1a28efe5664e83db20fd0557e86 Mon Sep 17 00:00:00 2001
+From 7a9e6e441f7b4c05f74c7b6e39c3074715eb48f2 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 23 Nov 2021 14:23:20 +0000
 Subject: [PATCH 08/10] STAGING enable amdgpu fragment
@@ -8,7 +8,7 @@ Subject: [PATCH 08/10] STAGING enable amdgpu fragment
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/config/core/build-configs.yaml b/config/core/build-configs.yaml
-index 41f0fda2c461..62b7e4cc4ea9 100644
+index 1c84e81e784a..36443a4f7f26 100644
 --- a/config/core/build-configs.yaml
 +++ b/config/core/build-configs.yaml
 @@ -625,9 +625,10 @@ build_configs:
@@ -22,7 +22,7 @@ index 41f0fda2c461..62b7e4cc4ea9 100644
 +              - x86_64_defconfig+x86-chromebook+amdgpu
                - x86_64_defconfig+x86-chromebook+crypto
                - x86_64_defconfig+x86-chromebook+ima
-       clang-10: &staging_clang
+       clang-11: &staging_clang
 -- 
 2.20.1
 

@@ -1,4 +1,4 @@
-From ef645e637c0b0e0d4bc8e27d2142fb1a9d2fddae Mon Sep 17 00:00:00 2001
+From 04104be28baa84837b5a5cb59fbf4f780f8c5805 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Thu, 14 Feb 2019 15:16:26 +0000
 Subject: [PATCH 01/10] STAGING build-configs.yaml: add kernelci_staging-*
@@ -9,7 +9,7 @@ Subject: [PATCH 01/10] STAGING build-configs.yaml: add kernelci_staging-*
  1 file changed, 46 insertions(+)
 
 diff --git a/config/core/build-configs.yaml b/config/core/build-configs.yaml
-index f5bd41d83d88..ba60d14f075d 100644
+index d8593b0cf1ca..0ca5a884e738 100644
 --- a/config/core/build-configs.yaml
 +++ b/config/core/build-configs.yaml
 @@ -605,6 +605,52 @@ build_configs:
@@ -34,8 +34,8 @@ index f5bd41d83d88..ba60d14f075d 100644
 +            <<: *x86_64_defconfig
 +            fragments: [x86-chromebook]
 +            extra_configs: ['x86_64_defconfig+x86-chromebook+kselftest']
-+      clang-10: &staging_clang
-+        build_environment: clang-10
++      clang-11: &staging_clang
++        build_environment: clang-11
 +        fragments: [kselftest]
 +        architectures:
 +          arm: *arm_defconfig
@@ -60,7 +60,7 @@ index f5bd41d83d88..ba60d14f075d 100644
 +    branch: 'staging-stable'
 +    variants:
 +      gcc-10: *staging_gcc
-+      clang-10: *staging_clang
++      clang-11: *staging_clang
 +
    khilman:
      tree: khilman

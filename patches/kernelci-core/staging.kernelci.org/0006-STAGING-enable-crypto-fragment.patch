@@ -1,17 +1,17 @@
-From 4c36c3ce70149103cdf04e9d1b0dbdfb85e75b3e Mon Sep 17 00:00:00 2001
+From cfa56d39f076e30b30bef5d0481e7ac718da2fac Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Thu, 3 Jun 2021 10:39:55 +0100
 Subject: [PATCH 06/10] STAGING enable crypto fragment
 
 ---
- config/core/build-configs.yaml | 22 ++++++++++++----------
- 1 file changed, 12 insertions(+), 10 deletions(-)
+ config/core/build-configs.yaml | 21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
 
 diff --git a/config/core/build-configs.yaml b/config/core/build-configs.yaml
-index b2ae4fca88e5..028be587e640 100644
+index 3cf9effe7f05..6959eddf2893 100644
 --- a/config/core/build-configs.yaml
 +++ b/config/core/build-configs.yaml
-@@ -614,26 +614,28 @@ build_configs:
+@@ -614,25 +614,28 @@ build_configs:
          fragments: [kselftest]
          architectures:
            arc: *arc_defconfig
@@ -35,8 +35,8 @@ index b2ae4fca88e5..028be587e640 100644
 +            extra_configs:
 +              - x86_64_defconfig+x86-chromebook+kselftest
 +              - x86_64_defconfig+x86-chromebook+crypto
-       clang-10: &staging_clang
-         build_environment: clang-10
+       clang-11: &staging_clang
+         build_environment: clang-11
          fragments: [kselftest]
          architectures:
            arm: *arm_defconfig
@@ -45,11 +45,10 @@ index b2ae4fca88e5..028be587e640 100644
 -            <<: *x86_64_defconfig
 -            fragments: [x86-chromebook]
 -            extra_configs: ['x86_64_defconfig+x86-chromebook+kselftest']
--
 +          x86_64: *x86_64_defconfig-staging
  
+ 
    kernelci_staging-next:
-     tree: kernelci
 -- 
 2.20.1
 

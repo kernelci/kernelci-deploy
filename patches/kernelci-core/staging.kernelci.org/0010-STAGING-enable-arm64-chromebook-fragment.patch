@@ -1,4 +1,4 @@
-From eec748b36c2862cc93213068e418918b9e2ce1e0 Mon Sep 17 00:00:00 2001
+From ddbf3defd42811ad233ab724cfac91d6d5fcd8d5 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Thu, 25 Nov 2021 09:24:24 +0000
 Subject: [PATCH 10/10] STAGING enable arm64-chromebook fragment
@@ -8,7 +8,7 @@ Subject: [PATCH 10/10] STAGING enable arm64-chromebook fragment
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/config/core/build-configs.yaml b/config/core/build-configs.yaml
-index 6679bee6b61f..f01927e8ce4e 100644
+index 22d3046d6a16..7d107c62997d 100644
 --- a/config/core/build-configs.yaml
 +++ b/config/core/build-configs.yaml
 @@ -619,7 +619,9 @@ build_configs:
