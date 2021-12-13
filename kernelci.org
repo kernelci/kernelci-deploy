@@ -51,21 +51,6 @@ cmd_dsl() {
             trigger job-dsl --no-params
 }
 
-cmd_rootfs_docker() {
-    echo "Updating rootfs builder Docker images"
-    cd checkout/kernelci-core/config/docker
-    ./build-and-push.sh -drn
-    while true; do
-        if ./build-and-push.sh -drp; then
-            break
-        else
-            echo "Retrying..."
-            sleep 3
-        fi
-    done
-    cd -
-}
-
 cmd_rootfs_builds() {
     echo "Starting rootfs build jobs"
     python3 job.py \
@@ -220,7 +205,6 @@ cmd_checkout() {
 }
 
 cmd_rootfs() {
-    cmd_rootfs_docker
     cmd_rootfs_builds
     cmd_rootfs_flush
     # ToDo: automate this step:
