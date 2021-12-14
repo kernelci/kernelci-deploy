@@ -1,4 +1,4 @@
-From 040d1a09b36076cab69e7f36736a48bf3d7ead63 Mon Sep 17 00:00:00 2001
+From 941fbd3cc117a5d1d5b35125eca728980afc7332 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Wed, 24 Nov 2021 14:07:24 +0000
 Subject: [PATCH 09/10] STAGING build-configs.yaml: add staging-cip
@@ -8,10 +8,10 @@ Subject: [PATCH 09/10] STAGING build-configs.yaml: add staging-cip
  1 file changed, 6 insertions(+)
 
 diff --git a/config/core/build-configs.yaml b/config/core/build-configs.yaml
-index 36443a4f7f26..22d3046d6a16 100644
+index 67fd425f19a3..18868d17da3d 100644
 --- a/config/core/build-configs.yaml
 +++ b/config/core/build-configs.yaml
-@@ -656,6 +656,12 @@ build_configs:
+@@ -676,6 +676,12 @@ build_configs:
        gcc-10: *staging_gcc
        clang-11: *staging_clang
  
