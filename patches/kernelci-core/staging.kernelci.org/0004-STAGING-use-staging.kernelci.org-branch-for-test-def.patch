@@ -1,4 +1,4 @@
-From 2c7ff233a7fee2fcb6043a4ca576f3ec582d0b23 Mon Sep 17 00:00:00 2001
+From 24984dc0dc6d5f2222329920a4c555af8b163130 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 15 Sep 2020 10:22:30 +0100
 Subject: [PATCH 4/5] STAGING use staging.kernelci.org branch for test

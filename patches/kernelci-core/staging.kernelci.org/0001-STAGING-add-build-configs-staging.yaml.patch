@@ -1,19 +1,19 @@
-From 60ef32658f67fb647229aaeacb17aa0003021e60 Mon Sep 17 00:00:00 2001
+From d36b40a158c343eb4d99657fbf522f5d2b68c8ae Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Wed, 15 Dec 2021 14:44:58 +0000
 Subject: [PATCH 1/5] STAGING add build-configs-staging.yaml
 
 ---
- config/core/build-configs-staging.yaml | 99 ++++++++++++++++++++++++++
- 1 file changed, 99 insertions(+)
+ config/core/build-configs-staging.yaml | 102 +++++++++++++++++++++++++
+ 1 file changed, 102 insertions(+)
  create mode 100644 config/core/build-configs-staging.yaml
 
 diff --git a/config/core/build-configs-staging.yaml b/config/core/build-configs-staging.yaml
 new file mode 100644
-index 000000000000..8523ae5982a4
+index 000000000000..0c39725b3819
 --- /dev/null
 +++ b/config/core/build-configs-staging.yaml
-@@ -0,0 +1,99 @@
+@@ -0,0 +1,102 @@
 +# Minimum architecture defconfigs
 +arch_defconfigs: &arch_defconfigs
 +  arc: &arc_defconfig
@@ -58,20 +58,23 @@ index 000000000000..8523ae5982a4
 +      fragments: [crypto]
 +    arm64:
 +      <<: *arm64_defconfig
-+      fragments: [arm64-chromebook, crypto]
++      fragments: [arm64-chromebook, crypto, preempt_rt]
 +      extra_configs:
++        - 'defconfig+arm64-chromebook+crypto'
 +        - 'defconfig+arm64-chromebook+kselftest'
++        - 'defconfig+arm64-chromebook+preempt_rt'
 +    i386: *i386_defconfig
 +    mips: *mips_defconfig
 +    riscv: *riscv_defconfig
 +    x86_64: &x86_64_defconfig-staging
 +      <<: *x86_64_defconfig
-+      fragments: [amdgpu, crypto, ima, x86-chromebook]
++      fragments: [amdgpu, crypto, ima, preempt_rt, x86-chromebook]
 +      extra_configs:
 +        - 'x86_64_defconfig+x86-chromebook+amdgpu'
 +        - 'x86_64_defconfig+x86-chromebook+crypto'
 +        - 'x86_64_defconfig+x86-chromebook+ima'
 +        - 'x86_64_defconfig+x86-chromebook+kselftest'
++        - 'x86_64_defconfig+x86-chromebook+preempt_rt'
 +
 +
 +# Staging build configurations using LLVM/Clang
