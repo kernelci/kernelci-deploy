@@ -1,17 +1,17 @@
-From 9ce18f2f8a52f5e4a0ddb03c8682684e03357ce5 Mon Sep 17 00:00:00 2001
+From cd2cd8bd51cc082a99076e7766e83a84e97173d3 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 29 Jan 2021 15:50:42 +0000
-Subject: [PATCH 05/10] STAGING use kernelci/staging-qemu Docker image
+Subject: [PATCH 5/5] STAGING use kernelci/staging-qemu Docker image
 
 ---
  config/lava/boot/generic-qemu-boot-template.jinja2 | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/config/lava/boot/generic-qemu-boot-template.jinja2 b/config/lava/boot/generic-qemu-boot-template.jinja2
-index c891cce5981f..ff4706281bf6 100644
+index 30d65878bd6d..08de0ad20b71 100644
 --- a/config/lava/boot/generic-qemu-boot-template.jinja2
 +++ b/config/lava/boot/generic-qemu-boot-template.jinja2
-@@ -60,7 +60,7 @@ actions:
+@@ -64,7 +64,7 @@ actions:
      media: tmpfs
  {%- if qemu_docker %}
      docker:
