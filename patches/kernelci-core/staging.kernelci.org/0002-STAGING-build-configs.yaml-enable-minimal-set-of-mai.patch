@@ -1,4 +1,4 @@
-From f1564fc6a7dabe6d8e35f765ae7df90fd300ae72 Mon Sep 17 00:00:00 2001
+From a8c614a2f7c3dbaa87b0c5b414215c08359b3246 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Wed, 8 Apr 2020 21:48:18 +0100
 Subject: [PATCH 2/5] STAGING build-configs.yaml: enable minimal set of
