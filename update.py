@@ -25,11 +25,11 @@ import kernelci
 from kernelci import print_color, shell_cmd, ssh_agent
 
 
-def do_rebase(path):
+def do_rebase(path, origin='origin', origin_branch='main'):
     shell_cmd("""\
 cd {path}
-git pull --rebase origin main
-""".format(path=path))
+git pull --rebase {origin} {origin_branch}
+""".format(path=path, origin=origin, origin_branch=origin_branch))
 
 
 def do_push(path, ssh_key, tag, branch):
@@ -51,7 +51,7 @@ def main(args):
     path = os.path.join('checkout', args.project)
     kernelci.checkout_repository(path, repo, branch=args.branch)
 
-    do_rebase(path)
+    do_rebase(path, args.origin, args.origin_branch)
 
     if args.push:
         ssh_key = kernelci.default_ssh_key(args.ssh_key, args.branch)
@@ -76,6 +76,10 @@ Update kernelci.org branch with latest changes")
                         help="Prefix to create date with current date")
     parser.add_argument("--branch", default='kernelci.org',
                         help="Name of the branch to force-push to")
+    parser.add_argument("--origin", default='origin',
+                        help="Name of the origin to rebase onto")
+    parser.add_argument("--origin-branch", default='main',
+                        help="Name of the branch in the origin to rebase onto")
     parser.add_argument("--namespace", default='kernelci',
                         help="Github project namespace, default is kernelci")
     parser.add_argument("--ssh-key",
