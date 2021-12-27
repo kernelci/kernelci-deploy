@@ -33,11 +33,22 @@ cmd_core() {
             https://github.com/kernelci/kernelci-core.git \
             checkout/kernelci-core \
             -b $branch
+        cd checkout/kernelci-core
+        git remote \
+            set-url origin --push \
+            git@github.com:kernelci/kernelci-core.git
+        cd -
     }
     cd checkout/kernelci-core
     git remote update origin
     git checkout origin/$branch
     cd -
+
+    python3 update.py \
+            --branch $branch \
+            --ssh-key=$PWD/keys/id_rsa_kernelci.org \
+            --push \
+            kernelci-core
 }
 
 cmd_jenkins() {
