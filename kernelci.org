@@ -164,16 +164,13 @@ _rebase_upstream() {
         cd -
     fi
 
-    cd checkout/"$repo"
-    git remote update origin
-    git remote update upstream
-    git checkout origin/main
-    git pull --rebase upstream "$branch"
-    tag=kernelci-$(date +%Y%m%d)
-    echo "tag: [$tag]"
-    git tag -a "$tag" -m "$tag"
-    git push --force origin HEAD:kernelci.org HEAD:main "$tag"
-    cd -
+    python3 update.py \
+            --ssh-key=$PWD/keys/id_rsa_kernelci.org \
+            --branch=kernelci.org \
+            --origin=upstream \
+            --origin-branch="$branch" \
+            --push \
+            "$repo"
 }
 
 cmd_test_definitions() {
