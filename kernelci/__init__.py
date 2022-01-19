@@ -18,8 +18,8 @@
 import configparser
 import datetime
 import github
-import glob
 import os
+import re
 import subprocess
 
 # Mainline kernel URL from torvalds
@@ -152,8 +152,16 @@ git diff origin/{branch}..HEAD
     return diff
 
 
+def _find_patches(path):
+    patches_re = re.compile('.*\.(patch|mbx)$')
+    for root, dirs, files in os.walk(path):
+        for file_name in files:
+            if patches_re.match(file_name):
+                yield os.path.join(root, file_name)
+
+
 def apply_patches(path, patches_path):
-    patches = sorted(glob.glob(os.path.join(patches_path, '*.patch')))
+    patches = list(_find_patches(patches_path))
     for patch in patches:
         print("Applying patch: {}".format(patch))
         try:
