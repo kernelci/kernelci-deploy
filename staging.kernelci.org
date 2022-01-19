@@ -141,6 +141,10 @@ cmd_kernel() {
             url=https://git.kernel.org/pub/scm/linux/kernel/git/cip/linux-cip.git
             branch=linux-5.10.y-cip
             ;;
+        android)
+            url=https://android.googlesource.com/kernel/common
+            branch=android13-5.15
+            ;;
         *)
             echo "Unknown tree"
             exit 1
