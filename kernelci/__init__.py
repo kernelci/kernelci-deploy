@@ -95,7 +95,7 @@ cd {}
 git tag -l | xargs git tag -d
 git fetch -q --tags origin
 """.format(path))
-    cmd = "cd {}; git tag --list""".format(path)
+    cmd = "cd {}; git tag --list".format(path)
     if pattern:
         cmd += "  \"{}\"".format(pattern)
     tags = sorted(shell_cmd(cmd).split())
