@@ -1,4 +1,4 @@
-From 499a8167f3f7a2c0f1a81c9ba4051c939a34ee6c Mon Sep 17 00:00:00 2001
+From 47041bb5ad80e0fc4baa90674ad73c457ebf0057 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 15 Sep 2020 10:22:30 +0100
 Subject: [PATCH 1/5] STAGING use staging.kernelci.org branch for test
@@ -13,7 +13,7 @@ Subject: [PATCH 1/5] STAGING use staging.kernelci.org branch for test
  5 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/config/lava/kselftest/kselftest.jinja2 b/config/lava/kselftest/kselftest.jinja2
-index 776131a859..68dca11953 100644
+index 776131a8590b..68dca119531f 100644
 --- a/config/lava/kselftest/kselftest.jinja2
 +++ b/config/lava/kselftest/kselftest.jinja2
 @@ -16,7 +16,7 @@
@@ -26,7 +26,7 @@ index 776131a859..68dca11953 100644
        name: {{ plan }}
        parameters:
 diff --git a/config/lava/ltp/ltp-open-posix.jinja2 b/config/lava/ltp/ltp-open-posix.jinja2
-index a19e3d9175..690cd56324 100644
+index a19e3d9175eb..690cd563247d 100644
 --- a/config/lava/ltp/ltp-open-posix.jinja2
 +++ b/config/lava/ltp/ltp-open-posix.jinja2
 @@ -5,7 +5,7 @@
@@ -39,7 +39,7 @@ index a19e3d9175..690cd56324 100644
           name: {{ plan }}
           parameters:
 diff --git a/config/lava/ltp/ltp.jinja2 b/config/lava/ltp/ltp.jinja2
-index 3b3c8f92f8..4a242cbc44 100644
+index 3b3c8f92f881..4a242cbc44f3 100644
 --- a/config/lava/ltp/ltp.jinja2
 +++ b/config/lava/ltp/ltp.jinja2
 @@ -5,7 +5,7 @@
@@ -52,7 +52,7 @@ index 3b3c8f92f8..4a242cbc44 100644
           name: {{ plan }}
           parameters:
 diff --git a/config/lava/preempt-rt/preempt-rt.jinja2 b/config/lava/preempt-rt/preempt-rt.jinja2
-index 75bbe27d13..9cfc451de3 100644
+index 75bbe27d13e7..9cfc451de3da 100644
 --- a/config/lava/preempt-rt/preempt-rt.jinja2
 +++ b/config/lava/preempt-rt/preempt-rt.jinja2
 @@ -17,7 +17,7 @@
@@ -65,7 +65,7 @@ index 75bbe27d13..9cfc451de3 100644
        name: cyclictest
        parameters:
 diff --git a/config/lava/sleep/sleep.jinja2 b/config/lava/sleep/sleep.jinja2
-index ceb55029cb..f848d1d629 100644
+index ceb55029cbf3..f848d1d62994 100644
 --- a/config/lava/sleep/sleep.jinja2
 +++ b/config/lava/sleep/sleep.jinja2
 @@ -3,7 +3,7 @@
@@ -78,5 +78,5 @@ index ceb55029cb..f848d1d629 100644
        history: False
        path: config/lava/sleep/sleep.yaml
 -- 
-2.20.1
+2.30.2
 

@@ -1,4 +1,4 @@
-From 2e703aea6a8bac1af144876e27db48851a847201 Mon Sep 17 00:00:00 2001
+From 538f993493e9682e908414f95b399534e6890641 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Wed, 15 Dec 2021 14:44:58 +0000
 Subject: [PATCH 3/5] STAGING add build-configs-staging.yaml
@@ -10,7 +10,7 @@ Subject: [PATCH 3/5] STAGING add build-configs-staging.yaml
 
 diff --git a/config/core/build-configs-staging.yaml b/config/core/build-configs-staging.yaml
 new file mode 100644
-index 0000000000..f1c93d1b85
+index 000000000000..f1c93d1b85ed
 --- /dev/null
 +++ b/config/core/build-configs-staging.yaml
 @@ -0,0 +1,132 @@
@@ -147,5 +147,5 @@ index 0000000000..f1c93d1b85
 +              - 'x86_64_defconfig+x86-chromebook+crypto'
 +              - 'x86_64_defconfig+x86-chromebook+ima'
 -- 
-2.20.1
+2.30.2
 
