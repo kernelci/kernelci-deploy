@@ -1,7 +1,7 @@
-From 882d5be4b444934ced5977cb0309ad77916a5f30 Mon Sep 17 00:00:00 2001
+From 651853379b2ba57a536aafd91eff6105fe572f74 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 29 Jan 2021 15:50:42 +0000
-Subject: [PATCH 5/5] STAGING use kernelci/staging-qemu Docker image
+Subject: [PATCH 4/5] STAGING use kernelci/staging-qemu Docker image
 
 ---
  config/lava/boot/generic-qemu-boot-template.jinja2 | 2 +-
