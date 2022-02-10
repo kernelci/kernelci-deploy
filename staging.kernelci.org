@@ -202,6 +202,27 @@ cmd_rotate_tree() {
     echo $tree
 }
 
+cmd_api_pipeline() {
+    echo "Updating API branch"
+    ./pending.py kernelci-api --push
+
+    echo "Updating pipeline branch"
+    ./pending.py kernelci-pipeline --push
+
+    echo "Restarting containers"
+    cd checkout/kernelci-pipeline
+    docker-compose down
+    cd -
+    cd checkout/kernelci-api
+    docker-compose down
+    REQUIREMENTS=requirements-dev.txt docker-compose build
+    docker-compose up -d
+    cd -
+    cd checkout/kernelci-pipeline
+    docker-compose up --build -d
+    cd -
+}
+
 cmd_all() {
     tree="$1"
 
