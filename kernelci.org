@@ -114,10 +114,14 @@ cmd_website() {
             -b $branch
     }
 
+    python3 update.py \
+            --branch $branch \
+            --ssh-key=$PWD/keys/id_rsa_kernelci.org \
+            --push \
+            kernelci-project
+
     echo "Updating Git LFS and submodules"
     cd checkout/kernelci-project/kernelci.org
-    git remote update origin
-    git checkout origin/$branch
     git-lfs fetch
     git-lfs checkout
     git submodule update --init --recursive
