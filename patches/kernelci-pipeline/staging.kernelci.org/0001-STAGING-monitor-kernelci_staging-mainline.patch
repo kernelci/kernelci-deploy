@@ -1,0 +1,23 @@
+From abde296dcb1447943f21140de2df5c7738c9bf8e Mon Sep 17 00:00:00 2001
+From: Guillaume Tucker <guillaume.tucker@collabora.com>
+Date: Mon, 14 Feb 2022 17:39:21 +0000
+Subject: [PATCH] STAGING monitor kernelci_staging-mainline
+
+---
+ config/kernelci.conf | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/config/kernelci.conf b/config/kernelci.conf
+index 7672170c8254..2b8b5f02a00a 100644
+--- a/config/kernelci.conf
++++ b/config/kernelci.conf
+@@ -1,5 +1,5 @@
+ [trigger]
+-build_config: mainline
++build_config: kernelci_staging-mainline
+ db_config: docker-host
+ 
+ [tarball]
+-- 
+2.30.2
+
