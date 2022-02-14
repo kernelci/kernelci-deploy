@@ -112,6 +112,11 @@ cmd_website() {
             https://github.com/kernelci/kernelci-project.git \
             checkout/kernelci-project \
             -b $branch
+        cd checkout/kernelci-project
+        git remote \
+            set-url origin --push \
+            git@github.com:kernelci/kernelci-project.git
+        cd -
     }
 
     python3 update.py \
