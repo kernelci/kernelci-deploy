@@ -1,4 +1,4 @@
-From baa271e1fed1a1741517d0f4bd27e39bdf924632 Mon Sep 17 00:00:00 2001
+From 9cf1c78ded8b834e321190cf9f85921c18269d66 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 29 Jan 2021 15:50:42 +0000
 Subject: [PATCH 3/3] CHROMEOS use kernelci/staging-qemu Docker image
@@ -8,18 +8,18 @@ Subject: [PATCH 3/3] CHROMEOS use kernelci/staging-qemu Docker image
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/config/lava/boot/generic-qemu-boot-template.jinja2 b/config/lava/boot/generic-qemu-boot-template.jinja2
-index c891cce5981f..ff4706281bf6 100644
+index 31ab79a0ea3d..94896b8997e4 100644
 --- a/config/lava/boot/generic-qemu-boot-template.jinja2
 +++ b/config/lava/boot/generic-qemu-boot-template.jinja2
-@@ -60,7 +60,7 @@ actions:
+@@ -59,7 +59,7 @@ actions:
+     method: qemu
      media: tmpfs
- {%- if qemu_docker %}
      docker:
 -      image: kernelci/qemu
 +      image: kernelci/staging-qemu
        binary: {{ qemu_binary }}
- {%- endif %}
      prompts:
+       - '{{ rootfs_prompt }}'
 -- 
-2.20.1
+2.30.2
 
