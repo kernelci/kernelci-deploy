@@ -103,7 +103,7 @@ cmd_kernel() {
 cmd_docker () {
     echo "Updating Docker images"
     cd checkout/kernelci-core/config/docker
-    ./build-and-push.sh -p chromeos-tast chromiumos
+    ./build-and-push.sh -p chromeos-tast chromeos-flash chromiumos
     cd -
 }
 
