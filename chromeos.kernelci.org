@@ -125,8 +125,8 @@ cmd_all() {
     cmd_test_definitions
     cmd_backend
     cmd_frontend
-    cmd_monitor
     cmd_docker
+    cmd_monitor
 }
 
 cmd="${1}"
