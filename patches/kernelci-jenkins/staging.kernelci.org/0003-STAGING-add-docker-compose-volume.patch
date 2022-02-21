@@ -1,7 +1,7 @@
-From 8e97646fdb1b3236823377f5b9ff3b4a6da82eba Mon Sep 17 00:00:00 2001
+From ab847107338ea45195f135d832731dc82e4ff2d4 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 4 May 2021 11:57:29 +0100
-Subject: [PATCH 3/4] STAGING add docker-compose volume
+Subject: [PATCH 3/3] STAGING add docker-compose volume
 
 ---
  docker-compose.yaml | 2 ++
