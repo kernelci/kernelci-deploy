@@ -246,6 +246,7 @@ cmd_all() {
     cmd_kernel $tree
     cmd_docker
     cmd_monitor
+    cmd_api_pipeline
 }
 
 cmd="${1}"
