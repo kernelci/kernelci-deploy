@@ -1,0 +1,43 @@
+From 427f51cdbee2469456dff062f43735deca53f579 Mon Sep 17 00:00:00 2001
+From: "kernelci.org bot" <bot@kernelci.org>
+Date: Mon, 28 Feb 2022 11:52:42 +0000
+Subject: [PATCH 2/3] STAGING config/kernelci.conf: use staging host and ports
+
+---
+ config/kernelci.conf | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/config/kernelci.conf b/config/kernelci.conf
+index 651454745c45..3a57fc54cbf9 100644
+--- a/config/kernelci.conf
++++ b/config/kernelci.conf
+@@ -1,6 +1,6 @@
+ [DEFAULT]
+-db_config: docker-host
+-storage_url: http://172.17.0.1:8002/
++db_config: staging.kernelci.org
++storage_url: http://staging.kernelci.org:9080
+ verbose: true
+ 
+ [trigger]
+@@ -11,9 +11,9 @@ poll_period: 0
+ kdir: /home/kernelci/data/linux
+ output: /home/kernelci/data/output
+ ssh_key: /home/kernelci/data/ssh/id_rsa_tarball
+-ssh_port: 8022
++ssh_port: 9022
+ ssh_user: kernelci
+-ssh_host: 172.17.0.1
++ssh_host: staging.kernelci.org
+ 
+ [runner]
+ output: /home/kernelci/data
+@@ -26,4 +26,4 @@ plan: check-describe
+ [test_report]
+ 
+ [db:docker-host]
+-api: http://172.17.0.1:8001
++api: https://staging.kernelci.org:9000
+-- 
+2.30.2
+
