@@ -223,7 +223,8 @@ cmd_api_pipeline() {
     docker-compose up -d
     cd -
     cd checkout/kernelci-pipeline
-    docker-compose up --build -d
+    REQUIREMENTS=requirements-dev.txt docker-compose build
+    docker-compose up -d
     cd -
 }
 
