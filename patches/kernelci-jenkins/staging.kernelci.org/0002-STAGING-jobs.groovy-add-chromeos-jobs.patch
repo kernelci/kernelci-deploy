@@ -1,14 +1,14 @@
-From 49baf3b85da3e3dcc0ef77136127cc8d698f7525 Mon Sep 17 00:00:00 2001
+From 999876833065e700e945b2e06085705f74301544 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Wed, 2 Mar 2022 20:25:29 +0000
-Subject: [PATCH 4/4] STAGING jobs.groovy: add chromeos jobs
+Subject: [PATCH 2/4] STAGING jobs.groovy: add chromeos jobs
 
 ---
  jobs.groovy | 81 +++++++++++++++++++++++++++++++++++++++++++++++++++++
  1 file changed, 81 insertions(+)
 
 diff --git a/jobs.groovy b/jobs.groovy
-index b6bb580..5963c30 100644
+index b6bb58024106..5963c3055759 100644
 --- a/jobs.groovy
 +++ b/jobs.groovy
 @@ -427,3 +427,84 @@ rm -rf output
