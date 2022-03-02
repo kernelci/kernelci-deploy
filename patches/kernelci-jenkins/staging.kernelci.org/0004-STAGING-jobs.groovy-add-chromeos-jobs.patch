@@ -1,0 +1,101 @@
+From 49baf3b85da3e3dcc0ef77136127cc8d698f7525 Mon Sep 17 00:00:00 2001
+From: Guillaume Tucker <guillaume.tucker@collabora.com>
+Date: Wed, 2 Mar 2022 20:25:29 +0000
+Subject: [PATCH 4/4] STAGING jobs.groovy: add chromeos jobs
+
+---
+ jobs.groovy | 81 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 81 insertions(+)
+
+diff --git a/jobs.groovy b/jobs.groovy
+index b6bb580..5963c30 100644
+--- a/jobs.groovy
++++ b/jobs.groovy
+@@ -427,3 +427,84 @@ rm -rf output
+ """)
+     }
+ }
++
++/* Chrome OS jobs */
++
++folder('chromeos') {
++    displayName('chromeos')
++    description('Jobs for chromeos.kernelci.org')
++}
++
++pipelineJob('chromeos/kernel-tree-monitor') {
++  definition {
++    cpsScm {
++      lightweight(true)
++      scm {
++        git {
++          branch('chromeos.kernelci.org')
++          remote {
++            url(KCI_JENKINS_URL)
++          }
++        }
++      }
++      scriptPath('jobs/monitor.jpl')
++    }
++    if (KCI_MONITOR_CRON) {
++      triggers {
++        cron(KCI_MONITOR_CRON)
++      }
++    }
++  }
++  logRotator {
++    daysToKeep(7)
++    numToKeep(200)
++  }
++  parameters {
++    stringParam('KCI_API_URL', KCI_API_URL, 'URL of the KernelCI back-end API.')
++    stringParam('KCI_API_TOKEN_ID', KCI_API_TOKEN_ID, 'Identifier of the KernelCI backend API token stored in Jenkins.')
++    stringParam('KCI_STORAGE_URL', KCI_STORAGE_URL, 'URL of the KernelCI storage server.')
++    stringParam('KCI_CORE_URL', KCI_CORE_URL, 'URL of the kernelci-core repository.')
++    stringParam('KCI_CORE_BRANCH', 'chromeos.kernelci.org', 'Name of the branch to use in the kernelci-core repository.')
++    stringParam('DOCKER_BASE', KCI_DOCKER_BASE, 'Dockerhub base address used for the build images.')
++    stringParam('CONFIG_LIST', 'chromeos-next', 'List of build configs to check instead of all the ones in build-configs.yaml.')
++  }
++}
++
++pipelineJob('chromeos/kernel-build-trigger') {
++  definition {
++    cpsScm {
++      lightweight(true)
++      scm {
++        git {
++          branch('chromeos.kernelci.org')
++          remote {
++            url(KCI_JENKINS_URL)
++          }
++        }
++      }
++      scriptPath('jobs/build-trigger.jpl')
++    }
++  }
++  configure { project ->
++    project / 'properties' / 'org.jenkinsci.plugins.workflow.job.properties.DisableResumeJobProperty' {
++      'switch'('on')
++    }
++  }
++  logRotator {
++    daysToKeep(7)
++    numToKeep(48)
++  }
++  parameters {
++    stringParam('BUILD_CONFIG', '', 'Name of the build configuration.')
++    booleanParam('PUBLISH', true, 'Publish build results via the KernelCI backend API')
++    booleanParam('EMAIL', true, 'Send build results via email')
++    stringParam('LABS_WHITELIST', 'lab-collabora-staging lab-collabora', 'List of labs to include in the tests, all labs will be tested by default.')
++    stringParam('KCI_API_TOKEN_ID', KCI_API_TOKEN_ID, 'Identifier of the KernelCI backend API token stored in Jenkins.')
++    stringParam('KCI_API_URL', KCI_API_URL, 'URL of the KernelCI Backend API')
++    stringParam('KCI_STORAGE_URL', KCI_STORAGE_URL, 'URL of the KernelCI storage server.')
++    stringParam('KCI_CORE_URL', KCI_CORE_URL, 'URL of the kernelci-core repository.')
++    stringParam('KCI_CORE_BRANCH', 'chromeos.kernelci.org', 'Name of the branch to use in the kernelci-core repository.')
++    stringParam('DOCKER_BASE', KCI_DOCKER_BASE, 'Dockerhub base address used for the build images.')
++    booleanParam('ALLOW_REBUILD', false, 'Allow building the same revision again.')
++  }
++}
+-- 
+2.30.2
+
