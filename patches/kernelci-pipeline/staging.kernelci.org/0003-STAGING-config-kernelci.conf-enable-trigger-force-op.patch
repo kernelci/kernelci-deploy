@@ -1,0 +1,25 @@
+From a9558c4151f922eab2ece96a6b599514778000d4 Mon Sep 17 00:00:00 2001
+From: "kernelci.org bot" <bot@kernelci.org>
+Date: Tue, 8 Mar 2022 07:53:07 +0000
+Subject: [PATCH 3/3] STAGING config/kernelci.conf: enable trigger --force
+ option
+
+---
+ config/kernelci.conf | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/config/kernelci.conf b/config/kernelci.conf
+index bc4e92d1ea1b..e4cc7c7ca433 100644
+--- a/config/kernelci.conf
++++ b/config/kernelci.conf
+@@ -5,6 +5,7 @@ verbose: true
+ 
+ [trigger]
+ build_config: kernelci_staging-mainline
++force: true
+ poll_period: 0
+ 
+ [tarball]
+-- 
+2.30.2
+
