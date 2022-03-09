@@ -161,7 +161,7 @@ def _find_patches(path):
 
 
 def apply_patches(path, patches_path):
-    patches = list(_find_patches(patches_path))
+    patches = list(sorted(_find_patches(patches_path)))
     for patch in patches:
         print("Applying patch: {}".format(patch))
         try:
