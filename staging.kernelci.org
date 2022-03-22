@@ -87,8 +87,12 @@ cmd_backend() {
 
     echo "Updating kernelci-backend"
     ./pending.py kernelci-backend --push
-    # ToDo: check if there were any changes to skip if there weren't any
-    ./ansible kernelci-backend api.staging.kernelci.org
+
+    if ./pending.py kernelci-backend --diff-only; then
+        ./ansible kernelci-backend api.staging.kernelci.org
+    else
+        echo "No changes, skipping Ansible"
+    fi
 
     echo "Resetting and enabling the Mongo DB profiler"
     echo "db.setProfilingLevel(0); db.system.profile.drop(); db.setProfilingLevel(2);" | mongo kernel-ci
@@ -97,8 +101,12 @@ cmd_backend() {
 cmd_frontend() {
     echo "Updating kernelci-frontend"
     ./pending.py kernelci-frontend --push
-    # ToDo: check if there were any changes to skip if there weren't any
-    ./ansible kernelci-frontend staging.kernelci.org
+
+    if ./pending.py kernelci-backend --diff-only; then
+        ./ansible kernelci-frontend staging.kernelci.org
+    else
+        echo "No changes, skipping Ansible"
+    fi
 }
 
 cmd_website() {
