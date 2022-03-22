@@ -106,6 +106,16 @@ def do_push(args, settings, path, branch, ssh_key):
     print("\nPushing tag ({}) and branch ({})".format(tag, branch))
     kernelci.push_tag_and_branch(path, ssh_key, branch, tag)
 
+    return True
+
+
+def do_diff(path, branch):
+    diff = kernelci.origin_diff(path, branch)
+    if diff:
+        print(diff)
+        return True
+    return False
+
 
 def main(args):
     settings = kernelci.Settings(args.settings, args.project)
@@ -113,6 +123,11 @@ def main(args):
     namespace = args.namespace or settings.get('namespace') or 'kernelci'
     repo_name = '/'.join([namespace, args.project])
     repo = kernelci.GITHUB.get_repo(repo_name)
+    target_branch = args.branch or settings.get('branch') or ''
+
+    if args.diff_only:
+        return do_diff(path, target_branch)
+
     kernelci.checkout_repository(path, repo, branch=args.main)
 
     skip = get_skip_list(args, settings)
@@ -127,7 +142,6 @@ def main(args):
 
     iterate_prs(repo, skip, users, path)
 
-    target_branch = args.branch or settings.get('branch') or ''
     patches_path = os.path.join('patches', args.project, target_branch)
     if not kernelci.apply_patches(path, patches_path):
         print_color('red', "Aborting, all patches must apply.")
@@ -171,6 +185,8 @@ Create staging.kernelci.org branch with all pending PRs")
                         help="Path to SSH key to push branches and tags")
     parser.add_argument("--push", action="store_true",
                         help="Push the resulting branch and tag")
+    parser.add_argument("--diff-only", action="store_true",
+                        help="Return 1 if there is a difference with upstream")
     parser.add_argument("--settings", default="data/staging.ini",
                         help="Path to a settings file")
     args = parser.parse_args(sys.argv[1:])
