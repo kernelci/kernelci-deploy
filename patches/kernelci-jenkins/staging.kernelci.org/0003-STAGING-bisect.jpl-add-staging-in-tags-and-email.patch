@@ -1,4 +1,4 @@
-From 2cff8171efccd696371c7de2aaa2d706321b9879 Mon Sep 17 00:00:00 2001
+From 1b41cb1525a91c971db140b00c2851cc1e1c8819 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 7 Jul 2020 21:56:00 +0100
 Subject: [PATCH 3/4] STAGING bisect.jpl: add -staging in tags and email

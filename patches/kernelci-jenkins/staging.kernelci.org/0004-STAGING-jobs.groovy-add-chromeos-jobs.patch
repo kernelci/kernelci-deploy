@@ -1,4 +1,4 @@
-From a5ce2be90fe24eb7a3173d1938a57483a0a6d22b Mon Sep 17 00:00:00 2001
+From 28241cd7df7e252699527afda90b1d87a44e2933 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Wed, 2 Mar 2022 20:25:29 +0000
 Subject: [PATCH 4/4] STAGING jobs.groovy: add chromeos jobs
@@ -8,12 +8,12 @@ Subject: [PATCH 4/4] STAGING jobs.groovy: add chromeos jobs
  1 file changed, 81 insertions(+)
 
 diff --git a/jobs.groovy b/jobs.groovy
-index b6bb58024106..b9589c87e7a6 100644
+index eb9fc6c4c94e..2f306eaa4acf 100644
 --- a/jobs.groovy
 +++ b/jobs.groovy
-@@ -427,3 +427,84 @@ rm -rf output
- """)
-     }
+@@ -339,3 +339,84 @@ pipelineJob('lava-bisection') {
+     stringParam('DOCKER_BASE', KCI_DOCKER_BASE, 'Dockerhub base address used for the build images.')
+   }
  }
 +
 +/* Chrome OS jobs */
