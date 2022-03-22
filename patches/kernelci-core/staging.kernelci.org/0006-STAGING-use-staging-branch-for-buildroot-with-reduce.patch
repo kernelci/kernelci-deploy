@@ -1,0 +1,34 @@
+From f85f1299392d82d768884dbc1a6a1b8bf7341b72 Mon Sep 17 00:00:00 2001
+From: "kernelci.org bot" <bot@kernelci.org>
+Date: Tue, 22 Mar 2022 17:38:32 +0000
+Subject: [PATCH 6/6] STAGING use staging branch for buildroot with reduced
+ arch list
+
+---
+ config/core/rootfs-configs.yaml | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
+
+diff --git a/config/core/rootfs-configs.yaml b/config/core/rootfs-configs.yaml
+index 654ac76cd245..6f36a923a13f 100644
+--- a/config/core/rootfs-configs.yaml
++++ b/config/core/rootfs-configs.yaml
+@@ -2,15 +2,10 @@ rootfs_configs:
+   buildroot-baseline:
+     rootfs_type: buildroot
+     git_url: https://github.com/kernelci/buildroot
+-    git_branch: main
++    git_branch: staging.kernelci.org
+     arch_list:
+-      - arc
+       - arm64
+-      - arm64be
+-      - armeb
+       - armel
+-      - mipsel
+-      - riscv
+       - x86
+     frags:
+       - baseline
+-- 
+2.30.2
+
