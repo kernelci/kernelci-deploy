@@ -1,0 +1,27 @@
+From dcf186d82eac2b3d96017ac446c4132b9a498686 Mon Sep 17 00:00:00 2001
+From: "kernelci.org bot" <bot@kernelci.org>
+Date: Fri, 25 Mar 2022 14:50:16 +0000
+Subject: [PATCH 7/7] STAGING add at91_dt_defconfig with gcc-10
+
+---
+ config/core/build-configs-staging.yaml | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/config/core/build-configs-staging.yaml b/config/core/build-configs-staging.yaml
+index e484c3459faf..d78c1be40fcf 100644
+--- a/config/core/build-configs-staging.yaml
++++ b/config/core/build-configs-staging.yaml
+@@ -40,6 +40,10 @@ staging-gcc-10: &staging-gcc-10
+     arm:
+       <<: *arm_defconfig
+       fragments: [crypto]
++      extra_configs:
++        - 'at91_dt_defconfig'
++      filters:
++        - passlist: { defconfig: ['multi_v7_defconfig', 'at91_dt_defconfig'] }
+     arm64:
+       <<: *arm64_defconfig
+       fragments: [arm64-chromebook, crypto, preempt_rt]
+-- 
+2.30.2
+
