@@ -1,14 +1,14 @@
-From 05f50e6a171b839b16919cc79cdf9d4d6f9de652 Mon Sep 17 00:00:00 2001
+From 4820ac00318cab88082fb1f529feb5dbb45fa10c Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Mon, 28 Feb 2022 11:52:42 +0000
 Subject: [PATCH 2/3] STAGING config/kernelci.conf: use staging host and ports
 
 ---
- config/kernelci.conf | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ config/kernelci.conf | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/config/kernelci.conf b/config/kernelci.conf
-index 33148652c635..bc4e92d1ea1b 100644
+index 7629ffa7684e..0a2923a4fe54 100644
 --- a/config/kernelci.conf
 +++ b/config/kernelci.conf
 @@ -1,6 +1,6 @@
@@ -32,12 +32,6 @@ index 33148652c635..bc4e92d1ea1b 100644
  
  [runner]
  output: /home/kernelci/data
-@@ -26,4 +26,4 @@ plan: check-describe
- [test_report]
- 
- [db:docker-host]
--api: http://172.17.0.1:8001
-+api: https://staging.kernelci.org:9000
 -- 
 2.30.2
 
