@@ -63,17 +63,50 @@ cmd_dsl() {
 }
 
 cmd_rootfs_builds() {
-    echo "Starting rootfs build jobs"
+    local version="$1"
+
+    echo "Starting rootfs build jobs for $version"
+
+    echo "{\
+\"PIPELINE_VERSION\": \"$version\",\
+\"KCI_CORE_BRANCH\": \"main\"\
+}" > rootfs-build-trigger.json
     python3 job.py \
         --settings=data/prod-jenkins.ini \
+        --json=rootfs-build-trigger.json \
         trigger \
         rootfs-build-trigger
+    rm rootfs-build-trigger.json
 }
 
 cmd_rootfs_flush() {
     echo "Waiting for rootfs jobs to complete"
     python3 job.py --settings data/prod-jenkins.ini \
             wait rootfs-build-trigger
+}
+
+cmd_rootfs_update() {
+    local version="$1"
+
+    echo "Updating rootfs URLs to $version"
+
+    cd checkout/kernelci-core
+    git fetch origin main
+    git checkout $FETCH_HEAD
+    sed -i s/"[0-9]\{8\}\.[0-9]\(\/{arch}\)"/"$version\1"/g config/core/test-configs.yaml
+    if ./kci_test validate_rootfs_urls; then
+        local branch=rootfs-$version
+        git checkout -b $branch
+        git commit -asm "test-configs.yaml: update rootfs URLs to $version"
+        git push -u origin HEAD:$branch
+        git checkout main
+        git branch -D $branch
+    else
+        echo "Failed to update rootfs URLs"
+        git reset --hard
+        git checkout origin/main
+    fi
+    cd -
 }
 
 cmd_backend() {
@@ -222,10 +255,11 @@ cmd_checkout() {
 }
 
 cmd_rootfs() {
-    cmd_rootfs_builds
-    cmd_rootfs_flush
-    # ToDo: automate this step:
-    echo "Now update the rootlfs URLs in rootfs-configs.yaml"
+    local version=$(date +%Y%m%d).0
+    cmd_rootfs_builds "$version"
+    sleep 60
+    cmd_rootfs_flush  # It takes a while for the jobs to start...
+    cmd_rootfs_update "$version"
 }
 
 cmd_pause() {
