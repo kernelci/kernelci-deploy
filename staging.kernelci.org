@@ -170,6 +170,7 @@ cmd_kernel() {
 
 cmd_docker() {
     echo "Updating Docker images"
+    docker system prune -f
     cd checkout/kernelci-core/config/docker
     ./build-and-push.sh -p -t kernelci/staging-
     cd -
