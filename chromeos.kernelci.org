@@ -100,7 +100,7 @@ cmd_kernel() {
         --tag-prefix=chromeos-"$tree"-
 }
 
-cmd_docker () {
+cmd_docker() {
     echo "Updating Docker images"
     cd checkout/kernelci-core/config/docker
     ./build-and-push.sh \
@@ -110,6 +110,17 @@ cmd_docker () {
         chromeos-tast \
         chromiumos
     cd -
+}
+
+cmd_kernel() {
+    echo "Pushing chromeos-stable kernel test branch"
+    ./kernel.py \
+        --push \
+        --ssh-key=keys/id_rsa_staging.kernelci.org \
+        --from-url=https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git \
+        --from-branch=linux-5.10.y \
+        --branch=chromeos-stable \
+        --tag-prefix=chromeos-stable-
 }
 
 cmd_monitor() {
