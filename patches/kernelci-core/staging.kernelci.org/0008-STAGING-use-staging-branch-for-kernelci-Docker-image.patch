@@ -1,4 +1,4 @@
-From a6632199ef0b794fe18c4c8e99984e0646b23f1c Mon Sep 17 00:00:00 2001
+From d54d25477f56bb643221837994b8d349c05aaac1 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Mon, 25 Apr 2022 18:48:36 +0100
 Subject: [PATCH 8/8] STAGING use staging branch for kernelci Docker image
