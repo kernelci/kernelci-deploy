@@ -141,6 +141,7 @@ cmd_all() {
     cmd_test_definitions
     cmd_backend
     cmd_frontend
+    cmd_kernel
     cmd_docker
     cmd_monitor
 }
