@@ -109,6 +109,11 @@ cmd_docker() {
         chromeos-lavapost \
         chromeos-tast \
         chromiumos
+    # For Chromium OS rootfs builds in Jenkins
+    ./build-and-push.sh \
+        -p \
+        -t kernelci/staging- \
+        chromiumos
     cd -
 }
 
