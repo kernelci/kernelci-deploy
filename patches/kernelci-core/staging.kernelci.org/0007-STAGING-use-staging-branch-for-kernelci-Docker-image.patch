@@ -1,7 +1,7 @@
-From d54d25477f56bb643221837994b8d349c05aaac1 Mon Sep 17 00:00:00 2001
+From c28580a87dd5f6911a721a7490806ed32d368723 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Mon, 25 Apr 2022 18:48:36 +0100
-Subject: [PATCH 8/8] STAGING use staging branch for kernelci Docker image
+Subject: [PATCH 7/7] STAGING use staging branch for kernelci Docker image
 
 ---
  config/docker/build-and-push.sh | 2 +-
