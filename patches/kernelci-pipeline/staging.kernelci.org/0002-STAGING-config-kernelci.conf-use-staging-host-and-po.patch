@@ -1,14 +1,14 @@
-From 6fe30d4b28ef56659d2ce1eba6ae4f6a8c501c64 Mon Sep 17 00:00:00 2001
+From d50a1b643f0b61766c0fa7e848f93c659afefb62 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Mon, 28 Feb 2022 11:52:42 +0000
-Subject: [PATCH 2/3] STAGING config/kernelci.conf: use staging host and ports
+Subject: [PATCH 2/4] STAGING config/kernelci.conf: use staging host and ports
 
 ---
  config/kernelci.conf | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/config/kernelci.conf b/config/kernelci.conf
-index 287522aa1df7..21baff053b08 100644
+index d0ef593445dc..49409751be8e 100644
 --- a/config/kernelci.conf
 +++ b/config/kernelci.conf
 @@ -1,6 +1,6 @@

@@ -1,7 +1,7 @@
-From be56360c713841ab0dbcdbc99d9cf3d36f38fb69 Mon Sep 17 00:00:00 2001
+From 4af138cb2df0e5e34bb83d1da96800d4ec6de77c Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 8 Mar 2022 07:53:07 +0000
-Subject: [PATCH 3/3] STAGING config/kernelci.conf: enable trigger --force
+Subject: [PATCH 3/4] STAGING config/kernelci.conf: enable trigger --force
  option
 
 ---
@@ -9,7 +9,7 @@ Subject: [PATCH 3/3] STAGING config/kernelci.conf: enable trigger --force
  1 file changed, 1 insertion(+)
 
 diff --git a/config/kernelci.conf b/config/kernelci.conf
-index 21baff053b08..eee1d631a93b 100644
+index 49409751be8e..c216da077ea5 100644
 --- a/config/kernelci.conf
 +++ b/config/kernelci.conf
 @@ -5,6 +5,7 @@ verbose: true

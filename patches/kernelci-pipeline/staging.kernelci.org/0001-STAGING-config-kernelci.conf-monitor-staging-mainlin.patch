@@ -1,14 +1,14 @@
-From fcb0231fed4189922fb86894a7cdd38fc05d4c40 Mon Sep 17 00:00:00 2001
+From dfc963da0d78d1fb9df370343617207905db3516 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Mon, 28 Feb 2022 11:58:45 +0000
-Subject: [PATCH 1/3] STAGING config/kernelci.conf: monitor staging-mainline
+Subject: [PATCH 1/4] STAGING config/kernelci.conf: monitor staging-mainline
 
 ---
  config/kernelci.conf | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/config/kernelci.conf b/config/kernelci.conf
-index 3fe156dc225b..287522aa1df7 100644
+index 666770294747..d0ef593445dc 100644
 --- a/config/kernelci.conf
 +++ b/config/kernelci.conf
 @@ -4,7 +4,7 @@ storage_url: http://172.17.0.1:8002/
