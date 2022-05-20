@@ -106,14 +106,9 @@ cmd_docker() {
     ./build-and-push.sh \
         -p \
         chromeos-flash \
-        chromeos-lavapost \
-        chromeos-tast \
-        chromiumos
-    # For Chromium OS rootfs builds in Jenkins
-    ./build-and-push.sh \
-        -p \
-        -t kernelci/staging- \
-        chromiumos
+        cros-qemu-modules \
+        cros-tast \
+        cros-sdk
     cd -
 }
 
