@@ -9,8 +9,6 @@ cmd_flush_kernel() {
     python3 job.py --settings data/prod-jenkins.ini \
             disable kernel-tree-monitor
     python3 job.py --settings data/prod-jenkins.ini \
-            flush_kernel_trigger_jobs kernel-build-trigger
-    python3 job.py --settings data/prod-jenkins.ini \
             wait kernel-build-trigger
 }
 
