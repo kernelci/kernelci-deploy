@@ -105,7 +105,6 @@ cmd_docker() {
     cd checkout/kernelci-core/config/docker
     ./build-and-push.sh \
         -p \
-        chromeos-flash \
         cros-qemu-modules \
         cros-tast \
         cros-sdk
