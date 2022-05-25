@@ -1,6 +1,6 @@
-From d509f1b8b0214f76136bf2b8f4dc85346bebbd73 Mon Sep 17 00:00:00 2001
+From ee232ab1b58c9d1126b3ba24913ab70bcc45472f Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
-Date: Tue, 17 May 2022 09:42:07 +0000
+Date: Wed, 25 May 2022 09:17:18 +0000
 Subject: [PATCH 4/4] STAGING config/kernelci.conf: add SMTP config to
  test_report
 
@@ -9,7 +9,7 @@ Subject: [PATCH 4/4] STAGING config/kernelci.conf: add SMTP config to
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/config/kernelci.conf b/config/kernelci.conf
-index c216da077ea5..9de5a65c593e 100644
+index e8e6047..dced512 100644
 --- a/config/kernelci.conf
 +++ b/config/kernelci.conf
 @@ -26,8 +26,8 @@ lab_config: shell
@@ -20,9 +20,9 @@ index c216da077ea5..9de5a65c593e 100644
 -email_port: your.port
 +email_host: smtp.gmail.com
 +email_port: 465
- email_send_from: bot@kernelci.org
- email_send_to: kernelci-results-staging@groups.io
- email_subject: Kernel-CI-Test-Reports
+ 
+ [db:docker-host]
+ api: http://172.17.0.1:8001
 -- 
 2.30.2
 
