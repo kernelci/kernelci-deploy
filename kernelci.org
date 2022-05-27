@@ -234,12 +234,12 @@ cmd_kernel() {
 }
 
 cmd_trigger() {
-    echo "Starting Jenkins kernel-build-trigger job"
+    echo "Starting Jenkins kernel-tree-monitor job"
     python3 job.py \
         --settings=data/prod-jenkins.ini \
-        --json=data/prod-trigger.json \
+        --json=data/prod-monitor.json \
         trigger \
-        kernel-build-trigger
+        kernel-tree-monitor
 }
 
 # -----------------------------------------------------------------------------
