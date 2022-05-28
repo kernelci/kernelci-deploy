@@ -92,7 +92,7 @@ cmd_rootfs_update() {
     git fetch origin main
     git checkout $FETCH_HEAD
     sed -i s/"[0-9]\{8\}\.[0-9]\(\/{arch}\)"/"$version\1"/g config/core/test-configs.yaml
-    if ./kci_test validate_rootfs_urls; then
+    if ./kci_test validate_rootfs_urls --verbose; then
         local branch=rootfs-$version
         git checkout -b $branch
         git commit -asm "test-configs.yaml: update rootfs URLs to $version"
