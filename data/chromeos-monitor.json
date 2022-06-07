@@ -1,3 +1,3 @@
 {
-    "CONFIG_LIST": "chromeos-stable kernelci_chromeos-stable"
+    "CONFIG_LIST": "chromeos-stable_5.10 chromeos-stable_5.15 kernelci_chromeos-stable"
 }
