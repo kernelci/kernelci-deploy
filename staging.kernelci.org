@@ -86,9 +86,9 @@ cmd_backend() {
     fi
 
     echo "Updating kernelci-backend"
-    ./pending.py kernelci-backend --push
 
     if ./pending.py kernelci-backend --diff-only; then
+        ./pending.py kernelci-backend --push
         ./ansible kernelci-backend api.staging.kernelci.org
     else
         echo "No changes, skipping Ansible"
@@ -100,9 +100,9 @@ cmd_backend() {
 
 cmd_frontend() {
     echo "Updating kernelci-frontend"
-    ./pending.py kernelci-frontend --push
 
-    if ./pending.py kernelci-backend --diff-only; then
+    if ./pending.py kernelci-frontend --diff-only; then
+        ./pending.py kernelci-frontend --push
         ./ansible kernelci-frontend staging.kernelci.org
     else
         echo "No changes, skipping Ansible"
