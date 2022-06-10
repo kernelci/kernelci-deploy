@@ -228,12 +228,15 @@ cmd_api_pipeline() {
 
     echo "Restarting containers"
     cd checkout/kernelci-api
-    REQUIREMENTS=requirements-dev.txt docker-compose build
+    REQUIREMENTS=requirements-dev.txt \
+        docker-compose build
     docker-compose up -d
     cd -
     cd checkout/kernelci-pipeline
-    REQUIREMENTS=requirements-dev.txt docker-compose build
-    docker-compose up -d
+    REQUIREMENTS=requirements-dev.txt \
+        docker-compose build
+    SETTINGS=/home/kernelci/config/staging.kernelci.org.conf \
+        docker-compose up -d
     cd -
 }
 
