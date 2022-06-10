@@ -1,0 +1,56 @@
+From b6e8e515c3e425cf4378b749993d02fc36aa2aaa Mon Sep 17 00:00:00 2001
+From: "kernelci.org bot" <bot@kernelci.org>
+Date: Fri, 10 Jun 2022 07:39:35 +0100
+Subject: [PATCH] STAGING config/staging.kernelci.org.conf: add file for
+ staging
+
+---
+ config/staging.kernelci.org.conf | 36 ++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
+ create mode 100644 config/staging.kernelci.org.conf
+
+diff --git a/config/staging.kernelci.org.conf b/config/staging.kernelci.org.conf
+new file mode 100644
+index 0000000..dced512
+--- /dev/null
++++ b/config/staging.kernelci.org.conf
+@@ -0,0 +1,36 @@
++[DEFAULT]
++db_config: staging.kernelci.org
++storage_url: http://staging.kernelci.org:9080
++verbose: true
++
++[trigger]
++build_config: kernelci_staging-mainline
++force: true
++poll_period: 0
++
++[tarball]
++kdir: /home/kernelci/data/linux
++output: /home/kernelci/data/output
++ssh_key: /home/kernelci/data/ssh/id_rsa_tarball
++ssh_port: 9022
++ssh_user: kernelci
++ssh_host: staging.kernelci.org
++
++[runner]
++output: /home/kernelci/output
++plan: check-describe
++lab_config: shell
++
++[notifier]
++
++[kcidb]
++
++[test_report]
++email_host: smtp.gmail.com
++email_port: 465
++
++[db:docker-host]
++api: http://172.17.0.1:8001
++
++[db:staging.kernelci.org]
++api: https://staging.kernelci.org:9000
+-- 
+2.30.2
+
