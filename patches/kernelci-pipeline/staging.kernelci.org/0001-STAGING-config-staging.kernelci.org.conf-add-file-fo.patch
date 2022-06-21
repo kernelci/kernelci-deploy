@@ -1,4 +1,4 @@
-From b6e8e515c3e425cf4378b749993d02fc36aa2aaa Mon Sep 17 00:00:00 2001
+From bdb66882f2f07264e77fdb562174b2a2af417323 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 10 Jun 2022 07:39:35 +0100
 Subject: [PATCH] STAGING config/staging.kernelci.org.conf: add file for
@@ -11,7 +11,7 @@ Subject: [PATCH] STAGING config/staging.kernelci.org.conf: add file for
 
 diff --git a/config/staging.kernelci.org.conf b/config/staging.kernelci.org.conf
 new file mode 100644
-index 0000000..dced512
+index 0000000..b249f0e
 --- /dev/null
 +++ b/config/staging.kernelci.org.conf
 @@ -0,0 +1,36 @@
@@ -26,7 +26,7 @@ index 0000000..dced512
 +poll_period: 0
 +
 +[tarball]
-+kdir: /home/kernelci/data/linux
++kdir: /home/kernelci/data/src/linux
 +output: /home/kernelci/data/output
 +ssh_key: /home/kernelci/data/ssh/id_rsa_tarball
 +ssh_port: 9022
