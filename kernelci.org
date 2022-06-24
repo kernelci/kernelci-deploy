@@ -63,7 +63,8 @@ cmd_dsl() {
 cmd_rootfs_builds() {
     local version="$1"
 
-    echo "Starting rootfs build jobs for $version"
+    echo "Starting rootfs build jobs"
+    [ -n "$version" ] && echo "Pipeline version: $version"
 
     echo "{\
 \"PIPELINE_VERSION\": \"$version\",\
