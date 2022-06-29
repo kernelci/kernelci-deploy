@@ -105,6 +105,7 @@ cmd_docker() {
     cd checkout/kernelci-core/config/docker
     ./build-and-push.sh \
         -p \
+        cros-baseline \
         cros-qemu-modules \
         cros-tast \
         cros-sdk
