@@ -255,11 +255,11 @@ cmd_all() {
     cmd_kcidb
     cmd_backend
     cmd_frontend
-    cmd_website
     cmd_kernel $tree
     cmd_docker
     cmd_monitor
     cmd_api_pipeline
+    cmd_website
 }
 
 cmd="${1}"
