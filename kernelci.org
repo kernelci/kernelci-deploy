@@ -151,6 +151,28 @@ cmd_website() {
         cd -
     }
 
+    echo "Updating sub-modules"
+    cd checkout/kernelci-project
+    git checkout main
+    git pull --ff-only
+    git submodule update --init --recursive
+    cd - 2>&1 > /dev/null
+    for mod in kernelci-core kernelci-api kcidb; do
+        cd checkout/kernelci-project/kernelci.org/external/$mod
+        git checkout main
+        git pull --ff-only
+        cd - 2>&1 > /dev/null
+        cd checkout/kernelci-project
+        git add kernelci.org/external/$mod
+        cd - 2>&1 > /dev/null
+    done
+    cd checkout/kernelci-project
+    if [ -n "$(git diff --cached | head -1)" ]; then
+        git commit -asm "kernelci.org: update submodules"
+        git push
+    fi
+    cd - 2>&1 > /dev/null
+
     python3 update.py \
             --branch $branch \
             --ssh-key=$PWD/keys/id_rsa_kernelci.org \
