@@ -170,7 +170,6 @@ cmd_kernel() {
 
 cmd_docker() {
     echo "Updating Docker images"
-    docker system prune -f
 
     # Skip the compilers as that's covered by kci_docker now
     targets="\
