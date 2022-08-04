@@ -171,24 +171,35 @@ cmd_kernel() {
 cmd_docker() {
     echo "Updating Docker images"
     docker system prune -f
+
+    # Skip the compilers as that's covered by kci_docker now
+    targets="\
+buildroot \
+coccinelle \
+cvehound \
+debos \
+dt-validation \
+qemu \
+"
     cd checkout/kernelci-core/config/docker
-    ./build-and-push.sh -p -t kernelci/staging-
+    ./build-and-push.sh -p -t kernelci/staging- $targets
     cd -
+
+    # Now build the compiler images with kci_docker
     cd checkout/kernelci-core/config/docker-new
     core_rev=$(git show --pretty=format:%H -s origin/staging.kernelci.org)
-    ./kci_docker \
-        build \
-        kernelci \
-        --prefix=kernelci/staging- \
-        --build-arg core_rev="$core_rev" \
-        && docker push kernelci/staging-kernelci
-    ./kci_docker \
-        build \
-        k8s \
-        --prefix=kernelci/staging- \
-        --fragment=kernelci \
-        --build-arg core_rev="$core_rev" \
-        && docker push kernelci/staging-k8s:kernelci
+    rev_arg="--build-arg core_rev=$core_rev"
+    px_arg='--prefix=kernelci/staging-'
+    frag_arg="--fragment=kernelci"
+    args="build --push $px_arg"
+    ./kci_docker $args kernelci $rev_arg
+    ./kci_docker $args k8s $rev_arg $frag_arg
+    for clang in clang-11 clang-15; do
+	./kci_docker $args $clang $frag_arg
+    done
+    for arch in arc arm armv5 arm64 mips riscv64 x86 sparc; do
+	./kci_docker $args gcc-10 --arch $arch $frag_arg
+    done
     cd -
 }
 
