@@ -190,16 +190,21 @@ qemu \
     core_rev=$(git show --pretty=format:%H -s origin/staging.kernelci.org)
     rev_arg="--build-arg core_rev=$core_rev"
     px_arg='--prefix=kernelci/staging-'
-    frag_arg="--fragment=kernelci"
-    args="build --push $px_arg"
-    ./kci_docker $args kernelci $rev_arg
-    ./kci_docker $args k8s $rev_arg $frag_arg
+    args="build --push $px_arg $rev_arg"
+    ./kci_docker $args kernelci
+    ./kci_docker $args k8s $rev_arg --fragment=kernelci
     for clang in clang-11 clang-15; do
-	./kci_docker $args $clang $frag_arg
+	./kci_docker $args $clang --fragment=kselftest --fragment=kernelci
+	./kci_docker $args $clang --fragment=kunit --fragment=kernelci
     done
-    for arch in arc arm armv5 arm64 mips riscv64 x86 sparc; do
-	./kci_docker $args gcc-10 --arch $arch $frag_arg
+    for arch in arc arm armv5 arm64 mips riscv64 x86; do
+	./kci_docker $args gcc-10 --arch $arch \
+                     --fragment=kselftest --fragment=kernelci
     done
+    # missing -dev packages for sparc64
+    ./kci_docker $args gcc-10 --arch sparc --fragment=kernelci
+    # only x86 is useful for KUnit (for now)
+    ./kci_docker $args gcc-10 --arch x86 --fragment=kunit --fragment=kernelci
     cd -
 }
 
