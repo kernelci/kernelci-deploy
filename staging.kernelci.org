@@ -192,7 +192,7 @@ qemu \
     args="build --push $px_arg $rev_arg"
     ./kci_docker $args kernelci
     ./kci_docker $args k8s $rev_arg --fragment=kernelci
-    for clang in clang-11 clang-15; do
+    for clang in clang-11 clang-14 clang-15; do
 	./kci_docker $args $clang --fragment=kselftest --fragment=kernelci
 	./kci_docker $args $clang --fragment=kunit --fragment=kernelci
     done
