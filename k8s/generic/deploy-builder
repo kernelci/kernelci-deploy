@@ -1,0 +1,3 @@
+#!/bin/sh -e
+
+kubectl apply -f ../generic/metrics-server.yaml
