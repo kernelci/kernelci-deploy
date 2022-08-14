@@ -1,0 +1,13 @@
+#!/bin/sh -e
+
+minikube start
+minikube kubectl -- get pods -A
+
+# Don't use the minikube addon since cloud providers don't seem
+# to commonly have this automation so we do it generically...
+#minikube addons enable metrics-server
+
+kubectl label node/minikube kerneci.org/builder=builder
+kubectl label node/minikube kerneci.org/service=service
+
+../generic/deploy-builder
