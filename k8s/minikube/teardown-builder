@@ -1,0 +1,4 @@
+#!/bin/sh
+
+../generic/teardown-builder
+minikube delete
