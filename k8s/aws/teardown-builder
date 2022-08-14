@@ -1,0 +1,25 @@
+#!/bin/sh -e
+
+REGION=${1}
+
+if [ "${REGION}" = "" ]; then
+	echo $0 REGION
+	exit 1
+fi
+
+if ! type eksctl > /dev/null ; then
+	echo eksctl not found
+	exit 1
+fi
+
+CLUSTER=kernelci-build-${REGION}.${REGION}.eksctl.io
+
+../generic/teardown-builder
+
+# Clean up Karpenter and any remaining nodes
+kubectl --cluster ${CLUSTER} delete provisioner/builder
+for n in $(kubectl --cluster ${CLUSTER} get nodes -l karpenter.sh/provisioner-name --output name ); do
+        kubectl --cluster ${CLUSTER} delete ${n}
+done
+
+eksctl delete cluster kernelci-build-${REGION}
