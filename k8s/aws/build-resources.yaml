@@ -1,0 +1,54 @@
+apiVersion: karpenter.sh/v1alpha5
+kind: Provisioner
+metadata:
+  name: builder
+spec:
+  requirements:
+    - key: "topology.kubernetes.io/zone"
+      operator: In
+      values: [ "REGIONa", "REGIONb", "REGIONc" ]
+    - key: "karpenter.sh/capacity-type"
+      operator: In
+      values: [ "spot", "on-demand" ]
+    - key: "kubernetes.io/arch"
+      operator: In
+      values: [ "amd64" ]
+  limits:
+    resources:
+      cpu: 96
+  labels:
+     kernelci.org/builder: builder
+  provider:
+    subnetSelector:
+      karpenter.sh/discovery: kernelci-build-REGION
+    securityGroupSelector:
+      karpenter.sh/discovery: kernelci-build-REGION
+  ttlSecondsAfterEmpty: 30
+  ttlSecondsUntilExpired: 86400
+---
+apiVersion: karpenter.sh/v1alpha5
+kind: Provisioner
+metadata:
+  name: builder
+spec:
+  requirements:
+    - key: "topology.kubernetes.io/zone"
+      operator: In
+      values: [ "REGIONa", "REGIONb", "REGIONc" ]
+    - key: "karpenter.sh/capacity-type"
+      operator: In
+      values: [ "spot", "on-demand" ]
+    - key: "kubernetes.io/arch"
+      operator: In
+      values: [ "amd64" ]
+  limits:
+    resources:
+      cpu: 96
+  labels:
+     kernelci.org/service: service
+  provider:
+    subnetSelector:
+      karpenter.sh/discovery: kernelci-build-REGION
+    securityGroupSelector:
+      karpenter.sh/discovery: kernelci-build-REGION
+  ttlSecondsAfterEmpty: 30

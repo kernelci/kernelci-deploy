@@ -1,0 +1,56 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: kernelci-build-REGION
+  region: REGION
+  tags:
+    karpenter.sh/discovery: kernelbuild
+  version: "1.22"
+iam:
+  vpcResourceControllerPolicy: true
+  withOIDC: true
+  serviceAccounts:
+  - metadata:
+      name: efs-csi-controller-sa
+      namespace: kube-system
+    wellKnownPolicies:
+      efsCSIController: true
+  - metadata:
+      name: ebs-csi-controller-sa
+      namespace: kube-system
+    wellKnownPolicies:
+      ebsCSIController: true
+karpenter:
+  version: '0.9.0'
+  createServiceAccount: true
+kubernetesNetworkConfig:
+  ipFamily: IPv4
+availabilityZones:
+  - REGIONa
+  - REGIONb
+  - REGIONc
+managedNodeGroups:
+- name: service
+  desiredCapacity: 1
+  disableIMDSv1: false
+  disablePodIMDS: false
+  iam:
+    withAddonPolicies:
+      autoScaler: true
+      ebs: true
+  instanceSelector:
+    memory: "4"
+    vCPUs: 2
+  labels:
+    alpha.eksctl.io/cluster-name: kernelci-build-REGION
+    alpha.eksctl.io/nodegroup-name: service
+    kernelci.org/service: service
+  minSize: 1
+  maxSize: 3
+  privateNetworking: false
+  securityGroups:
+    withLocal: null
+    withShared: null
+  tags:
+    alpha.eksctl.io/nodegroup-name: service
+    alpha.eksctl.io/nodegroup-type: managed
