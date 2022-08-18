@@ -176,7 +176,6 @@ cmd_docker() {
 coccinelle \
 cvehound \
 dt-validation \
-qemu \
 "
     cd checkout/kernelci-core/config/docker
     ./build-and-push.sh -p -t kernelci/staging- $targets
@@ -209,6 +208,9 @@ qemu \
     # rootfs
     ./kci_docker $args buildroot --fragment=kernelci
     ./kci_docker $args debos --fragment=kernelci
+
+    # QEMU
+    ./kci_docker $args qemu
     cd -
 }
 
