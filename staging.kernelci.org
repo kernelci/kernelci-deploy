@@ -171,16 +171,6 @@ cmd_kernel() {
 cmd_docker() {
     echo "Updating Docker images"
 
-    # Only build images that aren't covered by kci_docker yet
-    targets="\
-coccinelle \
-cvehound \
-dt-validation \
-"
-    cd checkout/kernelci-core/config/docker
-    ./build-and-push.sh -p -t kernelci/staging- $targets
-    cd -
-
     # Build the images with kci_docker
     cd checkout/kernelci-core/config/docker-new
     core_rev=$(git show --pretty=format:%H -s origin/staging.kernelci.org)
@@ -211,6 +201,10 @@ dt-validation \
 
     # QEMU
     ./kci_docker $args qemu
+
+    # Other tools
+    ./kci_docker $args cvehound --fragment=kernelci
+    ./kci_docker $args dt-validation --fragment=kernelci
     cd -
 }
 
