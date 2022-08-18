@@ -171,12 +171,10 @@ cmd_kernel() {
 cmd_docker() {
     echo "Updating Docker images"
 
-    # Skip the compilers as that's covered by kci_docker now
+    # Only build images that aren't covered by kci_docker yet
     targets="\
-buildroot \
 coccinelle \
 cvehound \
-debos \
 dt-validation \
 qemu \
 "
@@ -184,14 +182,18 @@ qemu \
     ./build-and-push.sh -p -t kernelci/staging- $targets
     cd -
 
-    # Now build the compiler images with kci_docker
+    # Build the images with kci_docker
     cd checkout/kernelci-core/config/docker-new
     core_rev=$(git show --pretty=format:%H -s origin/staging.kernelci.org)
     rev_arg="--build-arg core_rev=$core_rev"
     px_arg='--prefix=kernelci/staging-'
     args="build --push $px_arg $rev_arg"
+
+    # KernelCI tools
     ./kci_docker $args kernelci
     ./kci_docker $args k8s $rev_arg --fragment=kernelci
+
+    # Compiler toolchains
     for clang in clang-11 clang-14 clang-15 clang-16; do
 	./kci_docker $args $clang --fragment=kselftest --fragment=kernelci
 	./kci_docker $args $clang --fragment=kunit --fragment=kernelci
@@ -204,6 +206,10 @@ qemu \
     ./kci_docker $args gcc-10 --arch sparc --fragment=kernelci
     # only x86 is useful for KUnit (for now)
     ./kci_docker $args gcc-10 --arch x86 --fragment=kunit --fragment=kernelci
+
+    # rootfs
+    ./kci_docker $args buildroot --fragment=kernelci
+    ./kci_docker $args debos --fragment=kernelci
     cd -
 }
 
