@@ -204,7 +204,7 @@ cmd_docker() {
 
     # Other tools
     ./kci_docker $args cvehound --fragment=kernelci
-    ./kci_docker $args dt-validation --fragment=kernelci
+    ./kci_docker $args dt-validation # --fragment=kernelci (PyYAML conflict)
     cd -
 }
 
