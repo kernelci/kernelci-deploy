@@ -1,4 +1,4 @@
-From 684f61715d21a7df4ff07a8de3b1e77a3eaa85c7 Mon Sep 17 00:00:00 2001
+From aae881aebbef75686650df99d6ab132afd936dd8 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 25 Mar 2022 14:50:16 +0000
 Subject: [PATCH 6/6] STAGING add at91_dt_defconfig with gcc-10
@@ -8,7 +8,7 @@ Subject: [PATCH 6/6] STAGING add at91_dt_defconfig with gcc-10
  1 file changed, 4 insertions(+)
 
 diff --git a/config/core/build-configs-staging.yaml b/config/core/build-configs-staging.yaml
-index e484c345..d78c1be4 100644
+index e2c4d14e..7de158b7 100644
 --- a/config/core/build-configs-staging.yaml
 +++ b/config/core/build-configs-staging.yaml
 @@ -40,6 +40,10 @@ staging-gcc-10: &staging-gcc-10
