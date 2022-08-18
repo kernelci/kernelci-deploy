@@ -194,9 +194,8 @@ qemu \
     ./kci_docker $args k8s $rev_arg --fragment=kernelci
 
     # Compiler toolchains
-    for clang in clang-11 clang-14 clang-15 clang-16; do
+    for clang in clang-11 clang-14 clang-16; do
 	./kci_docker $args $clang --fragment=kselftest --fragment=kernelci
-	./kci_docker $args $clang --fragment=kunit --fragment=kernelci
     done
     for arch in arc arm armv5 arm64 mips riscv64 x86; do
 	./kci_docker $args gcc-10 --arch $arch \
