@@ -244,29 +244,41 @@ cmd_rotate_tree() {
 }
 
 cmd_api_pipeline() {
-    echo "Stopping containers"
+    echo "Stopping pipeline containers"
     cd checkout/kernelci-pipeline
     docker-compose down
     cd -
-    cd checkout/kernelci-api
-    docker-compose down
-    cd -
 
-    echo "Updating API branch"
-    ./pending.py kernelci-api --push
+    echo "Creating local staging branch in tmp directory while API is running"
+    mkdir -p tmp
+    pending_api="../pending.py --settings=../data/staging.ini kernelci-api"
+    (cd tmp; $pending_api)
+
+    echo "Looking for diff with current staging branch"
+    if (cd tmp; $pending_api --diff-only); then
+        echo "Stopping API containers"
+        cd checkout/kernelci-api
+        docker-compose down
+        cd -
+
+        echo "Updating API branch"
+        ./pending.py kernelci-api --push
+
+        echo "Starting API containers"
+        cd checkout/kernelci-api
+        REQUIREMENTS=requirements-dev.txt docker-compose build
+        docker-compose up -d
+        cd -
+    else
+        echo "No API changes, leaving it running"
+    fi
 
     echo "Updating pipeline branch"
     ./pending.py kernelci-pipeline --push
 
-    echo "Restarting containers"
-    cd checkout/kernelci-api
-    REQUIREMENTS=requirements-dev.txt \
-        docker-compose build
-    docker-compose up -d
-    cd -
+    echo "Starting pipeline containers"
     cd checkout/kernelci-pipeline
-    REQUIREMENTS=requirements-dev.txt \
-        docker-compose build
+    REQUIREMENTS=requirements-dev.txt docker-compose build
     SETTINGS=/home/kernelci/config/staging.kernelci.org.conf \
         docker-compose up -d
     cd -
