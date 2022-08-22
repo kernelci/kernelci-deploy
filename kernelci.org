@@ -191,18 +191,39 @@ cmd_website() {
 }
 
 cmd_docker() {
-    cd checkout/kernelci-core/config/docker
+    cd checkout/kernelci-core/config/docker-new
     echo "Re-building Docker images"
-    ./build-and-push.sh -n
-    echo "Pushing Docker images"
-    while true; do
-        if ./build-and-push.sh -p; then
-            break
-        else
-            echo "Retrying..."
-            sleep 3
-        fi
+
+    args="build --push --verbose"
+
+    # KernelCI tools
+    ./kci_docker $args kernelci
+    ./kci_docker $args k8s --fragment=kernelci
+
+    # Compiler toolchains
+    for clang in clang-11 clang-12 clang-13 clang-14 clang-15 clang-16; do
+	./kci_docker $args $clang --fragment=kselftest --fragment=kernelci
     done
+    for arch in arc arm armv5 arm64 mips riscv64 x86; do
+	./kci_docker $args gcc-10 --arch $arch \
+                     --fragment=kselftest --fragment=kernelci
+    done
+    # missing -dev packages for sparc64
+    ./kci_docker $args gcc-10 --arch sparc --fragment=kernelci
+    # only x86 is useful for KUnit (for now)
+    ./kci_docker $args gcc-10 --arch x86 --fragment=kunit --fragment=kernelci
+
+    # rootfs
+    ./kci_docker $args buildroot --fragment=kernelci
+    ./kci_docker $args debos --fragment=kernelci
+
+    # QEMU
+    ./kci_docker $args qemu
+
+    # Other tools
+    ./kci_docker $args cvehound --fragment=kernelci
+    ./kci_docker $args dt-validation # --fragment=kernelci (PyYAML conflict)
+
     cd -
 }
 
