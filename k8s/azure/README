@@ -1,0 +1,20 @@
+This needs to be run on a machine with Terraform install and the
+Azure CLI.  Personal login for the Azure CLI can be done with:
+
+	az login
+
+The actual account used is a service principal account though:
+
+	az ad sp create-for-rbac -n kernelci-k8s
+
+which outputs an appId and password, this should be distributed via the
+credential store and set in terraform variables, see variables.tf.
+
+When the clusters are created a logged in user can set up the client
+credentials like this:
+
+	for c in $(az aks list --query '[].name' -o tsv) ; do
+		az aks get-credentials --resource-group kernelci-workers --name ${c}
+	done
+
+(TBD: also put this in outputs.tf, need to figure out syntax for arrays)
