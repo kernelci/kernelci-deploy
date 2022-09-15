@@ -143,7 +143,7 @@ cmd_kernel() {
             ;;
         stable)
             url=https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-            branch=linux-5.4.y
+            branch=linux-5.15.y
             ;;
         cip)
             url=https://git.kernel.org/pub/scm/linux/kernel/git/cip/linux-cip.git
