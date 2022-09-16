@@ -172,7 +172,7 @@ cmd_docker() {
     echo "Updating Docker images"
 
     # Build the images with kci_docker
-    cd checkout/kernelci-core/config/docker-new
+    cd checkout/kernelci-core/config/docker
     core_rev=$(git show --pretty=format:%H -s origin/staging.kernelci.org)
     rev_arg="--build-arg core_rev=$core_rev"
     px_arg='--prefix=kernelci/staging-'
