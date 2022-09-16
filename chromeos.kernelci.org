@@ -102,7 +102,7 @@ cmd_kernel() {
 
 cmd_docker() {
     echo "Updating Docker images"
-    cd checkout/kernelci-core/config/docker
+    cd checkout/kernelci-core/config/docker-old
     ./build-and-push.sh \
         -p \
         cros-baseline \
