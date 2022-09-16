@@ -191,7 +191,7 @@ cmd_website() {
 }
 
 cmd_docker() {
-    cd checkout/kernelci-core/config/docker-new
+    cd checkout/kernelci-core/config/docker
     echo "Re-building Docker images"
 
     args="build --push --verbose"
