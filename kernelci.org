@@ -92,11 +92,11 @@ cmd_rootfs_update() {
     cd checkout/kernelci-core
     git fetch origin main
     git checkout $FETCH_HEAD
-    sed -i s/"[0-9]\{8\}\.[0-9]\(\/{arch}\)"/"$version\1"/g config/core/test-configs.yaml
-    if ./kci_test validate_rootfs_urls --verbose; then
+    if ./kci_test update_rootfs_urls --release ${version} --output rootfs-images-${version}.yaml --verbose | grep OK; then
+        mv rootfs-images-${version}.yaml config/core/rootfs-images.yaml
         local branch=rootfs-$version
         git checkout -b $branch
-        git commit -asm "test-configs.yaml: update rootfs URLs to $version"
+        git commit -asm "rootfs-images.yaml: update rootfs URLs to $version"
         git push -u origin HEAD:$branch
         git checkout main
         git branch -D $branch
