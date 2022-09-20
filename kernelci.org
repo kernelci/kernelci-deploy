@@ -191,10 +191,12 @@ cmd_website() {
 }
 
 cmd_docker() {
+    core_rev="${1:-kernelci.org}"
+
     cd checkout/kernelci-core/config/docker
     echo "Re-building Docker images"
 
-    args="build --push --verbose"
+    args="build --push --verbose --no-cache --build-arg core_rev=$core_rev"
 
     # KernelCI tools
     ./kci_docker $args kernelci
