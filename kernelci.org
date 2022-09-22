@@ -191,11 +191,11 @@ cmd_website() {
 }
 
 cmd_docker() {
-    core_rev="${1:-kernelci.org}"
-
-    cd checkout/kernelci-core/config/docker
     echo "Re-building Docker images"
 
+    cd checkout/kernelci-core/config/docker
+
+    core_rev=$(git show --pretty=format:%H -s origin/kernelci.org)
     args="build --push --verbose --no-cache --build-arg core_rev=$core_rev"
 
     # KernelCI tools
