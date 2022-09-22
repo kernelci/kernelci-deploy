@@ -102,13 +102,35 @@ cmd_kernel() {
 
 cmd_docker() {
     echo "Updating Docker images"
-    cd checkout/kernelci-core/config/docker-old
-    ./build-and-push.sh \
-        -p \
-        cros-baseline \
-        cros-qemu-modules \
-        cros-tast \
-        cros-sdk
+    # Build the images with kci_docker
+    cd checkout/kernelci-core/config/docker
+    core_rev=$(git show --pretty=format:%H -s origin/chromeos.kernelci.org)
+    rev_arg="--build-arg core_rev=$core_rev"
+    px_arg='--prefix=kernelci/cros-'
+    args="build --push $px_arg $rev_arg"
+
+    # KernelCI tools
+    ./kci_docker $args kernelci
+    ./kci_docker $args k8s $rev_arg --fragment=kernelci
+
+    # Compiler toolchains
+    for clang in clang-11 clang-14 clang-16; do
+	./kci_docker $args $clang $rev_arg --fragment=kselftest --fragment=kernelci
+    done
+    for arch in arm arm64 x86; do
+	./kci_docker $args gcc-10 --arch $arch $rev_arg \
+                     --fragment=kselftest --fragment=kernelci
+    done
+
+    px_arg='--prefix=kernelci/'
+    args="build --push $px_arg $rev_arg"
+    # ChromeOS related images
+    # cros-sdk used to create ChromiumOS rootfs, so it needs kernelci-core
+    # also we dont need cros- prefix as with compilers
+    ./kci_docker $args --fragment=kernelci cros-sdk
+    for imgname in cros-baseline cros-qemu-modules cros-tast; do
+	./kci_docker $args $rev_arg $imgname
+    done
     cd -
 }
 
