@@ -1,6 +1,6 @@
-From dabe68d8fee09dd7c7ee7c486a3c619384b41f47 Mon Sep 17 00:00:00 2001
+From 7a09a898e28d167dd2900ea86c45c5ecc6f1df4d Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
-Date: Fri, 10 Jun 2022 07:39:35 +0100
+Date: Fri, 23 Sep 2022 14:17:59 +0530
 Subject: [PATCH] STAGING config/staging.kernelci.org.conf: add file for
  staging
 
@@ -11,7 +11,7 @@ Subject: [PATCH] STAGING config/staging.kernelci.org.conf: add file for
 
 diff --git a/config/staging.kernelci.org.conf b/config/staging.kernelci.org.conf
 new file mode 100644
-index 0000000..4142577
+index 0000000..c08bb21
 --- /dev/null
 +++ b/config/staging.kernelci.org.conf
 @@ -0,0 +1,39 @@
@@ -41,7 +41,7 @@ index 0000000..4142577
 +
 +[complete_hack]
 +
-+[set_timeout]
++[timeout]
 +
 +[set_complete]
 +
@@ -55,5 +55,4 @@ index 0000000..4142577
 +[db:staging.kernelci.org]
 +api: https://staging.kernelci.org:9000
 -- 
-2.30.2
-
+2.25.1
