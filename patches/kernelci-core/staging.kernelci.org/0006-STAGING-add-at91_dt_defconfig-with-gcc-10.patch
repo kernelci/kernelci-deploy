@@ -1,4 +1,4 @@
-From b4f2ba1e2e0348e289892c39f9b3317bab9c74dc Mon Sep 17 00:00:00 2001
+From 1756145988e8b846db58ba14dc13a6c14ccf13db Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 25 Mar 2022 14:50:16 +0000
 Subject: [PATCH 6/6] STAGING add at91_dt_defconfig with gcc-10
