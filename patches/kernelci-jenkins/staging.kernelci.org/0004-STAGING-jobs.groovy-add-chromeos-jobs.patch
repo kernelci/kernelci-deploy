@@ -53,7 +53,7 @@ index 72e9480..a6c0cf1 100644
 +    stringParam('KCI_STORAGE_URL', 'http://storage.chromeos.kernelci.org', 'URL of the KernelCI storage server.')
 +    stringParam('KCI_CORE_URL', KCI_CORE_URL, 'URL of the kernelci-core repository.')
 +    stringParam('KCI_CORE_BRANCH', 'chromeos.kernelci.org', 'Name of the branch to use in the kernelci-core repository.')
-+    stringParam('DOCKER_BASE', KCI_DOCKER_BASE, 'Dockerhub base address used for the build images.')
++    stringParam('DOCKER_BASE', 'kernelci/cros-', 'Dockerhub base address used for the build images.')
 +    stringParam('CONFIG_LIST', 'chromeos-next', 'List of build configs to check instead of all the ones in build-configs.yaml.')
 +  }
 +}
