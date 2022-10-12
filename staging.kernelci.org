@@ -196,8 +196,8 @@ cmd_docker() {
     ./kci_docker $args gcc-10 --arch x86 --fragment=kunit --fragment=kernelci
 
     # rootfs
-    ./kci_docker $args buildroot --fragment=kernelci
-    ./kci_docker $args debos --fragment=kernelci
+    ./kci_docker $args buildroot
+    ./kci_docker $args debos
 
     # QEMU
     ./kci_docker $args qemu
