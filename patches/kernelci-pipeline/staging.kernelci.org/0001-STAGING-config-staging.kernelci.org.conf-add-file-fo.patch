@@ -1,20 +1,20 @@
-From 7a09a898e28d167dd2900ea86c45c5ecc6f1df4d Mon Sep 17 00:00:00 2001
+From 64fccab0df69242cb79a3544708ce31a8cf32ab6 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
-Date: Fri, 23 Sep 2022 14:17:59 +0530
+Date: Mon, 17 Oct 2022 17:22:57 +0530
 Subject: [PATCH] STAGING config/staging.kernelci.org.conf: add file for
  staging
 
 ---
- config/staging.kernelci.org.conf | 39 ++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+ config/staging.kernelci.org.conf | 41 ++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
  create mode 100644 config/staging.kernelci.org.conf
 
 diff --git a/config/staging.kernelci.org.conf b/config/staging.kernelci.org.conf
 new file mode 100644
-index 0000000..c08bb21
+index 0000000..31191d4
 --- /dev/null
 +++ b/config/staging.kernelci.org.conf
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,41 @@
 +[DEFAULT]
 +db_config: staging.kernelci.org
 +storage_url: http://staging.kernelci.org:9080
@@ -49,6 +49,8 @@ index 0000000..c08bb21
 +smtp_host: smtp.gmail.com
 +smtp_port: 465
 +
++[regression_tracker]
++
 +[db:docker-host]
 +api: http://172.17.0.1:8001
 +
@@ -56,3 +58,4 @@ index 0000000..c08bb21
 +api: https://staging.kernelci.org:9000
 -- 
 2.25.1
+
