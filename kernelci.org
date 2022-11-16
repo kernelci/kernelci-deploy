@@ -217,7 +217,7 @@ cmd_docker() {
 
     # rootfs
     ./kci_docker $args buildroot --fragment=kernelci
-    ./kci_docker $args debos --fragment=kernelci
+    ./kci_docker $args debos
 
     # QEMU
     ./kci_docker $args qemu
