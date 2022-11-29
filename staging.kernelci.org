@@ -171,22 +171,22 @@ cmd_kernel() {
 cmd_docker() {
     echo "Updating Docker images"
 
-    # Build the images with kci_docker
-    cd checkout/kernelci-core/config/docker
-
     # Build without cache if flag file doesn't exist or older than x days
     purge_flag_file=".last_docker_purge"
     if [ -f "$purge_flag_file" ]; then
         flag_time=$(date -r "$purge_flag_file" +%s)
         week_ago=$(date -d 'now - 7 days' +%s)
     fi
-    if [ ! -f "$purge_flag_file" ] || (( flag_time <= week_ago )); then
+    if [ ! -f "$purge_flag_file" ] || [ $flag_time -le $week_ago ]; then
         echo "Building without cache"
         cache_arg="--no-cache"
         touch "$purge_flag_file"
     else
         cache_arg=""
     fi
+
+    # Build the images with kci_docker
+    cd checkout/kernelci-core/config/docker
 
     core_rev=$(git show --pretty=format:%H -s origin/staging.kernelci.org)
     rev_arg="--build-arg core_rev=$core_rev"
