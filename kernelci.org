@@ -93,7 +93,7 @@ cmd_rootfs_update() {
     cd checkout/kernelci-core
     git fetch origin main
     git checkout $FETCH_HEAD
-    if ./kci_test update_rootfs_urls --release ${version} --output rootfs-images-${version}.yaml --verbose | grep OK; then
+    if ./kci_test update_rootfs_urls --release ${version} --output rootfs-images-${version}.yaml --verbose; then
         mv rootfs-images-${version}.yaml config/core/rootfs-images.yaml
         local branch=rootfs-$version
         git checkout -b $branch
