@@ -1,20 +1,20 @@
-From 883d1469f73207d61ee9bb498cee911ec6f17f84 Mon Sep 17 00:00:00 2001
+From a60ff6159a4503424260f96ce03091779c688dc3 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 29 Nov 2022 12:47:53 +0530
 Subject: [PATCH] STAGING config/staging.kernelci.org.conf: add file for
  staging
 
 ---
- config/staging.kernelci.org.conf | 39 ++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+ config/staging.kernelci.org.conf | 40 ++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
  create mode 100644 config/staging.kernelci.org.conf
 
 diff --git a/config/staging.kernelci.org.conf b/config/staging.kernelci.org.conf
 new file mode 100644
-index 0000000..66f5949
+index 0000000..6d18c7a
 --- /dev/null
 +++ b/config/staging.kernelci.org.conf
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,40 @@
 +[DEFAULT]
 +db_config: staging.kernelci.org
 +storage_url: http://staging.kernelci.org:9080
@@ -40,6 +40,7 @@ index 0000000..66f5949
 +[send_kcidb]
 +kcidb_topic_name: playground_kcidb_new
 +kcidb_project_id: kernelci-production
++origin: kernelci-api
 +
 +[timeout]
 +
