@@ -1,9 +1,10 @@
-From a60ff6159a4503424260f96ce03091779c688dc3 Mon Sep 17 00:00:00 2001
+From bd66a6953a7a0ef4f321c7490b003fd11ef66a8b Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 29 Nov 2022 12:47:53 +0530
 Subject: [PATCH] STAGING config/staging.kernelci.org.conf: add file for
  staging
 
+Signed-off-by: Jeny Sadadia <jeny.sadadia@collabora.com>
 ---
  config/staging.kernelci.org.conf | 40 ++++++++++++++++++++++++++++++++
  1 file changed, 40 insertions(+)
@@ -11,7 +12,7 @@ Subject: [PATCH] STAGING config/staging.kernelci.org.conf: add file for
 
 diff --git a/config/staging.kernelci.org.conf b/config/staging.kernelci.org.conf
 new file mode 100644
-index 0000000..6d18c7a
+index 0000000..6a9494b
 --- /dev/null
 +++ b/config/staging.kernelci.org.conf
 @@ -0,0 +1,40 @@
@@ -40,7 +41,7 @@ index 0000000..6d18c7a
 +[send_kcidb]
 +kcidb_topic_name: playground_kcidb_new
 +kcidb_project_id: kernelci-production
-+origin: kernelci-api
++origin: kernelci_api
 +
 +[timeout]
 +
