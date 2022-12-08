@@ -8,10 +8,10 @@ Subject: [PATCH 1/2] CHROMEOS bisect.jpl: add -chromeos in tags and email
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/jobs/bisect.jpl b/jobs/bisect.jpl
-index 7c5b4772aa3d..fff764260a2a 100644
+index e3262be..dcf2266 100644
 --- a/jobs/bisect.jpl
 +++ b/jobs/bisect.jpl
-@@ -123,7 +123,7 @@ def createTag(kdir, iteration) {
+@@ -121,7 +121,7 @@ def createTag(kdir, iteration) {
      def tag = gitDescribe(kdir)
  
      dir(kdir) {
@@ -20,16 +20,16 @@ index 7c5b4772aa3d..fff764260a2a 100644
          sh(script: "git tag -a ${tag} -m ${tag} HEAD")
      }
  
-@@ -515,7 +515,7 @@ def bisectNext(kdir, status) {
- def pushResults(kci_core, kdir, checks, params_summary) {
+@@ -543,7 +543,7 @@ def bisectNext(kdir, status) {
+ def pushResults(kdir, checks, params_summary) {
      def subject = "\
  ${params.KERNEL_TREE}/${params.KERNEL_BRANCH} bisection: \
 -${params.TEST_CASE} on ${params.TARGET}"
 +${params.TEST_CASE} on ${params.TARGET} #${env.BUILD_NUMBER}-chromeos"
  
-     dir(kci_core) {
-         withCredentials([string(credentialsId: params.KCI_API_TOKEN_ID,
-@@ -761,7 +761,7 @@ ${params_summary}""")
+     withCredentials([string(credentialsId: params.KCI_API_TOKEN_ID,
+                             variable: 'SECRET')]) {
+@@ -784,7 +784,7 @@ ${params_summary}""")
              currentBuild.result = "FAILURE"
  
              def tree_branch = "${params.KERNEL_TREE}/${params.KERNEL_BRANCH}"
