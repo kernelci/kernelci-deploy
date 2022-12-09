@@ -68,7 +68,8 @@ cmd_rootfs_builds() {
 
     echo "{\
 \"PIPELINE_VERSION\": \"$version\",\
-\"KCI_CORE_BRANCH\": \"main\"\
+\"KCI_CORE_BRANCH\": \"main\",\
+\"ROOTFS_TYPE\": \"buildroot debos\"\
 }" > rootfs-build-trigger.json
     python3 job.py \
         --settings=data/prod-jenkins.ini \
