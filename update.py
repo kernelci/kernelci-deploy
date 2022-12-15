@@ -29,6 +29,7 @@ def do_rebase(path, origin='origin', origin_branch='main'):
     shell_cmd("""\
 cd {path}
 git pull --rebase {origin} {origin_branch}
+git push 'origin' HEAD:{origin_branch} --force
 """.format(path=path, origin=origin, origin_branch=origin_branch))
 
 
