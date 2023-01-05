@@ -215,7 +215,9 @@ cmd_docker() {
     ./kci_docker $args gcc-10 --arch sparc --fragment=kernelci
     # only x86 is useful for KUnit (for now)
     ./kci_docker $args gcc-10 --arch x86 --fragment=kunit --fragment=kernelci
-    ./kci_docker $args rustc-1.62 --fragment=kselftest --fragment=kernelci
+    for rustc in rustc-1.62 rustc-1.66; do
+        ./kci_docker $args $rustc --fragment=kselftest --fragment=kernelci
+    done
 
     # rootfs
     ./kci_docker $args buildroot --fragment=kernelci
