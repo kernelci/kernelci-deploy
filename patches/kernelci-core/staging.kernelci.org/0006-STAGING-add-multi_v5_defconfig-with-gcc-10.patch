@@ -1,7 +1,7 @@
 From 1756145988e8b846db58ba14dc13a6c14ccf13db Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 25 Mar 2022 14:50:16 +0000
-Subject: [PATCH 6/6] STAGING add at91_dt_defconfig with gcc-10
+Subject: [PATCH 6/6] STAGING add multi_v5_defconfig with gcc-10
 
 ---
  config/core/build-configs-staging.yaml | 4 ++++
@@ -16,9 +16,9 @@ index 56eb40d4..6f25cfdd 100644
        <<: *arm_defconfig
        fragments: [crypto]
 +      extra_configs:
-+        - 'at91_dt_defconfig'
++        - 'multi_v5_defconfig'
 +      filters:
-+        - passlist: { defconfig: ['multi_v7_defconfig', 'at91_dt_defconfig'] }
++        - passlist: { defconfig: ['multi_v7_defconfig', 'multi_v5_defconfig'] }
      arm64:
        <<: *arm64_defconfig
        fragments: [arm64-chromebook, crypto, preempt_rt]
