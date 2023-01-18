@@ -50,7 +50,7 @@ index 72e9480..a6c0cf1 100644
 +  parameters {
 +    stringParam('KCI_API_URL', 'https://api.chromeos.kernelci.org', 'URL of the KernelCI back-end API.')
 +    stringParam('KCI_API_TOKEN_ID', 'kci-api-token-chromeos', 'Identifier of the KernelCI backend API token stored in Jenkins.')
-+    stringParam('KCI_STORAGE_URL', 'http://storage.chromeos.kernelci.org', 'URL of the KernelCI storage server.')
++    stringParam('KCI_STORAGE_CONFIG', 'chromeos.kernelci.org', 'KernelCI storage configuration.')
 +    stringParam('KCI_CORE_URL', KCI_CORE_URL, 'URL of the kernelci-core repository.')
 +    stringParam('KCI_CORE_BRANCH', 'chromeos.kernelci.org', 'Name of the branch to use in the kernelci-core repository.')
 +    stringParam('DOCKER_BASE', 'kernelci/cros-', 'Dockerhub base address used for the build images.')
@@ -89,7 +89,7 @@ index 72e9480..a6c0cf1 100644
 +    stringParam('LABS_WHITELIST', 'lab-collabora-staging lab-collabora', 'List of labs to include in the tests, all labs will be tested by default.')
 +    stringParam('KCI_API_TOKEN_ID', 'kci-api-token-chromeos', 'Identifier of the KernelCI backend API token stored in Jenkins.')
 +    stringParam('KCI_API_URL', 'https://api.chromeos.kernelci.org', 'URL of the KernelCI Backend API')
-+    stringParam('KCI_STORAGE_URL', 'http://storage.chromeos.kernelci.org', 'URL of the KernelCI storage server.')
++    stringParam('KCI_STORAGE_CONFIG', 'chromeos.kernelci.org', 'KernelCI storage config.')
 +    stringParam('KCI_CORE_URL', KCI_CORE_URL, 'URL of the kernelci-core repository.')
 +    stringParam('KCI_CORE_BRANCH', 'chromeos.kernelci.org', 'Name of the branch to use in the kernelci-core repository.')
 +    stringParam('DOCKER_BASE', 'kernelci/cros-', 'Dockerhub base address used for the build images.')
