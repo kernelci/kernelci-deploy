@@ -197,7 +197,7 @@ cmd_docker() {
     cd checkout/kernelci-core/config/docker
 
     core_rev=$(git show --pretty=format:%H -s origin/kernelci.org)
-    args="build --push --verbose --no-cache --build-arg core_rev=$core_rev"
+    args="build --push --no-cache --build-arg core_rev=$core_rev"
 
     # KernelCI tools
     ./kci_docker $args kernelci
