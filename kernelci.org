@@ -197,7 +197,8 @@ cmd_docker() {
     cd checkout/kernelci-core/config/docker
 
     core_rev=$(git show --pretty=format:%H -s origin/kernelci.org)
-    args="build --push --no-cache --build-arg core_rev=$core_rev"
+    base_args="build --build-arg core_rev=$core_rev"
+    args="$base_args --push --no-cache"
 
     # KernelCI tools
     ./kci_docker $args kernelci
@@ -205,9 +206,11 @@ cmd_docker() {
 
     # Compiler toolchains
     for clang in clang-11 clang-12 clang-13 clang-14 clang-15 clang-16; do
-	./kci_docker $args $clang --fragment=kselftest --fragment=kernelci
-        for arch in arm arm64 mips riscv64 x86; do
-	    ./kci_docker $args $clang --arch $arch \
+	./kci_docker $args $clang
+    done
+    for clang in clang-11 clang-15 clang-16; do
+        for arch in arm arm64 armv5 mips riscv64 x86; do
+	    ./kci_docker $base_args --push $clang --arch $arch \
                      --fragment=kselftest --fragment=kernelci
         done
     done
