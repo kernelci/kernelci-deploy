@@ -140,7 +140,7 @@ cmd_kernel() {
         --push \
         --ssh-key=keys/id_rsa_staging.kernelci.org \
         --from-url=https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git \
-        --from-branch=linux-5.15.y \
+        --from-branch=linux-6.1.y \
         --branch=chromeos-stable \
         --tag-prefix=chromeos-stable-
 }
