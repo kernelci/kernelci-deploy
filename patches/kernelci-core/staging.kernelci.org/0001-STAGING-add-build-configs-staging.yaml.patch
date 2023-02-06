@@ -86,9 +86,9 @@ index 00000000..56eb40d4
 +    arm64: *arm64_defconfig
 +    x86_64: *x86_64_defconfig-staging
 +
-+staging-clang-16: &staging-clang-16
++staging-clang-17: &staging-clang-17
 +  <<: *staging-clang-11
-+  build_environment: clang-16
++  build_environment: clang-17
 +
 +
 +build_configs:
@@ -98,7 +98,7 @@ index 00000000..56eb40d4
 +    branch: 'staging-android'
 +    variants:
 +      gcc-10: *staging-gcc-10
-+      clang-16: *staging-clang-16
++      clang-17: *staging-clang-17
 +
 +  kernelci_staging-cip:
 +    tree: kernelci
@@ -118,7 +118,7 @@ index 00000000..56eb40d4
 +    branch: 'staging-next'
 +    variants:
 +      gcc-10: *staging-gcc-10
-+      clang-16: *staging-clang-16
++      clang-17: *staging-clang-17
 +
 +  kernelci_staging-stable:
 +    tree: kernelci
