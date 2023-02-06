@@ -208,7 +208,7 @@ cmd_docker() {
     for clang in clang-11 clang-12 clang-13 clang-14 clang-15 clang-16; do
 	./kci_docker $args $clang
     done
-    for clang in clang-11 clang-15 clang-16; do
+    for clang in clang-11 clang-14 clang-15 clang-16; do
         for arch in arm arm64 armv5 mips riscv64 x86; do
 	    ./kci_docker $base_args --push $clang --arch $arch \
                      --fragment=kselftest --fragment=kernelci
@@ -224,6 +224,9 @@ cmd_docker() {
     ./kci_docker $args gcc-10 --arch x86 --fragment=kunit --fragment=kernelci
     for rustc in rustc-1.62 rustc-1.66; do
         ./kci_docker $args $rustc --fragment=kselftest --fragment=kernelci
+        for arch in x86; do
+            ./kci_docker $args $rustc --arch $arch --fragment=kselftest --fragment=kernelci
+        done
     done
 
     # rootfs
