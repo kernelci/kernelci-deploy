@@ -1,4 +1,4 @@
-From bd66a6953a7a0ef4f321c7490b003fd11ef66a8b Mon Sep 17 00:00:00 2001
+From f91883d4542ab6b4026f9d6577348af881aa9e43 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 29 Nov 2022 12:47:53 +0530
 Subject: [PATCH] STAGING config/staging.kernelci.org.conf: add file for
@@ -6,18 +6,19 @@ Subject: [PATCH] STAGING config/staging.kernelci.org.conf: add file for
 
 Signed-off-by: Jeny Sadadia <jeny.sadadia@collabora.com>
 ---
- config/staging.kernelci.org.conf | 40 ++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ config/staging.kernelci.org.conf | 41 ++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
  create mode 100644 config/staging.kernelci.org.conf
 
 diff --git a/config/staging.kernelci.org.conf b/config/staging.kernelci.org.conf
 new file mode 100644
-index 0000000..6a9494b
+index 0000000..20f6e3d
 --- /dev/null
 +++ b/config/staging.kernelci.org.conf
-@@ -0,0 +1,40 @@
+@@ -0,0 +1,41 @@
 +[DEFAULT]
 +db_config: staging.kernelci.org
++api_config: staging.kernelci.org
 +storage_url: http://staging.kernelci.org:9080
 +verbose: true
 +
@@ -57,5 +58,5 @@ index 0000000..6a9494b
 +[db:staging.kernelci.org]
 +api: https://staging.kernelci.org:9000
 -- 
-2.25.1
+2.30.2
 
