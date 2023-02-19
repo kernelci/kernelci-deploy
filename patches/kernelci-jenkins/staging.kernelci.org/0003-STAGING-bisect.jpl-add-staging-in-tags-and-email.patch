@@ -1,4 +1,4 @@
-From 909f292b492720b9ec67dc207cc5e3af8a2f6bd7 Mon Sep 17 00:00:00 2001
+From c96c1d9c65dc2413e6794f964bd60b529f57adf1 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 7 Jul 2020 21:56:00 +0100
 Subject: [PATCH 3/4] STAGING bisect.jpl: add -staging in tags and email
@@ -8,7 +8,7 @@ Subject: [PATCH 3/4] STAGING bisect.jpl: add -staging in tags and email
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/jobs/bisect.jpl b/jobs/bisect.jpl
-index 1e61da4..ebb6637 100644
+index d67ce74..91522a0 100644
 --- a/jobs/bisect.jpl
 +++ b/jobs/bisect.jpl
 @@ -121,7 +121,7 @@ def createTag(kdir, iteration) {
@@ -20,7 +20,7 @@ index 1e61da4..ebb6637 100644
          sh(script: "git tag -a ${tag} -m ${tag} HEAD")
      }
  
-@@ -535,7 +535,7 @@ def bisectNext(kdir, status) {
+@@ -542,7 +542,7 @@ def bisectNext(kdir, status) {
  def pushResults(kdir, checks, params_summary) {
      def subject = "\
  ${params.KERNEL_TREE}/${params.KERNEL_BRANCH} bisection: \
@@ -29,7 +29,7 @@ index 1e61da4..ebb6637 100644
  
      withCredentials([string(credentialsId: params.KCI_API_TOKEN_ID,
                              variable: 'SECRET')]) {
-@@ -776,7 +776,7 @@ ${params_summary}""")
+@@ -783,7 +783,7 @@ ${params_summary}""")
              currentBuild.result = "FAILURE"
  
              def tree_branch = "${params.KERNEL_TREE}/${params.KERNEL_BRANCH}"
