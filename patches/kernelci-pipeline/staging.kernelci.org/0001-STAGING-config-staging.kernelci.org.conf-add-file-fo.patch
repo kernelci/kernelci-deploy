@@ -1,4 +1,4 @@
-From 35205f1e97b70cb2b32296366c347865c8a33841 Mon Sep 17 00:00:00 2001
+From d475995afb72ed3b3ec9ea6a7cb4b6c1ad7a4a17 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 29 Nov 2022 12:47:53 +0530
 Subject: [PATCH] STAGING config/staging.kernelci.org.conf: add file for
@@ -12,7 +12,7 @@ Signed-off-by: Jeny Sadadia <jeny.sadadia@collabora.com>
 
 diff --git a/config/staging.kernelci.org.conf b/config/staging.kernelci.org.conf
 new file mode 100644
-index 0000000..4fa6f76
+index 0000000..e3ff723
 --- /dev/null
 +++ b/config/staging.kernelci.org.conf
 @@ -0,0 +1,34 @@
@@ -27,10 +27,7 @@ index 0000000..4fa6f76
 +[tarball]
 +kdir: /home/kernelci/data/src/linux
 +output: /home/kernelci/data/output
-+ssh_key: /home/kernelci/data/ssh/id_rsa_tarball
-+ssh_port: 9022
-+ssh_user: kernelci
-+ssh_host: staging.kernelci.org
++storage_config: staging.kernelci.org
 +
 +[runner]
 +output: /home/kernelci/output
@@ -50,6 +47,10 @@ index 0000000..4fa6f76
 +smtp_port: 465
 +
 +[regression_tracker]
++
++[storage:staging.kernelci.org]
++storage_cred: /home/kernelci/data/ssh/id_rsa_tarball
+\ No newline at end of file
 -- 
 2.30.2
 
