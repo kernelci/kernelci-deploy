@@ -50,7 +50,7 @@ index 00000000..56eb40d4
 +# Staging build configurations using GCC
 +staging-gcc-10: &staging-gcc-10
 +  build_environment: gcc-10
-+  fragments: [kselftest]
++  fragments: [kselftest, kselftest-slim]
 +  architectures:
 +    arc: *arc_defconfig
 +    arm:
@@ -80,7 +80,7 @@ index 00000000..56eb40d4
 +# Staging build configurations using LLVM/Clang
 +staging-clang-11: &staging-clang-11
 +  build_environment: clang-11
-+  fragments: [kselftest]
++  fragments: [kselftest, kselftest-slim]
 +  architectures:
 +    arm: *arm_defconfig
 +    arm64: *arm64_defconfig
