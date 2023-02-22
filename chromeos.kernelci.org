@@ -85,21 +85,6 @@ cmd_frontend() {
         $PWD/keys/id_rsa_kernelci.org
 }
 
-cmd_kernel() {
-    tree=mainline
-    url=git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
-    branch=master
-
-    echo "Pushing kernel test branch for ${tree}"
-    ./kernel.py \
-        --push \
-        --ssh-key=keys/id_rsa_staging.kernelci.org \
-        --from-url=$url \
-        --from-branch=$branch \
-        --branch=chromeos-"$tree" \
-        --tag-prefix=chromeos-"$tree"-
-}
-
 cmd_docker() {
     echo "Updating Docker images"
     # Build the images with kci_docker
