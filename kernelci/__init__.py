@@ -36,7 +36,12 @@ COLORS = {
 }
 
 # Github API handler
-GITHUB = github.Github()
+# If keys/gh-token.txt exists, use it as a token, otherwise use without auth
+if os.path.isfile('keys/gh-token.txt'):
+    with open('keys/gh-token.txt', 'r') as f:
+        GITHUB = github.Github(login_or_token=f.read().strip())
+else:
+    GITHUB = github.Github()
 
 
 def print_color(color, msg):
