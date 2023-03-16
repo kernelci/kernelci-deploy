@@ -185,8 +185,8 @@ cmd_docker() {
         cache_arg=""
     fi
 
-    # Build the images with kci_docker
-    cd checkout/kernelci-core/config/docker
+    # Build the images with kci docker
+    cd checkout/kernelci-core
 
     core_rev=$(git show --pretty=format:%H -s origin/staging.kernelci.org)
     rev_arg="--build-arg core_rev=$core_rev"
@@ -194,39 +194,37 @@ cmd_docker() {
     args="build --push $px_arg $cache_arg $rev_arg"
 
     # KernelCI tools
-    ./kci_docker $args kernelci
-    ./kci_docker $args k8s $rev_arg --fragment=kernelci
+    ./kci docker $args kernelci
+    ./kci docker $args k8s kernelci $rev_arg
 
     # Compiler toolchains
     for clang in clang-11 clang-14 clang-17; do
-	./kci_docker $args $clang --fragment=kselftest --fragment=kernelci
+	./kci docker $args $clang kselftest kernelci
         for arch in arm arm64 mips riscv64 x86; do
-	    ./kci_docker $args $clang --arch $arch \
-                     --fragment=kselftest --fragment=kernelci
+	    ./kci docker $args $clang kselftest kernelci --arch $arch
         done
     done
     for arch in arc arm armv5 arm64 mips riscv64 x86; do
-	./kci_docker $args gcc-10 --arch $arch \
-                     --fragment=kselftest --fragment=kernelci
+	./kci docker $args gcc-10 kselftest kernelci --arch $arch
     done
     # missing -dev packages for sparc64
-    ./kci_docker $args gcc-10 --arch sparc --fragment=kernelci
+    ./kci docker $args gcc-10 kernelci --arch sparc
     # only x86 is useful for KUnit (for now)
-    ./kci_docker $args gcc-10 --arch x86 --fragment=kunit --fragment=kernelci
+    ./kci docker $args gcc-10 kunit kernelci --arch x86
     for rustc in rustc-1.62 rustc-1.66; do
-    ./kci_docker $args $rustc --fragment=kselftest --fragment=kernelci
+    ./kci docker $args $rustc kselftest kernelci
     done
 
     # rootfs
-    ./kci_docker $args buildroot --fragment=kernelci
-    ./kci_docker $args debos --fragment=kernelci
+    ./kci docker $args buildroot kernelci
+    ./kci docker $args debos kernelci
 
     # QEMU
-    ./kci_docker $args qemu
+    ./kci docker $args qemu
 
     # Other tools
-    ./kci_docker $args cvehound --fragment=kernelci
-    ./kci_docker $args dt-validation # --fragment=kernelci (PyYAML conflict)
+    ./kci docker $args cvehound kernelci
+    ./kci docker $args dt-validation # kernelci (PyYAML conflict)
     cd -
 }
 
