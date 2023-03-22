@@ -1,10 +1,9 @@
-From db14fc79aab21786ad9d37655204ff32886e3523 Mon Sep 17 00:00:00 2001
+From d47bac10bae84774cfbb93eabc989af1008ddf0d Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 29 Nov 2022 12:47:53 +0530
 Subject: [PATCH] STAGING config/staging.kernelci.org.conf: add file for
  staging
 
-Signed-off-by: Jeny Sadadia <jeny.sadadia@collabora.com>
 ---
  config/staging.kernelci.org.conf | 34 ++++++++++++++++++++++++++++++++
  1 file changed, 34 insertions(+)
@@ -12,13 +11,13 @@ Signed-off-by: Jeny Sadadia <jeny.sadadia@collabora.com>
 
 diff --git a/config/staging.kernelci.org.conf b/config/staging.kernelci.org.conf
 new file mode 100644
-index 0000000..53bd6af
+index 0000000..da3d6f8
 --- /dev/null
 +++ b/config/staging.kernelci.org.conf
 @@ -0,0 +1,34 @@
 +[DEFAULT]
 +api_config: staging.kernelci.org
-+storage_url: http://staging.kernelci.org:9080
++storage_config: staging.kernelci.org
 +verbose: true
 +
 +[trigger]
