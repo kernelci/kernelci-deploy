@@ -1,0 +1,29 @@
+From 64133ebfe0b302250244f259b2e1892c798e3a78 Mon Sep 17 00:00:00 2001
+From: "kernelci.org bot" <bot@kernelci.org>
+Date: Mon, 27 Mar 2023 21:00:03 +0200
+Subject: [PATCH 2/3] STAGING config/pipeline.yaml: add docker runtime
+
+---
+ config/pipeline.yaml | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/config/pipeline.yaml b/config/pipeline.yaml
+index 3326b9b..e7c3d7b 100644
+--- a/config/pipeline.yaml
++++ b/config/pipeline.yaml
+@@ -82,6 +82,12 @@ storage_configs:
+ 
+ runtimes:
+ 
++  docker:
++    lab_type: docker
++    env_file: '/home/kernelci/.docker-env'
++    volumes:
++      - '/data/tmp:/home/kernelci/tmp'
++
+   k8s-gke-eu-west4:
+     lab_type: kubernetes
+     context: 'gke_android-kernelci-external_europe-west4-c_kci-eu-west4'
+-- 
+2.30.2
+

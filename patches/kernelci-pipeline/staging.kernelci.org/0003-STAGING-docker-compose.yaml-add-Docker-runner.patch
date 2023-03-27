@@ -1,0 +1,57 @@
+From ffdb144661d63fab7915fcbc0e41be0effdd7759 Mon Sep 17 00:00:00 2001
+From: "kernelci.org bot" <bot@kernelci.org>
+Date: Mon, 27 Mar 2023 21:00:30 +0200
+Subject: [PATCH 3/3] STAGING docker-compose.yaml: add Docker runner
+
+---
+ docker-compose.yaml | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
+
+diff --git a/docker-compose.yaml b/docker-compose.yaml
+index 128ed97..016745c 100644
+--- a/docker-compose.yaml
++++ b/docker-compose.yaml
+@@ -33,13 +33,31 @@ services:
+       - '--runtime-config=shell'
+       - 'kver'
+     volumes:
++      - '/data/tmp:/home/kernelci/tmp'
+       - './src:/home/kernelci/pipeline'
+       - './config:/home/kernelci/config'
+-      - './data/output:/home/kernelci/output'
+       - './data/k8s-credentials/.kube:/home/kernelci/.kube'
+       - './data/k8s-credentials/.config/gcloud:/home/kernelci/.config/gcloud'
+       - './data/k8s-credentials/.azure:/home/kernelci/.azure'
+ 
++  runner-docker:
++    <<: *runner
++    container_name: 'kernelci-pipeline-runner-docker'
++    user: root  # for docker-in-docker
++    working_dir: /home/kernelci
++    command:
++      - './pipeline/runner.py'
++      - '--settings=${SETTINGS:-/home/kernelci/config/kernelci.conf}'
++      - 'loop'
++      - '--runtime-config=docker'
++      - 'kunit'
++    volumes:
++      - '/data/tmp:/home/kernelci/tmp'
++      - './.docker-env:/home/kernelci/.docker-env'
++      - './src:/home/kernelci/pipeline'
++      - './config:/home/kernelci/config'
++      - '/var/run/docker.sock:/var/run/docker.sock'  # Docker-in-Docker
++
+   runner-k8s:
+     <<: *runner
+     container_name: 'kernelci-pipeline-runner-k8s'
+@@ -49,7 +67,6 @@ services:
+       - '--settings=${SETTINGS:-/home/kernelci/config/kernelci.conf}'
+       - 'loop'
+       - '--runtime-config=k8s-gke-eu-west4'
+-      - 'kunit'
+       - 'kunit-x86_64'
+       - 'kbuild'
+ 
+-- 
+2.30.2
+
