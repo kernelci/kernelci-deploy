@@ -61,6 +61,7 @@ def iterate_prs(repo, skip, users, path):
         repo = pr.head.repo
         user = pr.head.repo.owner.login if repo else "(unknown)"
         labels = list(label.name for label in pr.labels)
+        include_label = 'staging:{}'.format(args.main)
         print("{:4} {:16} {:32} ".format(pr.number, user, branch), end='')
         if repo is None:
             print_color('red', "SKIP unknown repository")
@@ -68,10 +69,10 @@ def iterate_prs(repo, skip, users, path):
             print_color('red', "SKIP untrusted user")
         elif (user, branch) in skip:
             print_color('yellow', "SKIP")
-        elif pr.base.ref != args.main:
-            print_color('yellow', "SKIP base: {}".format(pr.base.ref))
         elif args.skip_label and args.skip_label in labels:
             print_color('yellow', "SKIP label: {}".format(args.skip_label))
+        elif pr.base.ref != args.main and include_label not in labels:
+            print_color('yellow', "SKIP base: {} labels: {}".format(pr.base.ref, labels))
         else:
             if pull(args, pr, path):
                 print_color('green', "OK")
