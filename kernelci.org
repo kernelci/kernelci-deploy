@@ -194,15 +194,32 @@ cmd_website() {
 cmd_docker() {
     echo "Re-building Docker images"
 
+    # Build without cache if flag file doesn't exist or older than x days
+    purge_flag_file=".last_docker_purge"
+    if [ -f "$purge_flag_file" ]; then
+        flag_time=$(date -r "$purge_flag_file" +%s)
+        week_ago=$(date -d 'now - 7 days' +%s)
+    fi
+    if [ ! -f "$purge_flag_file" ] || [ $flag_time -le $week_ago ]; then
+        echo "Building without cache"
+        cache_arg="--no-cache"
+        touch "$purge_flag_file"
+    else
+        cache_arg=""
+    fi
+
+    # Build the images with kci docker
     cd checkout/kernelci-core
 
     core_rev=$(git show --pretty=format:%H -s origin/kernelci.org)
-    base_args="build --build-arg core_rev=$core_rev"
-    args="$base_args --push --no-cache"
+    rev_arg="--build-arg core_rev=$core_rev"
+    px_arg='--prefix=kernelci/'
+    args="build --push $px_arg $cache_arg $rev_arg"
 
     # KernelCI tools
     ./kci docker $args kernelci
-    ./kci docker $args k8s kernelci
+    ./kci docker $args k8s kernelci $rev_arg
+
 
     # Compiler toolchains
     for clang in clang-11 clang-12 clang-13 clang-14 clang-15 clang-16 clang-17; do
@@ -210,7 +227,7 @@ cmd_docker() {
     done
     for clang in clang-11 clang-14 clang-15 clang-16 clang-17; do
         for arch in arm arm64 armv5 mips riscv64 x86; do
-	    ./kci docker $base_args --push $clang kselftest kernelci --arch $arch
+           ./kci docker $args $clang kselftest kernelci --arch $arch
         done
     done
     for arch in arc arm armv5 arm64 mips riscv64 x86; do
