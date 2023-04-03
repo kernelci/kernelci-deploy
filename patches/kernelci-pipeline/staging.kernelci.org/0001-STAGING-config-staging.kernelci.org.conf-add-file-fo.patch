@@ -1,4 +1,4 @@
-From 82db9391dd2f58b0164b1d13eac6f26b7ad04848 Mon Sep 17 00:00:00 2001
+From e26d3bc8cc2529d8d009883b1c4550c39ce80be0 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 29 Nov 2022 12:47:53 +0530
 Subject: [PATCH 1/2] STAGING config/staging.kernelci.org.conf: add file for
