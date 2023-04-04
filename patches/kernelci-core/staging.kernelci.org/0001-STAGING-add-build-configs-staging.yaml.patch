@@ -1,25 +1,21 @@
-From b69f0992d945de3c0ec116670ea0c6ecfb143c72 Mon Sep 17 00:00:00 2001
+From cfc462187f7a05e6c147785e57676173f86f395d Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Wed, 15 Dec 2021 14:44:58 +0000
-Subject: [PATCH 1/7] STAGING add build-configs-staging.yaml
+Subject: [PATCH 1/5] STAGING add build-configs-staging.yaml
 
 ---
- config/core/build-configs-staging.yaml | 139 +++++++++++++++++++++++++
- 1 file changed, 139 insertions(+)
+ config/core/build-configs-staging.yaml | 115 +++++++++++++++++++++++++
+ 1 file changed, 115 insertions(+)
  create mode 100644 config/core/build-configs-staging.yaml
 
 diff --git a/config/core/build-configs-staging.yaml b/config/core/build-configs-staging.yaml
 new file mode 100644
-index 000000000000..d2ef4668ce96
+index 000000000000..6b5cf2d8166d
 --- /dev/null
 +++ b/config/core/build-configs-staging.yaml
-@@ -0,0 +1,139 @@
+@@ -0,0 +1,115 @@
 +# Minimum architecture defconfigs
 +arch_defconfigs: &arch_defconfigs
-+  arc: &arc_defconfig
-+    base_defconfig: 'haps_hs_smp_defconfig'
-+    filters:
-+      - regex: { defconfig: 'haps_hs_smp_defconfig' }
 +  arm: &arm_defconfig
 +    base_defconfig: 'multi_v7_defconfig'
 +    filters:
@@ -28,19 +24,11 @@ index 000000000000..d2ef4668ce96
 +    base_defconfig: 'defconfig'
 +    filters:
 +      - regex: { defconfig: 'defconfig' }
-+  i386: &i386_defconfig
-+    base_defconfig: 'i386_defconfig'
-+    filters:
-+      - regex: { defconfig: 'i386_defconfig' }
-+  mips: &mips_defconfig
-+    base_defconfig: '32r2el_defconfig'
-+    filters:
-+      - regex: { defconfig: '32r2el_defconfig' }
 +  riscv: &riscv_defconfig
 +    base_defconfig: 'defconfig'
 +    filters:
 +      - regex: { defconfig: 'defconfig' }
-+      - blocklist: { kernel: ['v3.', 'v4.4', 'v4.9', 'v4.14'] }
++      - blocklist: { kernel: ['v3.', 'v4.'] }
 +  x86_64: &x86_64_defconfig
 +    base_defconfig: 'x86_64_defconfig'
 +    filters:
@@ -50,45 +38,34 @@ index 000000000000..d2ef4668ce96
 +# Staging build configurations using GCC
 +staging-gcc-10: &staging-gcc-10
 +  build_environment: gcc-10
-+  fragments: [kselftest, kselftest-slim]
++  fragments: [kselftest]
 +  architectures:
-+    arc: *arc_defconfig
 +    arm:
 +      <<: *arm_defconfig
-+      fragments: [crypto]
++      extra_configs:
++        - 'multi_v5_defconfig'
++      filters:
++        - passlist: {defconfig: ['multi_v7_defconfig', 'multi_v5_defconfig']}
 +    arm64:
 +      <<: *arm64_defconfig
-+      fragments: [arm64-chromebook, crypto, preempt_rt]
++      fragments: [arm64-chromebook]
 +      extra_configs:
-+        - 'defconfig+arm64-chromebook+crypto'
 +        - 'defconfig+arm64-chromebook+kselftest'
-+        - 'defconfig+arm64-chromebook+preempt_rt'
-+    i386: *i386_defconfig
-+    mips: *mips_defconfig
 +    riscv: *riscv_defconfig
 +    x86_64: &x86_64_defconfig-staging
 +      <<: *x86_64_defconfig
-+      fragments: [amdgpu, crypto, ima, preempt_rt, x86-chromebook]
++      fragments: [x86-chromebook]
 +      extra_configs:
-+        - 'x86_64_defconfig+x86-chromebook+amdgpu'
-+        - 'x86_64_defconfig+x86-chromebook+crypto'
-+        - 'x86_64_defconfig+x86-chromebook+ima'
 +        - 'x86_64_defconfig+x86-chromebook+kselftest'
-+        - 'x86_64_defconfig+x86-chromebook+preempt_rt'
 +
 +
 +# Staging build configurations using LLVM/Clang
-+staging-clang-11: &staging-clang-11
-+  build_environment: clang-11
-+  fragments: [kselftest, kselftest-slim]
++staging-clang-17: &staging-clang-17
++  build_environment: clang-17
++  fragments: [kselftest]
 +  architectures:
-+    arm: *arm_defconfig
 +    arm64: *arm64_defconfig
 +    x86_64: *x86_64_defconfig-staging
-+
-+staging-clang-17: &staging-clang-17
-+  <<: *staging-clang-11
-+  build_environment: clang-17
 +
 +
 +build_configs:
@@ -111,7 +88,6 @@ index 000000000000..d2ef4668ce96
 +    branch: 'staging-mainline'
 +    variants:
 +      gcc-10: *staging-gcc-10
-+      clang-11: *staging-clang-11
 +
 +  kernelci_staging-next:
 +    tree: kernelci
@@ -119,6 +95,14 @@ index 000000000000..d2ef4668ce96
 +    variants:
 +      gcc-10: *staging-gcc-10
 +      clang-17: *staging-clang-17
++      rustc-1.62:
++        build_environment: rustc-1.62
++        fragments: [rust]
++        architectures:
++          x86_64:
++            base_defconfig: 'x86_64_defconfig'
++            filters:
++              - regex: {defconfig: '^x86_64_defconfig\+rust$'}
 +
 +  kernelci_staging-stable:
 +    tree: kernelci
@@ -127,32 +111,24 @@ index 000000000000..d2ef4668ce96
 +      gcc-10:
 +        build_environment: gcc-10
 +        architectures:
-+          arc: *arc_defconfig
-+          arm:
-+            <<: *arm_defconfig
-+            fragments: [crypto]
++          arm: *arm_defconfig
 +          arm64:
 +            <<: *arm64_defconfig
-+            fragments: [arm64-chromebook, crypto]
++            fragments: [arm64-chromebook]
 +            extra_configs:
-+              - 'defconfig+arm64-chromebook+crypto'
-+          i386: *i386_defconfig
-+          mips: *mips_defconfig
++              - 'defconfig+arm64-chromebook'
 +          riscv: *riscv_defconfig
 +          x86_64:
 +            <<: *x86_64_defconfig
-+            fragments: [amdgpu, crypto, ima, x86-chromebook]
++            fragments: [x86-chromebook]
 +            extra_configs:
-+              - 'x86_64_defconfig+x86-chromebook+amdgpu'
-+              - 'x86_64_defconfig+x86-chromebook+crypto'
-+              - 'x86_64_defconfig+x86-chromebook+ima'
++              - 'x86_64_defconfig+x86-chromebook'
 +
 +  mainline-staging:
 +    tree: mainline
 +    branch: 'master'
 +    variants:
 +      gcc-10: *staging-gcc-10
-+      clang-11: *staging-clang-11
 -- 
 2.30.2
 
