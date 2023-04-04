@@ -198,12 +198,18 @@ cmd_docker() {
     ./kci docker $args k8s kernelci $rev_arg
 
     # Compiler toolchains
-    for clang in clang-11 clang-14 clang-17; do
-	./kci docker $args $clang kselftest kernelci
-        for arch in arm arm64 mips riscv64 x86; do
-	    ./kci docker $args $clang kselftest kernelci --arch $arch
-        done
+
+    # clang-17 for linux-next (including weekly full build)
+    ./kci docker $args clang-17 kselftest kernelci
+    for arch in arm arm64 mips riscv64 x86; do
+	./kci docker $args clang-17 kselftest kernelci --arch $arch
     done
+    # clang-14 for chromeos
+    ./kci docker $args clang-14 kselftest kernelci
+    for arch in arm64 x86; do
+	./kci docker $args clang-14 kselftest kernelci --arch $arch
+    done
+    # gcc-10 for everything (including weekly linux-next full build)
     for arch in arc arm armv5 arm64 mips riscv64 x86; do
 	./kci docker $args gcc-10 kselftest kernelci --arch $arch
     done
@@ -211,9 +217,8 @@ cmd_docker() {
     ./kci docker $args gcc-10 kernelci --arch sparc
     # only x86 is useful for KUnit (for now)
     ./kci docker $args gcc-10 kunit kernelci --arch x86
-    for rustc in rustc-1.62 rustc-1.66; do
-    ./kci docker $args $rustc kselftest kernelci
-    done
+    # rustc-1.62 for linux-next
+    ./kci docker $args rustc-1.62 kselftest kernelci
 
     # rootfs
     ./kci docker $args buildroot kernelci
