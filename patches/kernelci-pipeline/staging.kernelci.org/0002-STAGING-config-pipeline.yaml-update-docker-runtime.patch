@@ -1,19 +1,21 @@
-From 7ac9d07197222933a3474852f1fc45f95bccc6a0 Mon Sep 17 00:00:00 2001
+From 811b88194d88cd87315d7e31add39e8f64adbe2b Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Mon, 3 Apr 2023 14:35:22 +0000
 Subject: [PATCH 2/2] STAGING config/pipeline.yaml: update docker runtime
 
 ---
- config/pipeline.yaml | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ config/pipeline.yaml | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/config/pipeline.yaml b/config/pipeline.yaml
-index ed27fc2..2fa1522 100644
+index ed27fc2..31b2d33 100644
 --- a/config/pipeline.yaml
 +++ b/config/pipeline.yaml
-@@ -96,9 +96,8 @@ runtimes:
+@@ -95,10 +95,10 @@ runtimes:
+     lab_type: docker
      env_file: '/home/kernelci/.docker-env'
      user: 'root'  # Docker-in-Docker
++    timeout: 300  # 5min timeout rather than 1min default
      volumes:
 -      # Note: Absolute paths on the host are required here
 -      - 'data/ssh/:/home/kernelci/data/ssh'
