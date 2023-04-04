@@ -1,14 +1,14 @@
-From 1756145988e8b846db58ba14dc13a6c14ccf13db Mon Sep 17 00:00:00 2001
+From af99d2331886883cc6bd61bee98b9bebc16ae09c Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 25 Mar 2022 14:50:16 +0000
-Subject: [PATCH 6/6] STAGING add multi_v5_defconfig with gcc-10
+Subject: [PATCH 6/7] STAGING add multi_v5_defconfig with gcc-10
 
 ---
  config/core/build-configs-staging.yaml | 4 ++++
  1 file changed, 4 insertions(+)
 
 diff --git a/config/core/build-configs-staging.yaml b/config/core/build-configs-staging.yaml
-index 56eb40d4..6f25cfdd 100644
+index d2ef4668ce96..2b799273248b 100644
 --- a/config/core/build-configs-staging.yaml
 +++ b/config/core/build-configs-staging.yaml
 @@ -40,6 +40,10 @@ staging-gcc-10: &staging-gcc-10
