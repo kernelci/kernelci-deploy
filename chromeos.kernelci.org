@@ -1,10 +1,22 @@
-#!/bin/sh
+#!/bin/dash
 
 # Periodic job run on chromeos.kernelci.org to merge together all the pending
 # PRs and update the chromeos.kernelci.org branches, trigger a full build/test
 # cycle with a test kernel branch.
 
 set -e
+
+# Trap function for errors
+crash() {
+    local exit_code="$?"
+    # If exit code is 0, then it's not an error
+    [ "$exit_code" -eq 0 ] && exit 0
+    # Generate syslog message
+    logger -t kernelci-deploy "Error in script $0"
+    exit $exit_code
+}
+
+trap 'crash' EXIT
 
 CHROMEOS_SETTINGS="data/chromeos.ini"
 SSH_KEY="keys/id_rsa_staging.kernelci.org"
