@@ -88,7 +88,7 @@ cmd_frontend() {
 cmd_docker() {
     echo "Updating Docker images"
     # Build the images with kci_docker
-    cd checkout/kernelci-core/config/docker
+    cd checkout/kernelci-core
     core_rev=$(git show --pretty=format:%H -s origin/chromeos.kernelci.org)
     rev_arg="--build-arg core_rev=$core_rev"
     px_arg='--prefix=kernelci/cros-'
