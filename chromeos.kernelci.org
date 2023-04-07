@@ -95,21 +95,19 @@ cmd_docker() {
     args="build --push $px_arg $rev_arg"
 
     # KernelCI tools
-    ./kci_docker $args kernelci
-    ./kci_docker $args k8s $rev_arg --fragment=kernelci
+    ./kci docker $args kernelci
+    ./kci docker $args k8s kernelci $rev_arg
 
     # Compiler toolchains
     for clang in clang-14; do
-	./kci_docker $args $clang $rev_arg \
-		     --fragment=kselftest --fragment=kernelci
-	for arch in arm arm64 x86; do
-	    ./kci_docker $args $clang $rev_arg --arch $arch \
-			 --fragment=kselftest --fragment=kernelci
-	done
+	  ./kci docker $args $clang kselftest kernelci $rev_arg
+
+	  for arch in arm arm64 x86; do
+	    ./kci docker $args $clang kselftest kernelci $rev_arg --arch $arch
+	  done
     done
     for arch in arm arm64 x86; do
-	./kci_docker $args gcc-10 --arch $arch $rev_arg \
-                     --fragment=kselftest --fragment=kernelci
+	./kci docker $args gcc-10 kselftest kernelci --arch $arch $rev_arg
     done
 
     px_arg='--prefix=kernelci/'
@@ -117,9 +115,9 @@ cmd_docker() {
     # ChromeOS related images
     # cros-sdk used to create ChromiumOS rootfs, so it needs kernelci-core
     # also we dont need cros- prefix as with compilers
-    ./kci_docker $args --fragment=kernelci cros-sdk
+    ./kci docker $args cros-sdk kernelci
     for imgname in cros-baseline cros-qemu-modules cros-tast; do
-	./kci_docker $args $rev_arg $imgname
+	./kci docker $args $rev_arg $imgname
     done
     cd -
 }
