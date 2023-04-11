@@ -276,7 +276,7 @@ cmd_api_pipeline() {
     for compose in $compose_files; do
         [ -f $compose ] || continue
         echo "Stopping containers with compose file: $compose"
-        docker-compose -f $compose down --remove-orphans
+        docker-compose -f $compose down
     done
     cd -
 
