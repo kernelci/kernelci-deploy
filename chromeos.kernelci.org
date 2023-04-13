@@ -143,6 +143,15 @@ cmd_kernel() {
         --from-branch=linux-6.1.y \
         --branch=chromeos-stable \
         --tag-prefix=chromeos-stable-
+
+    echo "Pushing linux-6.1.y-arm64-chromeos kernel test branch"
+    ./kernel.py \
+        --push \
+        --ssh-key=keys/id_rsa_staging.kernelci.org \
+        --from-url git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git \
+        --from-branch linux-6.1.y \
+        --branch linux-6.1.y-arm64-chromeos \
+        --tag-prefix=linux-6.1.y-arm64-chromeos-
 }
 
 cmd_monitor() {

@@ -1,0 +1,36 @@
+From eb950ab1f8c9a4ca149e9b3fc93f5a990ad03c7c Mon Sep 17 00:00:00 2001
+From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Date: Mon, 24 Oct 2022 12:23:06 +0200
+Subject: [PATCH 47/48] clk: mediatek: mt8186-mfg: Propagate rate changes to
+ parent
+
+Propagate the rate changes to MFG_BG3D's parent on MT8186 to allow
+for proper GPU DVFS.
+
+Signed-off-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Reviewed-by: Chen-Yu Tsai <wenst@chromium.org>
+Link: https://lore.kernel.org/r/20221024102307.33722-10-angelogioacchino.delregno@collabora.com
+Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
+---
+ drivers/clk/mediatek/clk-mt8186-mfg.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/clk/mediatek/clk-mt8186-mfg.c b/drivers/clk/mediatek/clk-mt8186-mfg.c
+index f1f92216f894..0142d741053a 100644
+--- a/drivers/clk/mediatek/clk-mt8186-mfg.c
++++ b/drivers/clk/mediatek/clk-mt8186-mfg.c
+@@ -16,8 +16,9 @@ static const struct mtk_gate_regs mfg_cg_regs = {
+ 	.sta_ofs = 0x0,
+ };
+ 
+-#define GATE_MFG(_id, _name, _parent, _shift)			\
+-	GATE_MTK(_id, _name, _parent, &mfg_cg_regs, _shift, &mtk_clk_gate_ops_setclr)
++#define GATE_MFG(_id, _name, _parent, _shift)				\
++	GATE_MTK_FLAGS(_id, _name, _parent, &mfg_cg_regs, _shift,	\
++		       &mtk_clk_gate_ops_setclr, CLK_SET_RATE_PARENT)
+ 
+ static const struct mtk_gate mfg_clks[] = {
+ 	GATE_MFG(CLK_MFG_BG3D, "mfg_bg3d", "top_mfg", 0),
+-- 
+2.40.0
+

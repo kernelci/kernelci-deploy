@@ -1,0 +1,48 @@
+From 8984d2c4b5d2a05c78afe63460d03b0a59267ad1 Mon Sep 17 00:00:00 2001
+From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Date: Wed, 1 Mar 2023 10:55:14 +0100
+Subject: [PATCH 28/48] arm64: dts: mediatek: mt8192-asurada: Assign sram
+ supply to MFG1 pd
+
+Add a phandle to the MT8192_POWER_DOMAIN_MFG1 power domain and
+assign the GPU VSRAM supply to this in mt8192-asurada: this allows to
+keep the sram powered up while the GPU is used.
+
+Signed-off-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Reviewed-by: Chen-Yu Tsai <wenst@chromium.org>
+---
+ arch/arm64/boot/dts/mediatek/mt8192-asurada.dtsi | 4 ++++
+ arch/arm64/boot/dts/mediatek/mt8192.dtsi         | 2 +-
+ 2 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/mediatek/mt8192-asurada.dtsi b/arch/arm64/boot/dts/mediatek/mt8192-asurada.dtsi
+index ec013d5ef157..df477eb89f21 100644
+--- a/arch/arm64/boot/dts/mediatek/mt8192-asurada.dtsi
++++ b/arch/arm64/boot/dts/mediatek/mt8192-asurada.dtsi
+@@ -384,6 +384,10 @@ &mfg0 {
+ 	domain-supply = <&mt6315_7_vbuck1>;
+ };
+ 
++&mfg1 {
++	domain-supply = <&mt6359_vsram_others_ldo_reg>;
++};
++
+ &mipi_tx0 {
+ 	status = "okay";
+ };
+diff --git a/arch/arm64/boot/dts/mediatek/mt8192.dtsi b/arch/arm64/boot/dts/mediatek/mt8192.dtsi
+index 3fbf6022b73a..2e835939ae7b 100644
+--- a/arch/arm64/boot/dts/mediatek/mt8192.dtsi
++++ b/arch/arm64/boot/dts/mediatek/mt8192.dtsi
+@@ -445,7 +445,7 @@ mfg0: power-domain@MT8192_POWER_DOMAIN_MFG0 {
+ 					#size-cells = <0>;
+ 					#power-domain-cells = <1>;
+ 
+-					power-domain@MT8192_POWER_DOMAIN_MFG1 {
++					mfg1: power-domain@MT8192_POWER_DOMAIN_MFG1 {
+ 						reg = <MT8192_POWER_DOMAIN_MFG1>;
+ 						mediatek,infracfg = <&infracfg>;
+ 						#address-cells = <1>;
+-- 
+2.40.0
+

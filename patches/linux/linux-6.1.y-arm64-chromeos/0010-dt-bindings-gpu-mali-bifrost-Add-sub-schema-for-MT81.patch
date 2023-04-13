@@ -1,0 +1,54 @@
+From b008d371e917d3c08dc00f18d465e8776bf3f11f Mon Sep 17 00:00:00 2001
+From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Date: Tue, 28 Feb 2023 11:26:56 +0100
+Subject: [PATCH 10/48] dt-bindings: gpu: mali-bifrost: Add sub-schema for
+ MT8192's power domains
+
+MediaTek MT8192 (and similar) needs five power domains for the
+Mali GPU and no sram-supply: change the binding to allow so by
+also introducing power-domain-names in the generic binding;
+while at it, also disallow the newly introduced power-domain-names
+for all non-MediaTek bindings.
+
+Fixes: 5d82e74a97c2 ("dt-bindings: Add compatible for Mali Valhall (JM)")
+Signed-off-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Chen-Yu Tsai <wenst@chromium.org>
+Tested-by: Chen-Yu Tsai <wenst@chromium.org>
+---
+ .../bindings/gpu/arm,mali-bifrost.yaml        | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml b/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml
+index bf0f7f1f71e0..c5bef872114d 100644
+--- a/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml
++++ b/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml
+@@ -177,6 +177,25 @@ allOf:
+     else:
+       properties:
+         sram-supply: false
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: mediatek,mt8192-mali
++    then:
++      properties:
++        power-domains:
++          minItems: 5
++        power-domain-names:
++          items:
++            - const: core0
++            - const: core1
++            - const: core2
++            - const: core3
++            - const: core4
++      required:
++        - power-domains
++        - power-domain-names
+   - if:
+       properties:
+         compatible:
+-- 
+2.40.0
+
