@@ -1,0 +1,56 @@
+From 6bf02280b54e021e5df2ab3fd7760b8012858ad3 Mon Sep 17 00:00:00 2001
+From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Date: Tue, 28 Feb 2023 11:26:58 +0100
+Subject: [PATCH 12/48] dt-bindings: gpu: mali-bifrost: Add support for
+ MediaTek MT8186
+
+MT8186 has a Mali-G52 MC2 2EE GPU (two cores): add a binding with
+two power domains (one per core) for it.
+
+Signed-off-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Reviewed-by: Chen-Yu Tsai <wenst@chromium.org>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Tested-by: Chen-Yu Tsai <wenst@chromium.org>
+---
+ .../bindings/gpu/arm,mali-bifrost.yaml         | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml b/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml
+index cf24aaba70f2..9f3991b6deae 100644
+--- a/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml
++++ b/Documentation/devicetree/bindings/gpu/arm,mali-bifrost.yaml
+@@ -20,6 +20,7 @@ properties:
+               - amlogic,meson-g12a-mali
+               - mediatek,mt8183-mali
+               - mediatek,mt8183b-mali
++              - mediatek,mt8186-mali
+               - realtek,rtd1619-mali
+               - renesas,r9a07g044-mali
+               - renesas,r9a07g054-mali
+@@ -196,6 +197,23 @@ allOf:
+       required:
+         - power-domains
+         - power-domain-names
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: mediatek,mt8186-mali
++    then:
++      properties:
++        power-domains:
++          minItems: 2
++          maxItems: 2
++        power-domain-names:
++          items:
++            - const: core0
++            - const: core1
++      required:
++        - power-domains
++        - power-domain-names
+   - if:
+       properties:
+         compatible:
+-- 
+2.40.0
+

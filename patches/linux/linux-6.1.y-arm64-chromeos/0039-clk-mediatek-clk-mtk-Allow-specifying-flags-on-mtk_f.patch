@@ -1,0 +1,80 @@
+From 0fb1d3b7a0891c444968500093058ef7ea33bee7 Mon Sep 17 00:00:00 2001
+From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Date: Mon, 24 Oct 2022 12:22:58 +0200
+Subject: [PATCH 39/48] clk: mediatek: clk-mtk: Allow specifying flags on
+ mtk_fixed_factor clocks
+
+Before this change, every mtk_fixed_factor clock forced clock flags to
+CLK_SET_RATE_PARENT: while this is harmless in some cases, it may not
+be desired in some others, especially when performing clock muxing on
+a clock having multiple parents of which one is a dedicated PLL and the
+others are not.
+
+This is especially seen on the GPU clocks on some SoCs, where we are
+muxing between multiple parents: a fixed clock (crystal), a programmable
+GPU PLL and one or more dividers for the MAINPLL, used for a number of
+devices; it happens that when a rate change is called for the GPU, the
+clock framework will try to satisfy the rate request by using one of the
+MAINPLL dividers, which have CLK_SET_RATE_PARENT and will set the rate
+on MAINPLL itself - overclocking or underclocking many devices in the
+system - and making it to lock up.
+
+Logically, it should be harmless (and would only reduce possible bugs)
+to change all of the univpll and mainpll related fixed factor clocks
+to not declare the CLK_SET_RATE_PARENT by default but, on some SoCs,
+this is also used for dividers of other PLLs for which a rate change
+based on the divider may be desired, hence introduce a new FACTOR_FLAGS()
+macro to use custom flags (or none) on selected fixed factor clocks.
+
+Signed-off-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Reviewed-by: Chen-Yu Tsai <wenst@chromium.org>
+Link: https://lore.kernel.org/r/20221024102307.33722-2-angelogioacchino.delregno@collabora.com
+Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
+---
+ drivers/clk/mediatek/clk-mtk.c | 2 +-
+ drivers/clk/mediatek/clk-mtk.h | 7 ++++++-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/clk/mediatek/clk-mtk.c b/drivers/clk/mediatek/clk-mtk.c
+index d31f01d0ba1c..3c1ac8d3010f 100644
+--- a/drivers/clk/mediatek/clk-mtk.c
++++ b/drivers/clk/mediatek/clk-mtk.c
+@@ -149,7 +149,7 @@ int mtk_clk_register_factors(const struct mtk_fixed_factor *clks, int num,
+ 		}
+ 
+ 		hw = clk_hw_register_fixed_factor(NULL, ff->name, ff->parent_name,
+-				CLK_SET_RATE_PARENT, ff->mult, ff->div);
++				ff->flags, ff->mult, ff->div);
+ 
+ 		if (IS_ERR(hw)) {
+ 			pr_err("Failed to register clk %s: %pe\n", ff->name,
+diff --git a/drivers/clk/mediatek/clk-mtk.h b/drivers/clk/mediatek/clk-mtk.h
+index 63ae7941aa92..f2db6b57d5b5 100644
+--- a/drivers/clk/mediatek/clk-mtk.h
++++ b/drivers/clk/mediatek/clk-mtk.h
+@@ -47,16 +47,21 @@ struct mtk_fixed_factor {
+ 	const char *parent_name;
+ 	int mult;
+ 	int div;
++	unsigned long flags;
+ };
+ 
+-#define FACTOR(_id, _name, _parent, _mult, _div) {	\
++#define FACTOR_FLAGS(_id, _name, _parent, _mult, _div, _fl) {	\
+ 		.id = _id,				\
+ 		.name = _name,				\
+ 		.parent_name = _parent,			\
+ 		.mult = _mult,				\
+ 		.div = _div,				\
++		.flags = _fl,				\
+ 	}
+ 
++#define FACTOR(_id, _name, _parent, _mult, _div)	\
++	FACTOR_FLAGS(_id, _name, _parent, _mult, _div, CLK_SET_RATE_PARENT)
++
+ int mtk_clk_register_factors(const struct mtk_fixed_factor *clks, int num,
+ 			     struct clk_hw_onecell_data *clk_data);
+ void mtk_clk_unregister_factors(const struct mtk_fixed_factor *clks, int num,
+-- 
+2.40.0
+

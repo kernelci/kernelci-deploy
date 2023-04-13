@@ -1,0 +1,168 @@
+From 97e44362d675d52016c6639fb4c050e9ca7b8c93 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?N=C3=ADcolas=20F=2E=20R=2E=20A=2E=20Prado?=
+ <nfraprado@collabora.com>
+Date: Wed, 2 Nov 2022 15:06:07 -0400
+Subject: [PATCH 01/48] arm64: dts: mediatek: asurada: Add display regulators
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Add the regulators present on the Asurada platform that are used to
+power the internal and external displays.
+
+Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Tested-by: Chen-Yu Tsai <wenst@chromium.org>
+Signed-off-by: Nícolas F. R. A. Prado <nfraprado@collabora.com>
+Link: https://lore.kernel.org/r/20221102190611.283546-2-nfraprado@collabora.com
+Signed-off-by: Matthias Brugger <matthias.bgg@gmail.com>
+---
+ .../boot/dts/mediatek/mt8192-asurada.dtsi     | 112 ++++++++++++++++++
+ 1 file changed, 112 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/mediatek/mt8192-asurada.dtsi b/arch/arm64/boot/dts/mediatek/mt8192-asurada.dtsi
+index 4b314435f8fd..fafca7428539 100644
+--- a/arch/arm64/boot/dts/mediatek/mt8192-asurada.dtsi
++++ b/arch/arm64/boot/dts/mediatek/mt8192-asurada.dtsi
+@@ -23,6 +23,43 @@ memory@40000000 {
+ 		reg = <0 0x40000000 0 0x80000000>;
+ 	};
+ 
++	pp1000_dpbrdg: regulator-1v0-dpbrdg {
++		compatible = "regulator-fixed";
++		regulator-name = "pp1000_dpbrdg";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pp1000_dpbrdg_en_pins>;
++		regulator-min-microvolt = <1000000>;
++		regulator-max-microvolt = <1000000>;
++		enable-active-high;
++		regulator-boot-on;
++		gpio = <&pio 19 GPIO_ACTIVE_HIGH>;
++		vin-supply = <&mt6359_vs2_buck_reg>;
++	};
++
++	pp1000_mipibrdg: regulator-1v0-mipibrdg {
++		compatible = "regulator-fixed";
++		regulator-name = "pp1000_mipibrdg";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pp1000_mipibrdg_en_pins>;
++		regulator-min-microvolt = <1000000>;
++		regulator-max-microvolt = <1000000>;
++		enable-active-high;
++		regulator-boot-on;
++		gpio = <&pio 129 GPIO_ACTIVE_HIGH>;
++		vin-supply = <&mt6359_vs2_buck_reg>;
++	};
++
++	pp1800_dpbrdg: regulator-1v8-dpbrdg {
++		compatible = "regulator-fixed";
++		regulator-name = "pp1800_dpbrdg";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pp1800_dpbrdg_en_pins>;
++		enable-active-high;
++		regulator-boot-on;
++		gpio = <&pio 126 GPIO_ACTIVE_HIGH>;
++		vin-supply = <&mt6359_vio18_ldo_reg>;
++	};
++
+ 	/* system wide LDO 1.8V power rail */
+ 	pp1800_ldo_g: regulator-1v8-g {
+ 		compatible = "regulator-fixed";
+@@ -34,6 +71,28 @@ pp1800_ldo_g: regulator-1v8-g {
+ 		vin-supply = <&pp3300_g>;
+ 	};
+ 
++	pp1800_mipibrdg: regulator-1v8-mipibrdg {
++		compatible = "regulator-fixed";
++		regulator-name = "pp1800_mipibrdg";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pp1800_mipibrdg_en_pins>;
++		enable-active-high;
++		regulator-boot-on;
++		gpio = <&pio 128 GPIO_ACTIVE_HIGH>;
++		vin-supply = <&mt6359_vio18_ldo_reg>;
++	};
++
++	pp3300_dpbrdg: regulator-3v3-dpbrdg {
++		compatible = "regulator-fixed";
++		regulator-name = "pp3300_dpbrdg";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pp3300_dpbrdg_en_pins>;
++		enable-active-high;
++		regulator-boot-on;
++		gpio = <&pio 26 GPIO_ACTIVE_HIGH>;
++		vin-supply = <&pp3300_g>;
++	};
++
+ 	/* system wide switching 3.3V power rail */
+ 	pp3300_g: regulator-3v3-g {
+ 		compatible = "regulator-fixed";
+@@ -56,6 +115,17 @@ pp3300_ldo_z: regulator-3v3-z {
+ 		vin-supply = <&ppvar_sys>;
+ 	};
+ 
++	pp3300_mipibrdg: regulator-3v3-mipibrdg {
++		compatible = "regulator-fixed";
++		regulator-name = "pp3300_mipibrdg";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pp3300_mipibrdg_en_pins>;
++		enable-active-high;
++		regulator-boot-on;
++		gpio = <&pio 127 GPIO_ACTIVE_HIGH>;
++		vin-supply = <&pp3300_g>;
++	};
++
+ 	/* separately switched 3.3V power rail */
+ 	pp3300_u: regulator-3v3-u {
+ 		compatible = "regulator-fixed";
+@@ -719,6 +789,48 @@ pins-wifi-kill {
+ 		};
+ 	};
+ 
++	pp1000_dpbrdg_en_pins: pp1000-dpbrdg-en-pins {
++		pins-en {
++			pinmux = <PINMUX_GPIO19__FUNC_GPIO19>;
++			output-low;
++		};
++	};
++
++	pp1000_mipibrdg_en_pins: pp1000-mipibrdg-en-pins {
++		pins-en {
++			pinmux = <PINMUX_GPIO129__FUNC_GPIO129>;
++			output-low;
++		};
++	};
++
++	pp1800_dpbrdg_en_pins: pp1800-dpbrdg-en-pins {
++		pins-en {
++			pinmux = <PINMUX_GPIO126__FUNC_GPIO126>;
++			output-low;
++		};
++	};
++
++	pp1800_mipibrdg_en_pins: pp1800-mipibrd-en-pins {
++		pins-en {
++			pinmux = <PINMUX_GPIO128__FUNC_GPIO128>;
++			output-low;
++		};
++	};
++
++	pp3300_dpbrdg_en_pins: pp3300-dpbrdg-en-pins {
++		pins-en {
++			pinmux = <PINMUX_GPIO26__FUNC_GPIO26>;
++			output-low;
++		};
++	};
++
++	pp3300_mipibrdg_en_pins: pp3300-mipibrdg-en-pins {
++		pins-en {
++			pinmux = <PINMUX_GPIO127__FUNC_GPIO127>;
++			output-low;
++		};
++	};
++
+ 	pp3300_wlan_pins: pp3300-wlan-pins {
+ 		pins-pcie-en-pp3300-wlan {
+ 			pinmux = <PINMUX_GPIO143__FUNC_GPIO143>;
+-- 
+2.40.0
+

@@ -1,0 +1,43 @@
+From 9b86d1c2181d46eb0faaf091daf3443dd86856d8 Mon Sep 17 00:00:00 2001
+From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Date: Wed, 1 Mar 2023 10:55:06 +0100
+Subject: [PATCH 20/48] arm64: dts: mediatek: mt8183-kukui: Override
+ vgpu/vsram_gpu constraints
+
+Override the PMIC-default voltage constraints for VGPU and VSRAM_GPU
+with the platform specific vmin/vmax for the highest possible SoC
+binning.
+
+Signed-off-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Reviewed-by: Chen-Yu Tsai <wenst@chromium.org>
+---
+ arch/arm64/boot/dts/mediatek/mt8183-kukui.dtsi | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/mediatek/mt8183-kukui.dtsi b/arch/arm64/boot/dts/mediatek/mt8183-kukui.dtsi
+index 6205e0aad6c7..146b113ff2e0 100644
+--- a/arch/arm64/boot/dts/mediatek/mt8183-kukui.dtsi
++++ b/arch/arm64/boot/dts/mediatek/mt8183-kukui.dtsi
+@@ -407,6 +407,9 @@ &mt6358codec {
+ };
+ 
+ &mt6358_vgpu_reg {
++	regulator-min-microvolt = <625000>;
++	regulator-max-microvolt = <900000>;
++
+ 	regulator-coupled-with = <&mt6358_vsram_gpu_reg>;
+ 	regulator-coupled-max-spread = <100000>;
+ };
+@@ -422,6 +425,9 @@ &mt6358_vsim2_reg {
+ };
+ 
+ &mt6358_vsram_gpu_reg {
++	regulator-min-microvolt = <850000>;
++	regulator-max-microvolt = <1000000>;
++
+ 	regulator-coupled-with = <&mt6358_vgpu_reg>;
+ 	regulator-coupled-max-spread = <100000>;
+ };
+-- 
+2.40.0
+
