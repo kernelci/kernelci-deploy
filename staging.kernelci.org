@@ -302,6 +302,9 @@ cmd_api_pipeline() {
         cd -
     else
         echo "No API changes, leaving it running"
+        cd checkout/kernelci-api
+        docker-compose up -d
+        cd -
     fi
 
     echo "Updating pipeline branch"
