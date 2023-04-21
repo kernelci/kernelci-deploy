@@ -229,8 +229,8 @@ cmd_docker() {
     ./kci docker $args gcc-10 kernelci --arch sparc
     # only x86 is useful for KUnit (for now)
     ./kci docker $args gcc-10 kunit kernelci --arch x86
-    # rustc-1.62 for linux-next
-    ./kci docker $args rustc-1.62 kselftest kernelci
+    # rustc-1.68 for linux-next
+    ./kci docker $args rustc-1.68 kselftest kernelci
 
     # rootfs
     ./kci docker $args buildroot kernelci
