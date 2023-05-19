@@ -281,15 +281,16 @@ cmd_rotate_tree() {
 }
 
 cmd_api_pipeline() {
-    compose_files="docker-compose.yaml docker-compose-kcidb.yaml"
+    compose_files="\
+-f docker-compose.yaml \
+-f docker-compose-kcidb.yaml \
+-f docker-compose-lava.yaml \
+-f docker-compose-production.yaml \
+"
 
     echo "Stopping pipeline containers"
     cd checkout/kernelci-pipeline
-    for compose in $compose_files; do
-        [ -f $compose ] || continue
-        echo "Stopping containers with compose file: $compose"
-        docker-compose -f $compose down
-    done
+    docker-compose $compose_files down --remove-orphans
     cd -
 
     echo "Creating local staging branch in tmp directory while API is running"
@@ -324,13 +325,9 @@ cmd_api_pipeline() {
 
     echo "Starting pipeline containers"
     cd checkout/kernelci-pipeline
-    for compose in $compose_files; do
-        [ -f $compose ] || continue
-        echo "Starting containers with compose file: $compose"
-        REQUIREMENTS=requirements-dev.txt docker-compose -f $compose build
-        SETTINGS=/home/kernelci/config/staging.kernelci.org.conf \
-                docker-compose -f $compose up -d
-    done
+    REQUIREMENTS=requirements-dev.txt docker-compose $compose_files build
+    SETTINGS=/home/kernelci/config/staging.kernelci.org.conf \
+            docker-compose $compose_files up -d
     cd -
 }
 
