@@ -326,7 +326,7 @@ cmd_api_pipeline() {
     echo "Starting pipeline containers"
     cd checkout/kernelci-pipeline
     REQUIREMENTS=requirements-dev.txt docker-compose $compose_files build
-    SETTINGS=/home/kernelci/config/staging.kernelci.org.toml \
+    SETTINGS=/home/kernelci/config/staging.kernelci.org.secrets.toml \
             docker-compose $compose_files up -d
     cd -
 }
