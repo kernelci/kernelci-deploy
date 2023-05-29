@@ -210,7 +210,7 @@ cmd_docker() {
     done
     for clang in clang-11 clang-14 clang-15 clang-16 clang-17; do
         for arch in arm arm64 armv5 mips riscv64 x86; do
-	    ./kci docker $base_args --push $clang kselftest kernelci --arch $arch
+            ./kci docker $args $clang kselftest kernelci --arch $arch
         done
     done
     for arch in arc arm armv5 arm64 mips riscv64 x86; do
