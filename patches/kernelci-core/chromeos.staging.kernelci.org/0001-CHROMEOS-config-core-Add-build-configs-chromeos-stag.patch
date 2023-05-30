@@ -1,0 +1,28 @@
+From 12fb4510124b88fc09112c17e388213c77aaed6a Mon Sep 17 00:00:00 2001
+From: Michal Galka <michal.galka@collabora.com>
+Date: Fri, 26 May 2023 07:57:53 +0200
+Subject: [PATCH] CHROMEOS config/core: Add build-configs-chromeos-staging.yaml
+
+Add build configs for chromeos.staging.kernelci.org
+
+Signed-off-by: Michal Galka <michal.galka@collabora.com>
+---
+ config/core/build-configs-chromeos-staging.yaml | 6 ++++++
+ 1 file changed, 6 insertions(+)
+ create mode 100644 config/core/build-configs-chromeos-staging.yaml
+
+diff --git a/config/core/build-configs-chromeos-staging.yaml b/config/core/build-configs-chromeos-staging.yaml
+new file mode 100644
+index 000000000..06960cdf7
+--- /dev/null
++++ b/config/core/build-configs-chromeos-staging.yaml
+@@ -0,0 +1,6 @@
++# build configs for chromeos.staging.kernelci.org instance
++
++  kernelci_chromeos-staging:
++    tree: kernelci
++    branch: 'chromeos-staging'
++    variants: *chromeos_6_1_variants
+-- 
+2.25.1
+
