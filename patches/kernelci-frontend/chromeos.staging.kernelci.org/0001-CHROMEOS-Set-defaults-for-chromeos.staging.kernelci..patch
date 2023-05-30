@@ -1,0 +1,43 @@
+From 0d3055c2767f1caa0d8319b771a784671adb797f Mon Sep 17 00:00:00 2001
+From: Michal Galka <michal.galka@collabora.com>
+Date: Thu, 25 May 2023 21:16:39 +0200
+Subject: [PATCH 1/2] CHROMEOS Set defaults for chromeos.staging.kernelci.org
+
+Signed-off-by: Michal Galka <michal.galka@collabora.com>
+---
+ app/dashboard/__init__.py         | 3 ++-
+ app/dashboard/default_settings.py | 4 ++--
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/app/dashboard/__init__.py b/app/dashboard/__init__.py
+index 671a8aaa..ab4c7922 100644
+--- a/app/dashboard/__init__.py
++++ b/app/dashboard/__init__.py
+@@ -51,7 +51,8 @@ __versionfull__ = __version__
+ 
+ CSRF_TOKEN_H = "X-Csrftoken"
+ 
+-DEFAULT_CONFIG_FILE = "/etc/kernelci/kernelci-frontend.cfg"
++DEFAULT_CONFIG_FILE = "/etc/kernelci/chromeos.staging.kernelci.org/" \
++                      "kernelci-frontend.cfg"
+ # Name of the environment variable that will be lookep up for app
+ # configuration parameters.
+ APP_ENVVAR = "FLASK_SETTINGS"
+diff --git a/app/dashboard/default_settings.py b/app/dashboard/default_settings.py
+index 336ceca6..74019ea2 100644
+--- a/app/dashboard/default_settings.py
++++ b/app/dashboard/default_settings.py
+@@ -22,8 +22,8 @@
+ # along with this library; if not, write to the Free Software Foundation, Inc.,
+ # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ 
+-LOGGER_NAME = "kernelci-frontend"
+-SESSION_COOKIE_NAME = "kernelci.org"
++LOGGER_NAME = "chromeos-kernelci-frontend"
++SESSION_COOKIE_NAME = "chromeos.staging.kernelci.org"
+ 
+ # Following keys should be defined in an external file and passed as an
+ # environment variable called FLASK_SETTINGS, or in /etc/kernelci in a file
+-- 
+2.25.1
+
