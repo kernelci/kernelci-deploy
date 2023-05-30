@@ -1,0 +1,42 @@
+From b418b745b6f96295c68a0ec863632619c90282f9 Mon Sep 17 00:00:00 2001
+From: Michal Galka <michal.galka@collabora.com>
+Date: Thu, 25 May 2023 19:43:27 +0200
+Subject: [PATCH 1/3] CHROMEOS update DB_NAME and socket path
+
+Update database name and socket to match ones for chromeos instance
+
+Signed-off-by: Michal Galka <michal.galka@collabora.com>
+---
+ app/models/__init__.py | 2 +-
+ app/server.py          | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/app/models/__init__.py b/app/models/__init__.py
+index 5ac2c9c..f1e46b4 100644
+--- a/app/models/__init__.py
++++ b/app/models/__init__.py
+@@ -27,7 +27,7 @@
+ # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ 
+ # The default mongodb database name.
+-DB_NAME = "kernel-ci"
++DB_NAME = "chromeos-kernel-ci"
+ 
+ DEFAULT_SCHEMA_VERSION = "1.0"
+ 
+diff --git a/app/server.py b/app/server.py
+index 7faff9d..d159269 100755
+--- a/app/server.py
++++ b/app/server.py
+@@ -171,7 +171,7 @@ if __name__ == "__main__":
+ 
+         server = tornado.httpserver.HTTPServer(application, **HTTP_SETTINGS)
+         unix_socket = tornado.netutil.bind_unix_socket(
+-            "/tmp/kernelci-backend.socket")
++            "/tmp/chromeos-kernelci-backend.socket")
+         server.add_socket(unix_socket)
+     else:
+         KernelCiBackend().listen(topt.options.port, **HTTP_SETTINGS)
+-- 
+2.25.1
+

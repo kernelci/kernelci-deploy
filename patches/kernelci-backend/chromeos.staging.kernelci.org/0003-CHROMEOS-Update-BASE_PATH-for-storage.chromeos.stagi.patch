@@ -1,0 +1,30 @@
+From 0e740c6c37cbbfdc41b276ce11ecafda7833e404 Mon Sep 17 00:00:00 2001
+From: Michal Galka <michal.galka@collabora.com>
+Date: Thu, 25 May 2023 20:02:09 +0200
+Subject: [PATCH 3/3] CHROMEOS Update BASE_PATH for
+ storage.chromeos.staging.kernelci.org
+
+Update the BASE_PATH to point to the location of
+storage.chromeos.staging.kernelci.org
+
+Signed-off-by: Michal Galka <michal.galka@collabora.com>
+---
+ app/utils/__init__.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/app/utils/__init__.py b/app/utils/__init__.py
+index 457ec84..fa2e66b 100644
+--- a/app/utils/__init__.py
++++ b/app/utils/__init__.py
+@@ -29,7 +29,7 @@ import re
+ import models
+ import utils.log
+ 
+-BASE_PATH = "/var/www/images/kernel-ci"
++BASE_PATH = "/data/storage.chromeos.staging.kernelci.org"
+ LOG = utils.log.get_log()
+ 
+ # Build log file names.
+-- 
+2.25.1
+

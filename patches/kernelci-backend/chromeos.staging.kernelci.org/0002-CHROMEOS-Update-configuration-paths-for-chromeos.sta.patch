@@ -1,0 +1,46 @@
+From d44f44d8d2fa5f7acd353b701b7b9c53ef2f93a3 Mon Sep 17 00:00:00 2001
+From: Michal Galka <michal.galka@collabora.com>
+Date: Thu, 25 May 2023 19:51:06 +0200
+Subject: [PATCH 2/3] CHROMEOS Update configuration paths for
+ chromeos.staging.kernelci.org
+
+Update default configuration paths to point to
+chromeos.staging.kernelci.org instance configs
+
+Signed-off-by: Michal Galka <michal.galka@collabora.com>
+---
+ app/server.py           | 3 ++-
+ app/taskqueue/celery.py | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/app/server.py b/app/server.py
+index d159269..5d9f2e2 100755
+--- a/app/server.py
++++ b/app/server.py
+@@ -37,7 +37,8 @@ import utils.database.redisdb as redisdb
+ import utils.db
+ 
+ 
+-DEFAULT_CONFIG_FILE = "/etc/kernelci/kernelci-backend.cfg"
++DEFAULT_CONFIG_FILE = "/etc/kernelci/api.chromeos.staging.kernelci.org/" \
++                      "kernelci-backend.cfg"
+ 
+ topt.define(
+     "master_key", default=str(uuid.uuid4()), type=str, help="The master key")
+diff --git a/app/taskqueue/celery.py b/app/taskqueue/celery.py
+index f2c694e..57da9f5 100644
+--- a/app/taskqueue/celery.py
++++ b/app/taskqueue/celery.py
+@@ -35,7 +35,8 @@ import taskqueue.celeryconfig as celeryconfig
+ import taskqueue.serializer as serializer
+ 
+ 
+-CELERY_CONFIG_FILE = "/etc/kernelci/kernelci-celery.cfg"
++CELERY_CONFIG_FILE = "/etc/kernelci/api.chromeos.staging.kernelci.org/" \
++                     "kernelci-celery.cfg"
+ TASKS_LIST = [
+     "taskqueue.tasks.bisect",
+     "taskqueue.tasks.build",
+-- 
+2.25.1
+
