@@ -1,0 +1,9 @@
+[Unit]
+Description=Run KernelCI rootfs builds at Friday 9:00 UTC
+
+[Timer]
+Unit=kernelci-scheduler-rootfs.service
+OnCalendar=Fri *-*-* 09:00:00 UTC
+
+[Install]
+WantedBy=timers.target
