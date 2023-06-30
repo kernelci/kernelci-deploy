@@ -3,14 +3,24 @@
 # This script install KernelCI deploy systemd services and timers
 
 # Check if running as root
-UID=$(id -u)
-if [ "$UID" -ne 0 ]; then
+userid=$(id -u)
+if [ "$userid" -ne 0 ]; then
     echo "Please run this command as root"
     exit 1
 fi
 
-# cd to script directory
-cd "$(dirname "$0")"
+# argument should be either production or staging
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 <production|staging>"
+    exit 1
+fi
+
+# cd to script directory/<production|staging>
+cd "$(dirname "$0")/$1"
+if [ $? -ne 0 ]; then
+    echo "Failed to cd to $(dirname "$0")/$1"
+    exit 1
+fi
 
 # Copy systemd services and timers
 cp -v *.service /etc/systemd/system/
