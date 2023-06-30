@@ -23,13 +23,22 @@ if [ $? -ne 0 ]; then
 fi
 
 # Copy systemd services and timers
+echo "Copying systemd services and timers"
 cp -v *.service /etc/systemd/system/
 cp -v *.timer /etc/systemd/system/
 
-# Reload systemd
+
+# Stop possible running services and timers, and disable them
+echo "Stopping and disabling services and timers"
+systemctl stop *.service || true
+systemctl stop *.timer || true
+
+# Reload systemd to pick up new/updated services and timers
+echo "Reloading systemd"
 systemctl daemon-reload
 
 # Enable and start services and timers
-ls -1 *.service | xargs -I {} systemctl enable {}.service
-ls -1 *.timer | xargs -I {} systemctl enable {}.timer
+echo "Enabling and starting services and timers"
+ls -1 *.service | xargs -I {} systemctl enable {}
+ls -1 *.timer | xargs -I {} systemctl enable {}
 
