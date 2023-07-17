@@ -60,6 +60,21 @@ cmd_dsl() {
             trigger job-dsl --no-params
 }
 
+cmd_rootfs_docker() {
+    echo "Building Docker images used to build rootfs images"
+
+    cd checkout/kernelci-core
+
+    core_rev=$(git show --pretty=format:%H -s origin/main)
+    base_args="build --build-arg core_rev=$core_rev"
+    args="$base_args --prefix=kernelci/ --push --no-cache"
+
+    ./kci docker $args buildroot kernelci
+    ./kci docker $args debos kernelci
+
+    cd -
+}
+
 cmd_rootfs_builds() {
     local version="$1"
 
@@ -227,10 +242,6 @@ cmd_docker() {
         done
     done
 
-    # rootfs
-    ./kci docker $args buildroot kernelci
-    ./kci docker $args debos kernelci
-
     # QEMU
     ./kci docker $args qemu
 
@@ -312,6 +323,7 @@ cmd_checkout() {
 
 cmd_rootfs() {
     local version=$(date +%Y%m%d).0
+    cmd_rootfs_docker
     cmd_rootfs_builds "$version"
     sleep 60
     cmd_rootfs_flush  # It takes a while for the jobs to start...
