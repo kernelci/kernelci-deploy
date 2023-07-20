@@ -40,6 +40,7 @@ cmd_jenkins() {
     echo "Updating encrypted data checkout"
     topdir=$(pwd)
     cd checkout/kernelci-jenkins/data
+    git prune
     git remote update origin
     data_diff=$(git diff origin/main)
     if [ -n "$data_diff" ]; then
@@ -126,6 +127,7 @@ cmd_website() {
     ./pending.py kernelci-project --push
     topd=$PWD
     cd checkout/kernelci-project/kernelci.org
+    git prune
     git-lfs checkout
     git submodule update --init --recursive
     for d in external/*; do
@@ -199,6 +201,7 @@ cmd_docker() {
 
     # Build the images with kci docker
     cd checkout/kernelci-core
+    git prune
 
     core_rev=$(git show --pretty=format:%H -s origin/staging.kernelci.org)
     rev_arg="--build-arg core_rev=$core_rev"
@@ -290,6 +293,7 @@ cmd_api_pipeline() {
 
     echo "Stopping pipeline containers"
     cd checkout/kernelci-pipeline
+    git prune
     docker-compose $compose_files down --remove-orphans
     cd -
 
@@ -310,6 +314,7 @@ cmd_api_pipeline() {
 
         echo "Starting API containers"
         cd checkout/kernelci-api
+        git prune
         REQUIREMENTS=requirements-dev.txt docker-compose build
         docker-compose up -d
         cd -
