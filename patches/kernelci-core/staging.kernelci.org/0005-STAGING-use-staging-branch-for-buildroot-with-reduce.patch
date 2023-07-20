@@ -1,4 +1,4 @@
-From 7d2e1a6d42f2403c37a9599576464226a2eb2d69 Mon Sep 17 00:00:00 2001
+From 0f2ecb38d436c58cf1cb081636e02f3c328d5bf7 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 22 Mar 2022 17:38:32 +0000
 Subject: [PATCH 5/5] STAGING use staging branch for buildroot with reduced
@@ -9,7 +9,7 @@ Subject: [PATCH 5/5] STAGING use staging branch for buildroot with reduced
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/config/core/rootfs-configs.yaml b/config/core/rootfs-configs.yaml
-index 202416a64..43a23dd60 100644
+index d147b867ae40..99c8c5d24006 100644
 --- a/config/core/rootfs-configs.yaml
 +++ b/config/core/rootfs-configs.yaml
 @@ -43,7 +43,7 @@ rootfs_configs:
@@ -22,5 +22,5 @@ index 202416a64..43a23dd60 100644
        - arc
        - arm64
 -- 
-2.30.2
+2.39.2
 
