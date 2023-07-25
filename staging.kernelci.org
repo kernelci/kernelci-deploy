@@ -299,6 +299,8 @@ cmd_api_pipeline() {
 
     echo "Creating local staging branch in tmp directory while API is running"
     mkdir -p tmp
+    rm -rf tmp/patches
+    cp -R patches tmp/
     pending_api="../pending.py --settings=../data/staging.ini kernelci-api"
     (cd tmp; $pending_api)
 
