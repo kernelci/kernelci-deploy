@@ -126,9 +126,6 @@ def main(args):
     repo = kernelci.GITHUB.get_repo(repo_name)
     target_branch = args.branch or settings.get('branch') or ''
 
-    if args.diff_only:
-        return do_diff(path, target_branch)
-
     kernelci.checkout_repository(path, repo, branch=args.main)
 
     skip = get_skip_list(args, settings)
@@ -147,6 +144,9 @@ def main(args):
     if not kernelci.apply_patches(path, patches_path):
         print_color('red', "Aborting, all patches must apply.")
         return False
+
+    if args.diff_only:
+        return do_diff(path, target_branch)
 
     if args.push:
         ssh_key = kernelci.default_ssh_key(args.ssh_key, target_branch)
