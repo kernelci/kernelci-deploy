@@ -1,6 +1,6 @@
-From 718fedfaad4b5afa14859f1570a97a97ae1b45fd Mon Sep 17 00:00:00 2001
+From ae817bcfe90880e75ce0c1209aaf239499f85bf6 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
-Date: Thu, 25 May 2023 12:13:46 +0530
+Date: Thu, 27 Jul 2023 10:22:50 +0530
 Subject: [PATCH] STAGING config/staging.kernelci.org.toml: add file for
  staging
 
@@ -11,13 +11,13 @@ Subject: [PATCH] STAGING config/staging.kernelci.org.toml: add file for
 
 diff --git a/config/staging.kernelci.org.toml b/config/staging.kernelci.org.toml
 new file mode 100644
-index 0000000..1cc7282
+index 0000000..f2fde97
 --- /dev/null
 +++ b/config/staging.kernelci.org.toml
 @@ -0,0 +1,35 @@
 +[DEFAULT]
-+api_config = "staging.kernelci.org"
-+storage_config = "staging.kernelci.org"
++api_config = "staging"
++storage_config = "staging"
 +verbose = true
 +
 +[trigger]
@@ -27,7 +27,7 @@ index 0000000..1cc7282
 +[tarball]
 +kdir = "/home/kernelci/data/src/linux"
 +output = "/home/kernelci/data/output"
-+storage_config = "staging.kernelci.org"
++storage_config = "staging"
 +
 +[runner]
 +output = "/home/kernelci/data/output"
@@ -48,7 +48,7 @@ index 0000000..1cc7282
 +
 +[regression_tracker]
 +
-+["storage:staging.kernelci.org"]
++[storage.staging]
 +storage_cred = "/home/kernelci/data/ssh/id_rsa_tarball"
 -- 
 2.34.1
