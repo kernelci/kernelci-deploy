@@ -95,8 +95,8 @@ index 000000000000..cf255ebf4427
 +    variants:
 +      gcc-10: *staging-gcc-10
 +      clang-17: *staging-clang-17
-+      rustc-1.70:
-+        build_environment: rustc-1.70
++      rustc-1.71:
++        build_environment: rustc-1.71
 +        fragments: [rust]
 +        architectures:
 +          x86_64:
