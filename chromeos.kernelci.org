@@ -111,7 +111,7 @@ cmd_docker() {
     ./kci docker $args k8s kernelci $rev_arg
 
     # Compiler toolchains
-    for clang in clang-14; do
+    for clang in clang-17; do
 	  ./kci docker $args $clang kselftest kernelci $rev_arg
 
 	  for arch in arm arm64 x86; do
