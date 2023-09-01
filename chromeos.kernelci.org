@@ -170,8 +170,8 @@ cmd_all() {
     cmd_jenkins
     cmd_core
     cmd_test_definitions
-    cmd_backend
-    cmd_frontend
+#    cmd_backend
+#    cmd_frontend
     cmd_kernel
     cmd_docker
     cmd_monitor
