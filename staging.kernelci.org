@@ -179,7 +179,8 @@ cmd_kernel() {
         --from-url=$url \
         --from-branch=$branch \
         --branch=staging-"$tree" \
-        --tag-prefix=staging-"$tree"-
+        --tag-prefix=staging-"$tree"- \
+        --tag-limit=32
 }
 
 cmd_docker() {
