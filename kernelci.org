@@ -238,7 +238,7 @@ cmd_docker() {
     ./kci docker $args gcc-10 kernelci --arch sparc
     # only x86 is useful for KUnit (for now)
     ./kci docker $args gcc-10 kunit kernelci --arch x86
-    for rustc in rustc-1.70; do
+    for rustc in rustc-1.71; do
         ./kci docker $args $rustc kselftest kernelci
         for arch in x86; do
             ./kci docker $args $rustc kselftest kernelci --arch $arch
