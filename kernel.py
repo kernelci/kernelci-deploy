@@ -59,6 +59,8 @@ def main(args):
             print_color('red', "No SSH key provided.")
             return False
         kernelci.push_tag_and_branch(path, ssh_key, args.branch, tag)
+        if args.tag_limit:
+            kernelci.delete_old_tags(args, path, ssh_key)
     return True
 
 
@@ -69,6 +71,8 @@ Create a kernel branch to test KernelCI")
                         help="Tag to create, default is to use current date")
     parser.add_argument("--tag-prefix", default="staging-",
                         help="Prefix to create date with current date")
+    parser.add_argument("--tag-limit", default="20", type=int,
+                        help="Number of previous tags to keep, 0 for all")
     parser.add_argument("--branch", default="staging.kernelci.org",
                         help="Name of the branch to force-push to")
     parser.add_argument("--from-url", default=kernelci.TORVALDS_GIT_URL,
