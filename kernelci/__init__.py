@@ -122,6 +122,17 @@ def delete_tags(path, tags, ssh_key):
         ssh_agent(ssh_key, cmd)
 
 
+def delete_old_tags(args, path, ssh_key):
+    tags = list_tags(path, args.tag_prefix + "*")
+    if len(tags) > args.tag_limit:
+        limit = args.tag_limit * -1
+        to_delete = tags[:limit]
+        print("Deleting {} tags: {}{}".format(
+            len(to_delete), to_delete[0],
+            "...{}".format(to_delete[-1]) if len(to_delete) > 1 else ""))
+        delete_tags(path, to_delete, ssh_key)
+
+
 def checkout_repository(path, repo, origin="origin", branch="main"):
     if not os.path.exists(path):
         shell_cmd("""\
