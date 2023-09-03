@@ -89,15 +89,15 @@ git tag -a {tag} -m {tag}
     return tag
 
 
-def list_tags(path, pattern=None):
+def list_tags(path, pattern='^.*'):
     shell_cmd("""\
-cd {}
-git tag -l | xargs git tag -d
+cd {path}
+git tag -l | grep -e '{pattern}' | xargs git tag -d
 git fetch -q --tags origin
-""".format(path))
-    cmd = "cd {}; git tag --list".format(path)
-    if pattern:
-        cmd += "  \"{}\"".format(pattern)
+""".format(path=path, pattern=pattern))
+    cmd = "cd {path}; git tag -l | grep -e '{pattern}'".format(
+        path=path, pattern=pattern
+    )
     tags = sorted(shell_cmd(cmd).split())
     return tags
 
