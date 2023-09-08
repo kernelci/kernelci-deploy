@@ -1,20 +1,21 @@
-From a479815e04bd0080312a31990e96fbe74b7a7783 Mon Sep 17 00:00:00 2001
+From 1e44b255ac0d6d8e5f29ad542fdebdfde9a89491 Mon Sep 17 00:00:00 2001
 From: Guillaume Tucker <guillaume.tucker@collabora.com>
 Date: Wed, 2 Mar 2022 20:25:29 +0000
 Subject: [PATCH 4/4] STAGING jobs.groovy: add chromeos jobs
 
 ---
- jobs.groovy | 81 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 81 insertions(+)
+ jobs.groovy | 82 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 82 insertions(+)
 
 diff --git a/jobs.groovy b/jobs.groovy
-index b18830d..943431d 100644
+index 09f395c..19a5c97 100644
 --- a/jobs.groovy
 +++ b/jobs.groovy
-@@ -334,3 +334,84 @@ pipelineJob('lava-bisection') {
+@@ -335,3 +335,85 @@ pipelineJob('lava-bisection') {
      stringParam('TREES_WHITELIST', KCI_BISECTION_TREES_WHITELIST, 'If defined, jobs will abort if the KERNEL_TREE is not on that list.')
    }
- }
+ } */
++
 +
 +/* Chrome OS jobs */
 +
