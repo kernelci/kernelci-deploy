@@ -1,20 +1,20 @@
-From 718fedfaad4b5afa14859f1570a97a97ae1b45fd Mon Sep 17 00:00:00 2001
+From e3bf003852141d3fa26d0722b14741f05e71fe80 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
-Date: Thu, 25 May 2023 12:13:46 +0530
+Date: Thu, 14 Sep 2023 16:18:52 +0530
 Subject: [PATCH] STAGING config/staging.kernelci.org.toml: add file for
  staging
 
 ---
- config/staging.kernelci.org.toml | 35 ++++++++++++++++++++++++++++++++
- 1 file changed, 35 insertions(+)
+ config/staging.kernelci.org.toml | 36 ++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
  create mode 100644 config/staging.kernelci.org.toml
 
 diff --git a/config/staging.kernelci.org.toml b/config/staging.kernelci.org.toml
 new file mode 100644
-index 0000000..1cc7282
+index 0000000..2b6eac7
 --- /dev/null
 +++ b/config/staging.kernelci.org.toml
-@@ -0,0 +1,35 @@
+@@ -0,0 +1,36 @@
 +[DEFAULT]
 +api_config = "staging.kernelci.org"
 +storage_config = "staging.kernelci.org"
@@ -23,6 +23,7 @@ index 0000000..1cc7282
 +[trigger]
 +poll_period = 3600
 +startup_delay = 3
++timeout = 60
 +
 +[tarball]
 +kdir = "/home/kernelci/data/src/linux"
