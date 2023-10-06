@@ -1,4 +1,4 @@
-From 68537d6c8ee211b6e97061e122b31373bfa82a06 Mon Sep 17 00:00:00 2001
+From cfdaca18efd2d9abbe316b207a89be1b7f07e5e3 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 1 Sep 2023 21:37:43 +0200
 Subject: [PATCH 7/7] STAGING use [KernelCI staging] in LAVA jobs
