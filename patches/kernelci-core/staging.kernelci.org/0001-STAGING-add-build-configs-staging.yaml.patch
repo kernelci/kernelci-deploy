@@ -54,9 +54,9 @@ index 000000000..3a898bbd4
 +    riscv: *riscv_defconfig
 +    x86_64: &x86_64_defconfig-staging
 +      <<: *x86_64_defconfig
-+      fragments: [x86-chromebook]
++      fragments: [x86-board]
 +      extra_configs:
-+        - 'x86_64_defconfig+x86-chromebook+kselftest'
++        - 'x86_64_defconfig+x86-board+kselftest'
 +
 +
 +# Staging build configurations using LLVM/Clang
@@ -120,9 +120,9 @@ index 000000000..3a898bbd4
 +          riscv: *riscv_defconfig
 +          x86_64:
 +            <<: *x86_64_defconfig
-+            fragments: [x86-chromebook]
++            fragments: [x86-board]
 +            extra_configs:
-+              - 'x86_64_defconfig+x86-chromebook'
++              - 'x86_64_defconfig+x86-board'
 +
 +  mainline-staging:
 +    tree: mainline
