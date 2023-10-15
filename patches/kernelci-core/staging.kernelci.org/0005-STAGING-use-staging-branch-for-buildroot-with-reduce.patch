@@ -1,4 +1,4 @@
-From 8c1c4f85f78d7c7666d311646b9d56b5b94e0da1 Mon Sep 17 00:00:00 2001
+From bb55b58ab4fc2159a9e6c9fab71150e212f33931 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 22 Mar 2022 17:38:32 +0000
 Subject: [PATCH 5/7] STAGING use staging branch for buildroot with reduced

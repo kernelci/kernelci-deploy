@@ -1,4 +1,4 @@
-From d217f2adb8913353f1fd7c66e68da862f02e9f6c Mon Sep 17 00:00:00 2001
+From c5fbf377558d19cdbf57428c54ddb97ccfe06ed0 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 1 Sep 2023 18:46:13 +0000
 Subject: [PATCH 6/7] STAGING use staging JWT in kubernetes template
