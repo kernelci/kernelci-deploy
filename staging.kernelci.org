@@ -13,6 +13,7 @@ crash() {
     [ "$exit_code" -eq 0 ] && exit 0
     # Generate syslog message
     logger -t kernelci-deploy "Error in script $0"
+    tools/kci-slackbot.py --message "Staging FAILED!!!"
     exit $exit_code
 }
 
@@ -43,18 +44,18 @@ cmd_jenkins() {
     git prune
     git remote update origin
     data_diff=$(git diff origin/main)
-    if [ -n "$data_diff" ]; then
+    #if [ -n "$data_diff" ]; then
         git checkout origin/main
         cd "$topdir/checkout/kernelci-jenkins"
         echo "Recreating Jenkins container"
         docker-compose down
         docker-compose up --build -d
         sleep 60  # magic - another way to do this would be to poll something
-    else
-        cd "$topdir/checkout/kernelci-jenkins"
-        # ToDo: restart the container but only when there were some changes in
-        # kernelci-jenkins to avoid aborting running jobs unnecessarily
-    fi
+    #else
+    #    cd "$topdir/checkout/kernelci-jenkins"
+    #    # ToDo: restart the container but only when there were some changes in
+    #    # kernelci-jenkins to avoid aborting running jobs unnecessarily
+    #fi
     cd "$topdir"
 
     echo "Triggering Jenkins seed job"
@@ -343,6 +344,7 @@ cmd_all() {
 
     [ -z $tree ] && tree=$(cmd_rotate_tree)
     echo "Kernel tree: $tree"
+    tools/kci-slackbot.py --message "Staging starts on tree $tree"
 
     cmd_pull
     cmd_jenkins
@@ -358,6 +360,8 @@ cmd_all() {
     cmd_monitor
     cmd_api_pipeline
     cmd_website
+    tools/kci-slackbot.py --message "Staging completed"
+
 }
 
 cmd="${1}"
