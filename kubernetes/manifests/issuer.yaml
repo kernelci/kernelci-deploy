@@ -1,0 +1,43 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: all-issuer
+spec:
+  acme:
+    # The ACME server URL
+    server: https://acme-v02.api.letsencrypt.org/directory
+    # Email address used for ACME registration
+    email: nuclearcat-kci@nuclearcat.com
+    # Name of a secret used to store the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-account
+    # Enable the HTTP-01 challenge provider
+    solvers:
+      - http01:
+          ingress:
+            ingressTemplate:
+              metadata:
+                labels:
+                  app: ingressclass-api
+            ingressClassName: ingressclass-api
+            podTemplate:
+              spec:
+                nodeSelector:
+                  kubernetes.io/os: linux
+        selector:
+          dnsNames:
+            - 'kernelci-api.eastus.cloudapp.azure.com'
+      - http01:
+          ingress:
+            ingressTemplate:
+              metadata:
+                labels:
+                  app: ingressclass-pipeline
+            ingressClassName: ingressclass-pipeline
+            podTemplate:
+              spec:
+                nodeSelector:
+                  kubernetes.io/os: linux
+        selector:
+          dnsNames:
+            - 'kernelci-pipeline.eastus.cloudapp.azure.com'
