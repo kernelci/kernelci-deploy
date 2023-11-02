@@ -1,0 +1,8 @@
+# deploy.cfg contains confidential data, do not add it to git
+# deploy.cfg.example is just example of this file and variables it should contain
+#export API_TOKEN=""
+#export MONGO=""
+#export API_SECRET_KEY=""
+#export LAVA_KEY=""
+#export IP_API=""
+#export IP_PIPELINE=""
