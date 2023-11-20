@@ -1,0 +1,73 @@
+From d6f2cbd01a6706374223730f295976cf54dabf37 Mon Sep 17 00:00:00 2001
+From: Dikshita Agarwal <quic_dikshita@quicinc.com>
+Date: Mon, 22 May 2023 07:02:51 +0100
+Subject: [PATCH 2/2] media: venus: enable sufficient sequence change support
+ for vp9
+
+VP9 supports resolution change at interframe.
+Currenlty, if sequence change is detected at interframe and
+resources are sufficient, sequence change event is not raised
+by firmware to driver until the next keyframe.
+This change add the HFI to notify the sequence change in this
+case to driver.
+
+Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Tested-by: Nathan Hebert <nhebert@chromium.org>
+Signed-off-by: Vikash Garodia <quic_vgarodia@quicinc.com>
+Signed-off-by: Viswanath Boma <quic_vboma@quicinc.com>
+Signed-off-by: Dikshita Agarwal <quic_dikshita@quicinc.com>
+Signed-off-by: Stanimir Varbanov <stanimir.k.varbanov@gmail.com>
+Signed-off-by: Mauro Carvalho Chehab <mchehab@kernel.org>
+---
+ drivers/media/platform/qcom/venus/hfi_cmds.c   | 1 +
+ drivers/media/platform/qcom/venus/hfi_helper.h | 2 ++
+ drivers/media/platform/qcom/venus/vdec.c       | 8 ++++++++
+ 3 files changed, 11 insertions(+)
+
+diff --git a/drivers/media/platform/qcom/venus/hfi_cmds.c b/drivers/media/platform/qcom/venus/hfi_cmds.c
+index 930b743f225e..e2539b58340f 100644
+--- a/drivers/media/platform/qcom/venus/hfi_cmds.c
++++ b/drivers/media/platform/qcom/venus/hfi_cmds.c
+@@ -521,6 +521,7 @@ static int pkt_session_set_property_1x(struct hfi_session_set_property_pkt *pkt,
+ 		pkt->shdr.hdr.size += sizeof(u32) + sizeof(*en);
+ 		break;
+ 	}
++	case HFI_PROPERTY_PARAM_VDEC_ENABLE_SUFFICIENT_SEQCHANGE_EVENT:
+ 	case HFI_PROPERTY_CONFIG_VDEC_POST_LOOP_DEBLOCKER: {
+ 		struct hfi_enable *in = pdata;
+ 		struct hfi_enable *en = prop_data;
+diff --git a/drivers/media/platform/qcom/venus/hfi_helper.h b/drivers/media/platform/qcom/venus/hfi_helper.h
+index d2d6719a2ba4..2e03b6e172f2 100644
+--- a/drivers/media/platform/qcom/venus/hfi_helper.h
++++ b/drivers/media/platform/qcom/venus/hfi_helper.h
+@@ -469,6 +469,8 @@
+ #define HFI_PROPERTY_PARAM_VDEC_PIXEL_BITDEPTH			0x1003007
+ #define HFI_PROPERTY_PARAM_VDEC_PIC_STRUCT			0x1003009
+ #define HFI_PROPERTY_PARAM_VDEC_COLOUR_SPACE			0x100300a
++#define HFI_PROPERTY_PARAM_VDEC_ENABLE_SUFFICIENT_SEQCHANGE_EVENT \
++								0x100300b
+ 
+ /*
+  * HFI_PROPERTY_CONFIG_VDEC_COMMON_START
+diff --git a/drivers/media/platform/qcom/venus/vdec.c b/drivers/media/platform/qcom/venus/vdec.c
+index 1a52c2ea2da5..c46158ed69ab 100644
+--- a/drivers/media/platform/qcom/venus/vdec.c
++++ b/drivers/media/platform/qcom/venus/vdec.c
+@@ -679,6 +679,14 @@ static int vdec_set_properties(struct venus_inst *inst)
+ 			return ret;
+ 	}
+ 
++	/* Enabling sufficient sequence change support for VP9 */
++	if (is_fw_rev_or_newer(inst->core, 5, 4, 51)) {
++		ptype = HFI_PROPERTY_PARAM_VDEC_ENABLE_SUFFICIENT_SEQCHANGE_EVENT;
++		ret = hfi_session_set_property(inst, ptype, &en);
++		if (ret)
++			return ret;
++	}
++
+ 	ptype = HFI_PROPERTY_PARAM_VDEC_CONCEAL_COLOR;
+ 	conceal = ctr->conceal_color & 0xffff;
+ 	conceal |= ((ctr->conceal_color >> 16) & 0xffff) << 10;
+-- 
+2.30.2
+
