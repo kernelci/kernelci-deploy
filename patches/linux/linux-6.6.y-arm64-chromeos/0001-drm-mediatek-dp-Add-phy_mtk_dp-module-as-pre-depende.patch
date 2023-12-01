@@ -1,0 +1,39 @@
+From 97951b7210b3ef310cad8a12dbd4093f55d34713 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?N=C3=ADcolas=20F=2E=20R=2E=20A=2E=20Prado?=
+ <nfraprado@collabora.com>
+Date: Mon, 20 Nov 2023 15:28:16 -0500
+Subject: [PATCH 1/4] drm/mediatek: dp: Add phy_mtk_dp module as pre-dependency
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The mtk_dp driver registers a phy device which is handled by the
+phy_mtk_dp driver and assumes that the phy probe will complete
+synchronously, proceeding to make use of functionality exposed by that
+driver right away. This assumption however is false when the phy driver
+is built as a module, causing the mtk_dp driver to fail probe in this
+case.
+
+Add the phy_mtk_dp module as a pre-dependency to the mtk_dp module to
+ensure the phy module has been loaded before the dp, so that the phy
+probe happens synchrounously and the mtk_dp driver can probe
+successfully even with the phy driver built as a module.
+
+Fixes: f70ac097a2cf ("drm/mediatek: Add MT8195 Embedded DisplayPort driver")
+Signed-off-by: Nícolas F. R. A. Prado <nfraprado@collabora.com>
+---
+ drivers/gpu/drm/mediatek/mtk_dp.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/gpu/drm/mediatek/mtk_dp.c b/drivers/gpu/drm/mediatek/mtk_dp.c
+index 2cb47f6637568..43ba2f92aa6a1 100644
+--- a/drivers/gpu/drm/mediatek/mtk_dp.c
++++ b/drivers/gpu/drm/mediatek/mtk_dp.c
+@@ -2780,3 +2780,4 @@ MODULE_AUTHOR("Markus Schneider-Pargmann <msp@baylibre.com>");
+ MODULE_AUTHOR("Bo-Chen Chen <rex-bc.chen@mediatek.com>");
+ MODULE_DESCRIPTION("MediaTek DisplayPort Driver");
+ MODULE_LICENSE("GPL");
++MODULE_SOFTDEP("pre: phy_mtk_dp");
+-- 
+2.42.0
+
