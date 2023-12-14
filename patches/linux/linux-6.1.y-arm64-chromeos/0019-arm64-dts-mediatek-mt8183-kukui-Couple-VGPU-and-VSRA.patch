@@ -48,7 +48,7 @@ index b4b86bb1f1a7..6205e0aad6c7 100644
 +
  &pio {
  	aud_pins_default: audiopins {
- 		pins_bus {
+ 		pins-bus {
 -- 
 2.40.0
 
