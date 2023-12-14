@@ -1,7 +1,7 @@
-From ffd0dc479b9d9efa0690df03ccd02ec2e350105b Mon Sep 17 00:00:00 2001
+From f6b1031ab7b5a6cb22ea0f6e2596e5279571d4d8 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 3 Jan 2020 16:09:40 +0000
-Subject: [PATCH 2/7] STAGING ensure no public bisection email reports are sent
+Subject: [PATCH 2/6] STAGING ensure no public bisection email reports are sent
 
 ---
  scripts/kci-bisect-push-results | 2 ++
