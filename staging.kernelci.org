@@ -17,10 +17,27 @@ crash() {
     # Generate syslog message
     logger -t kernelci-deploy "Error in script $0"
     ${ABSDIR}/tools/kci-slackbot.py --message "Staging FAILED!!!"
+    # remove pidfile
+    rm -f /var/run/staging.kernelci.org.pid
     exit $exit_code
 }
 
 trap 'crash' EXIT
+
+# verify if the script is already running
+if [ -f /var/run/staging.kernelci.org.pid ]; then
+    pid=$(cat /var/run/staging.kernelci.org.pid)
+    if [ -d /proc/$pid ]; then
+        echo "Script already running with pid $pid"
+        exit 1
+    else
+        echo "Removing stale pidfile"
+        rm -f /var/run/staging.kernelci.org.pid
+    fi
+fi
+
+# create pidfile
+echo $$ > /var/run/staging.kernelci.org.pid
 
 cmd_pull() {
     echo "Updating local repository"
@@ -377,4 +394,6 @@ fi
 
 "cmd_"$cmd $@
 
+# remove pidfile
+rm -f /var/run/staging.kernelci.org.pid
 exit 0
