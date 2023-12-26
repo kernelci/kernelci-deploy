@@ -9,6 +9,7 @@ set -e
 # Trap function for errors
 ABSPATH=$(readlink -f "$0")
 ABSDIR=$(dirname "$ABSPATH")
+PIDFILE="/tmp/staging.kernelci.org.pid"
 
 crash() {
     local exit_code="$?"
@@ -18,26 +19,26 @@ crash() {
     logger -t kernelci-deploy "Error in script $0"
     ${ABSDIR}/tools/kci-slackbot.py --message "Staging FAILED!!!"
     # remove pidfile
-    rm -f /var/run/staging.kernelci.org.pid
+    rm -f $PIDFILE
     exit $exit_code
 }
 
 trap 'crash' EXIT
 
 # verify if the script is already running
-if [ -f /var/run/staging.kernelci.org.pid ]; then
-    pid=$(cat /var/run/staging.kernelci.org.pid)
+if [ -f $PIDFILE ]; then
+    pid=$(cat $PIDFILE)
     if [ -d /proc/$pid ]; then
         echo "Script already running with pid $pid"
         exit 1
     else
         echo "Removing stale pidfile"
-        rm -f /var/run/staging.kernelci.org.pid
+        rm -f $PIDFILE
     fi
 fi
 
 # create pidfile
-echo $$ > /var/run/staging.kernelci.org.pid
+echo $$ > $PIDFILE
 
 cmd_pull() {
     echo "Updating local repository"
@@ -395,5 +396,5 @@ fi
 "cmd_"$cmd $@
 
 # remove pidfile
-rm -f /var/run/staging.kernelci.org.pid
+rm -f $PIDFILE
 exit 0
