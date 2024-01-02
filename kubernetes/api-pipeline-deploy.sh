@@ -221,7 +221,9 @@ function deploy_once_pipeline {
 
     echo "Setting kernelci-api-secret/secret-key"
     kubectl --context=${CONTEXT} delete secret kernelci-api-secret --namespace=${NS_API} || true
-    kubectl --context=${CONTEXT} create secret generic kernelci-api-secret --from-literal=secret-key=${API_SECRET_KEY} --namespace=${NS_API}
+    kubectl --context=${CONTEXT} create secret generic kernelci-api-secret --from-literal=secret-key=${API_SECRET_KEY} \
+            --from-literal=email-password=${EMAIL_PASSWORD} \
+            --namespace=${NS_API}
 }
 
 function deploy_once_api {
@@ -234,6 +236,7 @@ function deploy_once_api {
     #cp deploy/configmap.yaml.example deploy/configmap.yaml
     cp kernelci-api/kube/aks/configmap.yaml.example kernelci-api/kube/aks/configmap.yaml
     ./yq -i e ".data.mongo_service=\"${MONGO}\"" kernelci-api/kube/aks/configmap.yaml
+    ./yq -i e ".data.email_sender=\"${EMAIL_SENDER}\"" kernelci-api/kube/aks/configmap.yaml
     ./yq -i e ".metadata.namespace=\"${NS_API}\"" kernelci-api/kube/aks/configmap.yaml
 
     # Update all namespaces in deploy/* to ${NS}
@@ -393,6 +396,11 @@ fi
 
 if [ -z "$MONGO" ]; then
     echo "MONGO not set, exiting"
+    exit 1
+fi
+
+if [ -z "$EMAIL_USER" ] || [ -z "$EMAIL_PASSWORD" ]; then
+    echo "EMAIL_USER or EMAIL_PASSWORD not set, exiting"
     exit 1
 fi
 
