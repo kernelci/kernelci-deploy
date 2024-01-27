@@ -258,7 +258,7 @@ cmd_docker() {
     # only x86 is useful for KUnit (for now)
     ./kci docker $args gcc-10 kunit kernelci --arch x86
     # additional images for Rust
-    for rustc in rustc-1.74; do
+    for rustc in rustc-1.74 rustc-1.75; do
         ./kci docker $args $rustc kselftest kernelci
         for arch in x86; do
             ./kci docker $args $rustc kselftest kernelci --arch $arch
