@@ -232,7 +232,7 @@ cmd_docker() {
 
     # KernelCI tools
     ./kci docker $args kernelci
-    ./kci docker $args k8s kernelci $rev_arg
+    ./kci docker $args k8s kernelci
 
     # Compiler toolchains
 
