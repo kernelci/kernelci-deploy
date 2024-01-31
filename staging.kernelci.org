@@ -88,6 +88,11 @@ cmd_core() {
     ./pending.py kernelci-core --push
 }
 
+cmd_api() {
+    echo "Updating kernelci-api"
+    ./pending.py kernelci-api --push
+}
+
 cmd_bootrr() {
     echo "Updating bootrr"
     ./pending.py bootrr --push
@@ -221,6 +226,11 @@ cmd_docker() {
         cache_arg=""
     fi
 
+    # Get API revision to tag the image
+    cd checkout/kernelci-api
+    api_rev=$(git show --pretty=format:%H -s origin/staging.kernelci.org)
+    cd -
+
     # Build the images with kci docker
     cd checkout/kernelci-core
     git prune
@@ -233,6 +243,8 @@ cmd_docker() {
     # KernelCI tools
     ./kci docker $args kernelci
     ./kci docker $args k8s kernelci
+
+    ./kci docker $args api --version="$api_rev"
 
     # Compiler toolchains
 
@@ -333,9 +345,6 @@ cmd_api_pipeline() {
         docker-compose down
         cd -
 
-        echo "Updating API branch"
-        ./pending.py kernelci-api --push
-
         echo "Starting API containers"
         cd checkout/kernelci-api
         git prune
@@ -370,6 +379,7 @@ cmd_all() {
     cmd_pull
     cmd_jenkins
     cmd_core
+    cmd_api
     cmd_bootrr
     cmd_buildroot
     cmd_test_definitions
