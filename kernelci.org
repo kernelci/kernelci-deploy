@@ -20,24 +20,26 @@ cmd_abort_bisections() {
             abort lava-bisection
 }
 
-cmd_core() {
-    # First, manually push to kernelci-core/kernelci.org branch
+_cmd_repo() {
+    repo="${1:-kernelci-core}"
+    branch="${2:-kernelci.org}"
 
-    branch="${1:-kernelci.org}"
-    echo "Getting $branch branch from kernelci-core"
-    [ -d checkout/kernelci-core ] || {
+    # First, manually push to $repo/kernelci.org branch
+
+    echo "Getting $branch branch from $repo"
+    [ -d "checkout/$repo" ] || {
         mkdir -p checkout
         git clone \
-            https://github.com/kernelci/kernelci-core.git \
-            checkout/kernelci-core \
+            "https://github.com/kernelci/${repo}.git" \
+            "checkout/$repo" \
             -b $branch
-        cd checkout/kernelci-core
+        cd "checkout/$repo"
         git remote \
             set-url origin --push \
-            git@github.com:kernelci/kernelci-core.git
+            "git@github.com:kernelci/${repo}.git"
         cd -
     }
-    cd checkout/kernelci-core
+    cd "checkout/$repo"
     git remote update origin
     git checkout origin/$branch
     cd -
@@ -46,7 +48,17 @@ cmd_core() {
             --branch $branch \
             --ssh-key=$PWD/keys/id_rsa_kernelci.org \
             --push \
-            kernelci-core
+            "$repo"
+}
+
+cmd_core() {
+    branch="${1:-kernelci.org}"
+    _cmd_repo kernelci-core "$branch"
+}
+
+cmd_api() {
+    branch="${1:-kernelci.org}"
+    _cmd_repo kernelci-api "$branch"
 }
 
 cmd_jenkins() {
@@ -212,6 +224,11 @@ cmd_website() {
 cmd_docker() {
     echo "Re-building Docker images"
 
+    # Get API revision to tag the image
+    cd checkout/kernelci-api
+    api_rev=$(git show --pretty=format:%H -s origin/kernelci.org)
+    cd -
+
     cd checkout/kernelci-core
 
     core_rev=$(git show --pretty=format:%H -s origin/kernelci.org)
@@ -221,6 +238,8 @@ cmd_docker() {
     # KernelCI tools
     ./kci docker $args kernelci
     ./kci docker $args k8s kernelci
+
+    ./kci docker $args api --version="$api_rev"
 
     # Compiler toolchains
     for clang in clang-11 clang-12 clang-13 clang-14 clang-15 clang-16 clang-17; do
@@ -344,6 +363,7 @@ cmd_pause() {
 
 cmd_update() {
     cmd_core
+    cmd_api
     cmd_dsl
     cmd_backend
     cmd_frontend
