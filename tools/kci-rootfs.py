@@ -244,11 +244,21 @@ def main():
     parser.add_argument('--name', help='Name of the rootfs to build')
     parser.add_argument('--branch', help='Branch of kernelci-core to use', default="main")
     parser.add_argument('--all', help='Build all rootfs images', action='store_true')
+    parser.add_argument('--staging', help='Use staging- prefix for rootfs image docker builder', action='store_true')
     args = parser.parse_args()
 
     containerid = get_containerid()
     verify_docker()
     prepare_kci_source(args.branch)
+
+    if args.staging:
+        prefix = "staging-"
+    else:
+        prefix = ""
+    
+    # if branch set to staging, check if staging- prefix is used, if not - suggest to use --staging
+    if args.branch == "staging.kernelci.org" and not args.staging:
+        print("WARNING! You are building rootfs for staging.kernelci.org, please use --staging")
 
     if args.all:
         # iterate key,value
@@ -256,8 +266,6 @@ def main():
         for rootfs in allfs:
             arch_list = allfs[rootfs]["arch_list"]
             rootfs_type = allfs[rootfs]["rootfs_type"]
-            prefix = ""
-            # TODO: staging- cros-
             docker_image = f"kernelci/{prefix}{rootfs_type}:kernelci"
             prepare_docker_container(docker_image, containerid)
             for arch in arch_list:
@@ -279,8 +287,6 @@ def main():
         print("rootfs_type not found in config")
         exit(1)
 
-    prefix = ""
-    # TODO: staging- cros-
     docker_image = f"kernelci/{prefix}{rootfs_type}:kernelci"
     prepare_docker_container(docker_image, containerid)
 
