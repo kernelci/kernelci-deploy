@@ -245,6 +245,9 @@ cmd_docker() {
     ./kci docker $args k8s kernelci
 
     ./kci docker $args api --version="$api_rev"
+    # TODO - add this functionality to kci docker
+    docker tag kernelci/staging-api:$api_rev kernelci/staging-api:latest
+    docker push kernelci/staging-api:latest
 
     # Compiler toolchains
 
