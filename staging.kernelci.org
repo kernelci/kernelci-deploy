@@ -236,7 +236,7 @@ cmd_docker() {
     git prune
 
     core_rev=$(git show --pretty=format:%H -s origin/staging.kernelci.org)
-    rev_arg="--build-arg core_rev=$core_rev"
+    rev_arg="--build-arg core_rev=$core_rev --build-arg api_rev=$api_rev"
     px_arg='--prefix=kernelci/staging-'
     args="build --push $px_arg $cache_arg $rev_arg"
 
