@@ -164,7 +164,7 @@ cmd_website() {
         git checkout origin/staging.kernelci.org || echo "Never mind"
         cd -
     done
-    ./docker-hugo -D -b https://static.staging.kernelci.org/
+    ./docker-hugo -D -F -b https://static.staging.kernelci.org/
     cd "$topd"
 }
 
