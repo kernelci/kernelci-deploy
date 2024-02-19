@@ -339,32 +339,14 @@ cmd_api_pipeline() {
     docker-compose $compose_files down --remove-orphans
     cd -
 
-    echo "Creating local staging branch in tmp directory while API is running"
-    mkdir -p tmp
-    rm -rf tmp/patches
-    cp -R patches tmp/
-    pending_api="../pending.py --settings=../data/staging.ini kernelci-api"
-    (cd tmp; $pending_api)
-
-    echo "Looking for diff with current staging branch"
-    if (cd tmp; $pending_api --diff-only); then
-        echo "Stopping API containers"
-        cd checkout/kernelci-api
-        docker-compose down
-        cd -
-
-        echo "Starting API containers"
-        cd checkout/kernelci-api
-        git prune
-        REQUIREMENTS=requirements-dev.txt docker-compose build
-        docker-compose up -d
-        cd -
-    else
-        echo "No API changes, leaving it running"
-        cd checkout/kernelci-api
-        docker-compose up -d
-        cd -
-    fi
+    ./pending.py kernelci-api --push
+    echo "Stopping API containers"
+    cd checkout/kernelci-api
+    git prune
+    docker-compose down
+    echo "Starting API containers"
+    docker-compose up -d
+    cd -
 
     echo "Updating pipeline branch"
     ./pending.py kernelci-pipeline --push
