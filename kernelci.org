@@ -61,6 +61,11 @@ cmd_api() {
     _cmd_repo kernelci-api "$branch"
 }
 
+cmd_pipeline() {
+    branch="${1:-kernelci.org}"
+    _cmd_repo kernelci-pipeline "$branch"
+}
+
 cmd_jenkins() {
     # ToDo
     return 0
@@ -229,10 +234,15 @@ cmd_docker() {
     api_rev=$(git show --pretty=format:%H -s origin/kernelci.org)
     cd -
 
+    # Get Pipeline revision to tag the image
+    cd checkout/kernelci-pipeline
+    pipeline_rev=$(git show --pretty=format:%H -s origin/kernelci.org)
+    cd -
+
     cd checkout/kernelci-core
 
     core_rev=$(git show --pretty=format:%H -s origin/kernelci.org)
-    base_args="build --build-arg core_rev=$core_rev --build-arg api_rev=$api_rev"
+    base_args="build --build-arg core_rev=$core_rev --build-arg api_rev=$api_rev --build-arg pipeline_rev=$pipeline_rev"
     args="$base_args --prefix=kernelci/ --push --no-cache"
 
     # KernelCI tools
@@ -240,6 +250,7 @@ cmd_docker() {
     ./kci docker $args k8s kernelci
 
     ./kci docker $args api --version="$api_rev"
+    ./kci docker $args pipeline --version="$pipeline_rev"
 
     # Compiler toolchains
     for clang in clang-11 clang-12 clang-13 clang-14 clang-15 clang-16 clang-17; do
