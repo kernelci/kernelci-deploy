@@ -232,7 +232,7 @@ cmd_docker() {
     cd checkout/kernelci-core
 
     core_rev=$(git show --pretty=format:%H -s origin/kernelci.org)
-    base_args="build --build-arg core_rev=$core_rev"
+    base_args="build --build-arg core_rev=$core_rev --build-arg api_rev=$api_rev"
     args="$base_args --prefix=kernelci/ --push --no-cache"
 
     # KernelCI tools
