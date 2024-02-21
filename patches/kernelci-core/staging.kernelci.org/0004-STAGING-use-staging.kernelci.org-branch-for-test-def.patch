@@ -1,8 +1,7 @@
-From e2807858aca61ee66750334832d65c9a470d2c28 Mon Sep 17 00:00:00 2001
+From c007594903217874ded4712c586d9e464734dfda Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Tue, 15 Sep 2020 10:22:30 +0100
-Subject: [PATCH 4/6] STAGING use staging.kernelci.org branch for test
- definitions
+Subject: [PATCH] STAGING use staging.kernelci.org branch for test definitions
 
 ---
  config/lava/kselftest/kselftest.jinja2   | 2 +-
@@ -13,7 +12,7 @@ Subject: [PATCH 4/6] STAGING use staging.kernelci.org branch for test
  5 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/config/lava/kselftest/kselftest.jinja2 b/config/lava/kselftest/kselftest.jinja2
-index 440251bce..2c1ad1f16 100644
+index 440251bc..2c1ad1f1 100644
 --- a/config/lava/kselftest/kselftest.jinja2
 +++ b/config/lava/kselftest/kselftest.jinja2
 @@ -16,7 +16,7 @@
@@ -26,7 +25,7 @@ index 440251bce..2c1ad1f16 100644
        name: {{ plan }}
        parameters:
 diff --git a/config/lava/ltp/ltp-open-posix.jinja2 b/config/lava/ltp/ltp-open-posix.jinja2
-index a19e3d917..690cd5632 100644
+index a19e3d91..690cd563 100644
 --- a/config/lava/ltp/ltp-open-posix.jinja2
 +++ b/config/lava/ltp/ltp-open-posix.jinja2
 @@ -5,7 +5,7 @@
@@ -39,7 +38,7 @@ index a19e3d917..690cd5632 100644
           name: {{ plan }}
           parameters:
 diff --git a/config/lava/ltp/ltp.jinja2 b/config/lava/ltp/ltp.jinja2
-index 3b3c8f92f..4a242cbc4 100644
+index 3b3c8f92..4a242cbc 100644
 --- a/config/lava/ltp/ltp.jinja2
 +++ b/config/lava/ltp/ltp.jinja2
 @@ -5,7 +5,7 @@
@@ -52,20 +51,20 @@ index 3b3c8f92f..4a242cbc4 100644
           name: {{ plan }}
           parameters:
 diff --git a/config/lava/preempt-rt/preempt-rt.jinja2 b/config/lava/preempt-rt/preempt-rt.jinja2
-index 75bbe27d1..9cfc451de 100644
+index 4f48659e..b544e579 100644
 --- a/config/lava/preempt-rt/preempt-rt.jinja2
 +++ b/config/lava/preempt-rt/preempt-rt.jinja2
-@@ -17,7 +17,7 @@
+@@ -18,7 +18,7 @@
  
      - repository: https://github.com/kernelci/test-definitions.git
        from: git
 -      revision: kernelci.org
 +      revision: staging.kernelci.org
-       path: automated/linux/cyclictest/cyclictest.yaml
-       name: cyclictest
+       path: automated/linux/{{ tst_group|default(tst_cmd) }}/{{ tst_cmd }}.yaml
+       name: {{ plan }}
        parameters:
 diff --git a/config/lava/sleep/sleep.jinja2 b/config/lava/sleep/sleep.jinja2
-index ceb55029c..f848d1d62 100644
+index ceb55029..f848d1d6 100644
 --- a/config/lava/sleep/sleep.jinja2
 +++ b/config/lava/sleep/sleep.jinja2
 @@ -3,7 +3,7 @@
@@ -78,5 +77,5 @@ index ceb55029c..f848d1d62 100644
        history: False
        path: config/lava/sleep/sleep.yaml
 -- 
-2.39.2
+2.30.2
 
