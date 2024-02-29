@@ -278,9 +278,8 @@ cmd_docker() {
                 ./kci docker $args $rustc kselftest kernelci --arch $arch
             done
         done
-        else
-            echo "Rust images not built, please touch .build_rust file to build them"
-    done
+        echo "Rust images not built, please touch .build_rust file to build them"
+    fi
 
     # rootfs
     ./kci docker $args buildroot kernelci
