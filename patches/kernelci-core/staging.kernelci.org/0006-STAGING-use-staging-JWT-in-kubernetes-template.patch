@@ -1,4 +1,4 @@
-From 1352376e62fd0c26aed2811cd426ac630cb2cf1c Mon Sep 17 00:00:00 2001
+From c88268aab10b3abd91bfb60d846ed5896ca9f0c2 Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Fri, 1 Sep 2023 18:46:13 +0000
 Subject: [PATCH 6/6] STAGING use staging JWT in kubernetes template
@@ -8,10 +8,10 @@ Subject: [PATCH 6/6] STAGING use staging JWT in kubernetes template
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/config/runtime/base/kubernetes.jinja2 b/config/runtime/base/kubernetes.jinja2
-index 47de9d851..6d93ba1c4 100644
+index e17917a3..2b96b072 100644
 --- a/config/runtime/base/kubernetes.jinja2
 +++ b/config/runtime/base/kubernetes.jinja2
-@@ -65,7 +65,7 @@ spec:
+@@ -55,7 +55,7 @@ spec:
            valueFrom:
              secretKeyRef:
                # FIXME: convert to template parameter

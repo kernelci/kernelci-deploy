@@ -70,5 +70,5 @@ function install_secrets() {
 #create_cluster rg-kbuild-westus3 aks-kbuild-big-1 westus3 Standard_F32s_v2 4 0.1375
 #install_secrets aks-kbuild-big-1
 
-#create_cluster rg-kbuild-westus3 aks-kbuild-medium-1 westus3 Standard_D8as_v5 13 0.04
-#install_secrets aks-kbuild-medium-1
+create_cluster rg-kbuild-westus3 aks-kbuild-medium-1 westus3 Standard_D8as_v5 13 0.04
+install_secrets aks-kbuild-medium-1
