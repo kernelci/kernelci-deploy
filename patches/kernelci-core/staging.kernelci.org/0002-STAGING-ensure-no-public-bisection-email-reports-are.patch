@@ -1,4 +1,4 @@
-From b33809c2d0de7164e6916ba358bafb17bd8e90cf Mon Sep 17 00:00:00 2001
+From d31e4df88b94c05cb403b4f22bf8803cab0d91ae Mon Sep 17 00:00:00 2001
 From: "kernelci.org bot" <bot@kernelci.org>
 Date: Thu, 18 Jan 2024 17:42:11 +0530
 Subject: [PATCH 2/6] STAGING ensure no public bisection email reports are sent
@@ -8,7 +8,7 @@ Subject: [PATCH 2/6] STAGING ensure no public bisection email reports are sent
  1 file changed, 2 insertions(+)
 
 diff --git a/kernelci/scripts/kci_bisect_push_results.py b/kernelci/scripts/kci_bisect_push_results.py
-index d3549d9d3..56a51c938 100755
+index d3549d9d..56a51c93 100755
 --- a/kernelci/scripts/kci_bisect_push_results.py
 +++ b/kernelci/scripts/kci_bisect_push_results.py
 @@ -225,6 +225,8 @@ def send_report(args, log_file_name, token, api):
