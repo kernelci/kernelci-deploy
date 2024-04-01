@@ -239,7 +239,7 @@ cmd_docker() {
     ./kci docker $args kernelci
     ./kci docker $args k8s kernelci
 
-    ./kci docker $args api --version="$api_rev"
+    ./kci docker $args kernelci api --version="$api_rev"
 
     # Compiler toolchains
     for clang in clang-11 clang-12 clang-13 clang-14 clang-15 clang-16 clang-17; do
