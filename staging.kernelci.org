@@ -349,6 +349,7 @@ cmd_api_pipeline() {
     git prune
     docker-compose down
     echo "Starting API containers"
+    docker-compose build --no-cache
     docker-compose up -d
     cd -
 
@@ -357,7 +358,7 @@ cmd_api_pipeline() {
 
     echo "Starting pipeline containers"
     cd checkout/kernelci-pipeline
-    REQUIREMENTS=requirements-dev.txt docker-compose $compose_files build
+    REQUIREMENTS=requirements-dev.txt docker-compose $compose_files build --no-cache
     SETTINGS=/home/kernelci/config/staging.kernelci.org.secrets.toml \
             docker-compose $compose_files up -d
     cd -
