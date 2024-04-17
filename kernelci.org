@@ -249,7 +249,8 @@ cmd_docker() {
     ./kci docker $args kernelci
     ./kci docker $args k8s kernelci
 
-    ./kci docker $args api --version="$api_rev"
+
+    ./kci docker $args kernelci api --version="$api_rev"
     ./kci docker $args pipeline --version="$pipeline_rev"
 
     # Compiler toolchains

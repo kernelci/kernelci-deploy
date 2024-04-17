@@ -219,6 +219,7 @@ cmd_docker() {
 
     # Build without cache if flag file doesn't exist or older than x days
     purge_flag_file=".last_docker_purge"
+    rust_flag_file=".build_rust"
     if [ -f "$purge_flag_file" ]; then
         flag_time=$(date -r "$purge_flag_file" +%s)
         week_ago=$(date -d 'now - 7 days' +%s)
@@ -254,11 +255,11 @@ cmd_docker() {
     ./kci docker $args kernelci
     ./kci docker $args k8s kernelci
 
-    ./kci docker $args api --version="$api_rev"
+    ./kci docker $args kernelci api --version="$api_rev"
     ./kci docker $args pipeline --version="$pipeline_rev"
     # TODO - add this functionality to kci docker
-    docker tag kernelci/staging-api:$api_rev kernelci/staging-api:latest
-    docker push kernelci/staging-api:latest
+    docker tag kernelci/staging-kernelci:api-$api_rev kernelci/staging-kernelci:api
+    docker push kernelci/staging-kernelci:api
     docker tag kernelci/staging-pipeline:$pipeline_rev kernelci/staging-pipeline:latest
     docker push kernelci/staging-pipeline:latest
 
@@ -283,12 +284,15 @@ cmd_docker() {
     # only x86 is useful for KUnit (for now)
     ./kci docker $args gcc-10 kunit kernelci --arch x86
     # additional images for Rust
-    for rustc in rustc-1.74 rustc-1.75; do
-        ./kci docker $args $rustc kselftest kernelci
-        for arch in x86; do
-            ./kci docker $args $rustc kselftest kernelci --arch $arch
+    if [ -f "$rust_flag_file" ]; then
+        for rustc in rustc-1.74 rustc-1.75; do
+            ./kci docker $args $rustc kselftest kernelci
+            for arch in x86; do
+                ./kci docker $args $rustc kselftest kernelci --arch $arch
+            done
         done
-    done
+        echo "Rust images not built, please touch .build_rust file to build them"
+    fi
 
     # rootfs
     ./kci docker $args buildroot kernelci
@@ -358,6 +362,7 @@ cmd_api_pipeline() {
     git prune
     docker-compose down
     echo "Starting API containers"
+    docker-compose build --no-cache
     docker-compose up -d
     cd -
 
@@ -366,7 +371,7 @@ cmd_api_pipeline() {
 
     echo "Starting pipeline containers"
     cd checkout/kernelci-pipeline
-    REQUIREMENTS=requirements-dev.txt docker-compose $compose_files build
+    REQUIREMENTS=requirements-dev.txt docker-compose $compose_files build --no-cache
     SETTINGS=/home/kernelci/config/staging.kernelci.org.secrets.toml \
             docker-compose $compose_files up -d
     cd -
