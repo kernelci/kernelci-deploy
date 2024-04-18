@@ -26,7 +26,7 @@ spec:
                   kubernetes.io/os: linux
         selector:
           dnsNames:
-            - 'kernelci-api.eastus.cloudapp.azure.com'
+            - 'kernelci-api.westus3.cloudapp.azure.com'
       - http01:
           ingress:
             ingressTemplate:
@@ -40,4 +40,4 @@ spec:
                   kubernetes.io/os: linux
         selector:
           dnsNames:
-            - 'kernelci-pipeline.eastus.cloudapp.azure.com'
+            - 'kernelci-pipeline.westus3.cloudapp.azure.com'
