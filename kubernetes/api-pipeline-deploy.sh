@@ -10,10 +10,10 @@
 
 
 # Azure specific variables, unset if you are not using Azure
-AZURE_RG="kernelci-api"
-LOCATION="eastus"
+AZURE_RG="kernelci-api-1_group"
+LOCATION="westus3"
 
-CONTEXT="kernelci-api-1-admin"
+CONTEXT="kernelci-api-1"
 CLUSTER_NAME="kernelci-api-1"
 
 # Pipeline namespace and DNS label
@@ -235,8 +235,13 @@ function deploy_once_api {
     # replace MONGOCONNECTSTRING in deploy/configmap.yaml.example to ${MONGO} and save to deploy/configmap.yaml
     #cp deploy/configmap.yaml.example deploy/configmap.yaml
     cp kernelci-api/kube/aks/configmap.yaml.example kernelci-api/kube/aks/configmap.yaml
-    ./yq -i e ".data.mongo_service=\"${MONGO}\"" kernelci-api/kube/aks/configmap.yaml
-    ./yq -i e ".data.email_sender=\"${EMAIL_SENDER}\"" kernelci-api/kube/aks/configmap.yaml
+    # if MONGO set
+    if [ -z "$MONGO" ]; then
+        echo "MONGO not set, using default"
+    else
+        ./yq -i e ".data.mongo_service=\"${MONGO}\"" kernelci-api/kube/aks/configmap.yaml
+    fi
+    ./yq -i e ".data.email_sender=\"${EMAIL_USER}\"" kernelci-api/kube/aks/configmap.yaml
     ./yq -i e ".metadata.namespace=\"${NS_API}\"" kernelci-api/kube/aks/configmap.yaml
 
     # Update all namespaces in deploy/* to ${NS}
@@ -301,7 +306,7 @@ function deploy_cert_manager {
     fi
 }
 
-function redeploy_certissuer {    
+function redeploy_certissuer {
     echo "Updating cert-issuer ACME url to ${ACME_URL}..."
     ./yq -i e ".spec.acme.server=\"${ACME_URL}\"" manifests/issuer.yaml
     kubectl --context=${CONTEXT} apply -f manifests/issuer.yaml
@@ -416,8 +421,9 @@ local_setup
 
 # if argument delete set just delete namespace and exit
 if [ "$1" == "delete" ]; then
-    echo "Deleting namespace ${NS}... this might take up to 5 minutes!"
-    kubectl --context=${CONTEXT} delete namespace ${NS}
+    echo "Deleting namespace ${NS_API} and ${NS_PIPELINE}..."
+    kubectl --context=${CONTEXT} delete namespace ${NS_API} || true
+    kubectl --context=${CONTEXT} delete namespace ${NS_PIPELINE} || true
     exit 0
 fi
 
@@ -434,6 +440,11 @@ if [ "$1" == "token" ]; then
     exit 0
 fi
 
+if [ "$1" == "config" ]; then
+    deploy_pipeline_configmap
+    exit 0
+fi
+
 # cert
 if [ "$1" == "cert" ]; then
     redeploy_certissuer
@@ -446,6 +457,7 @@ if [ "$1" != "full" ]; then
     echo "$0 full - deploy everything"
     echo "$0 delete - delete all namespaces"
     echo "$0 token - post-install procedure, install API token"
+    echo "$0 config - deploy pipeline configmap"
     exit 1
 fi
 
