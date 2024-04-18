@@ -265,6 +265,11 @@ cmd_docker() {
     docker tag kernelci/staging-kernelci:pipeline-$pipeline_rev kernelci/staging-kernelci:pipeline
     docker push kernelci/staging-kernelci:pipeline
 
+    ./kci docker $args kernelci lava-callback --version="$pipeline_rev"
+    # lava-callback fragment
+    docker tag kernelci/staging-kernelci:lava-callback-$pipeline_rev kernelci/staging-kernelci:lava-callback
+    docker push kernelci/staging-kernelci:lava-callback
+
     # Compiler toolchains
 
     # clang-17 for linux-next (including weekly full build)
