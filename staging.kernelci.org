@@ -93,6 +93,11 @@ cmd_api() {
     ./pending.py kernelci-api --push
 }
 
+cmd_pipeline() {
+    echo "Updating kernelci-pipeline"
+    ./pending.py kernelci-pipeline --push
+}
+
 cmd_bootrr() {
     echo "Updating bootrr"
     ./pending.py bootrr --push
@@ -232,12 +237,17 @@ cmd_docker() {
     api_rev=$(git show --pretty=format:%H -s origin/staging.kernelci.org)
     cd -
 
+    # Get pipeline revision to tag the image
+    cd checkout/kernelci-pipeline
+    pipeline_rev=$(git show --pretty=format:%H -s origin/staging.kernelci.org)
+    cd -
+
     # Build the images with kci docker
     cd checkout/kernelci-core
     git prune
 
     core_rev=$(git show --pretty=format:%H -s origin/staging.kernelci.org)
-    rev_arg="--build-arg core_rev=$core_rev --build-arg api_rev=$api_rev"
+    rev_arg="--build-arg core_rev=$core_rev --build-arg api_rev=$api_rev --build-arg pipeline_rev=$pipeline_rev"
     px_arg='--prefix=kernelci/staging-'
     args="build --push $px_arg $cache_arg $rev_arg"
 
@@ -249,6 +259,11 @@ cmd_docker() {
     # TODO - add this functionality to kci docker
     docker tag kernelci/staging-kernelci:api-$api_rev kernelci/staging-kernelci:api
     docker push kernelci/staging-kernelci:api
+
+    ./kci docker $args kernelci pipeline --version="$pipeline_rev"
+    # TODO - add this functionality to kci docker
+    docker tag kernelci/staging-kernelci:pipeline-$pipeline_rev kernelci/staging-kernelci:pipeline
+    docker push kernelci/staging-kernelci:pipeline
 
     # Compiler toolchains
 
@@ -375,6 +390,7 @@ cmd_all() {
     cmd_jenkins
     cmd_core
     cmd_api
+    cmd_pipeline
     cmd_bootrr
     cmd_buildroot
     cmd_test_definitions
