@@ -208,6 +208,7 @@ function update_fqdn {
 function deploy_once_pipeline {
     echo "Deploying kernelci-pipeline secrets..."
     echo "Setting secrets...(API token, k8s, toml)"
+
     kubectl --context=${CONTEXT} delete secret kernelci-api-token --namespace=${NS_PIPELINE} || true
     kubectl --context=${CONTEXT} create secret generic kernelci-api-token --from-literal=token=${API_TOKEN} --namespace=${NS_PIPELINE}
 
@@ -318,6 +319,10 @@ function deploy_certissuer {
 }
 
 function deploy_pipeline_configmap {
+    # replace in config/ all 'https://staging.kernelci.org:9100' to 'https://kernelci-pipeline.westus3.cloudapp.azure.com'
+    echo "Updating pipeline-configmap..."
+    sed -i 's|https://staging.kernelci.org:9100|https://${DNS_PIPELINE}.${LOCATION}.cloudapp.azure.com|g' config/*
+
     echo "Deleting old pipeline-configmap..."
     kubectl --context=${CONTEXT} delete configmap pipeline-configmap --namespace=${NS_PIPELINE} || true
     echo "Deploying pipeline-configmap..."
@@ -451,6 +456,24 @@ if [ "$1" == "cert" ]; then
     exit 0
 fi
 
+# pipeline-credentials
+if [ "$1" == "pipeline-credentials" ]; then
+    deploy_once_pipeline
+    exit 0
+fi
+
+# pipeline-configmap
+if [ "$1" == "pipeline-configmap" ]; then
+    deploy_pipeline_configmap
+    exit 0
+fi
+
+# pipeline-restart-pods
+if [ "$1" == "pipeline-restart-pods" ]; then
+    kubectl --context=${CONTEXT} delete pods --all --namespace=${NS_PIPELINE}
+    exit 0
+fi
+
 # require full option or quit
 if [ "$1" != "full" ]; then
     echo "Usage:"
@@ -458,6 +481,9 @@ if [ "$1" != "full" ]; then
     echo "$0 delete - delete all namespaces"
     echo "$0 token - post-install procedure, install API token"
     echo "$0 config - deploy pipeline configmap"
+    echo "$0 pipeline-credentials - deploy pipeline credentials"
+    echo "$0 pipeline-configmap - deploy pipeline configmap"
+    echo "$0 pipeline-restart-pods - restart all pods in pipeline"
     exit 1
 fi
 

@@ -57,10 +57,13 @@ function nodepool() {
 function install_secrets() {
     echo "Install secrets for cluster $1"
     API_TOKEN_STAGING=$(cat secrets/token)
+    API_TOKEN_EARLY_ACCESS=$(cat secrets/token-early-access)
     AZURE_SAS_STAGING=$(cat secrets/azure_sas_staging)
     kubectl --context=$1 delete secret kci-api-jwt-staging
+    kubectl --context=$1 delete secret kci-api-jwt-early-access
     kubectl --context=$1 delete secret kci-api-azure-files-sas-staging
     kubectl --context=$1 create secret generic kci-api-jwt-staging --from-literal=token="${API_TOKEN_STAGING}"
+    kubectl --context=$1 create secret generic kci-api-jwt-early-access --from-literal=token="${API_TOKEN_EARLY_ACCESS}"
     kubectl --context=$1 create secret generic kci-api-azure-files-sas-staging --from-literal=azure-files-sas="${AZURE_SAS_STAGING}"
 }
 
