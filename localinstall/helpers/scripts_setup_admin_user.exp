@@ -1,0 +1,9 @@
+#!/usr/bin/expect -f
+
+set password [lindex $argv 1]
+spawn ./scripts/setup_admin_user --email [lindex $argv 0]
+expect "Password for user 'admin':"
+send -- "$password\r"
+expect "Retype password for user 'admin':"
+send -- "$password\r"
+expect eof
