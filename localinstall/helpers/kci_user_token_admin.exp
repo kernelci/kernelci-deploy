@@ -1,0 +1,10 @@
+#!/usr/bin/expect -f
+
+set password [lindex $argv 0]
+log_user 0
+spawn ./kci user token admin
+expect "Password:"
+send -- "$password\r"
+expect "\r\n"
+log_user 1
+expect eof
