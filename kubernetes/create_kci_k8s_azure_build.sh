@@ -56,7 +56,7 @@ function nodepool() {
 
 function install_secrets() {
     echo "Install secrets for cluster $1"
-    API_TOKEN_STAGING=$(cat secrets/token)
+    API_TOKEN_STAGING=$(cat secrets/token-staging-api)
     API_TOKEN_EARLY_ACCESS=$(cat secrets/token-early-access)
     AZURE_SAS_STAGING=$(cat secrets/azure_sas_staging)
     kubectl --context=$1 delete secret kci-api-jwt-staging
@@ -73,5 +73,5 @@ function install_secrets() {
 #create_cluster rg-kbuild-westus3 aks-kbuild-big-1 westus3 Standard_F32s_v2 4 0.1375
 #install_secrets aks-kbuild-big-1
 
-create_cluster rg-kbuild-westus3 aks-kbuild-medium-1 westus3 Standard_D8as_v5 13 0.04
+#create_cluster rg-kbuild-westus3 aks-kbuild-medium-1 westus3 Standard_D8as_v5 13 0.04
 install_secrets aks-kbuild-medium-1

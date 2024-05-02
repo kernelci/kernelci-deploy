@@ -88,10 +88,10 @@ echo Build docker images: k8s+kernelci
 ./kci docker $args k8s kernelci
 failonerror
 echo Build docker images: api
-./kci docker $args api --version="$api_rev"
+./kci docker $args kernelci api --version="$api_rev"
 failonerror
 echo Tag docker image of api to latest
-docker tag local/staging-api:$api_rev local/staging-api:latest
+docker tag local/staging-kernelci:api-$api_rev local/staging-kernelci:api
 failonerror
 echo Build docker images: clang-17+kselftest+kernelci for x86
 ./kci docker $args clang-17 kselftest kernelci --arch x86
