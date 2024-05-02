@@ -7,7 +7,7 @@
 #
 # TODO(nuclearcat): Most of things can be converted to helm charts
 # and yq replaced by kustomize
-
+# TODO: Add managed disk pickup or creation for mongo
 
 # Azure specific variables, unset if you are not using Azure
 AZURE_RG="kernelci-api-1_group"
@@ -474,6 +474,30 @@ if [ "$1" == "pipeline-restart-pods" ]; then
     exit 0
 fi
 
+# backup-mongo
+if [ "$1" == "backup-mongo" ]; then
+    echo "Backup MongoDB at ${MONGO}..."
+    echo "Cleaning up old backup directory on k8s..."
+    kubectl --context=${CONTEXT} exec -n ${NS_API} $(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "rm -rf /tmp/mongobackup"
+    echo "Backing up mongo..."
+    kubectl --context=${CONTEXT} exec -n ${NS_API} $(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "mongodump --uri=${MONGO} --out=/tmp/mongobackup --gzip"
+    echo "Print sizes..."
+    kubectl --context=${CONTEXT} exec -n ${NS_API} $(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "du -sh /tmp/mongobackup"
+    echo "Copying backup..."
+    kubectl --context=${CONTEXT} cp ${NS_API}/$(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}'):/tmp/mongobackup ./mongobackup
+    exit 0
+fi
+
+# restore-mongo
+if [ "$1" == "restore-mongo" ]; then
+    echo "Restoring MongoDB at ${MONGO}..."
+    echo "Copying backup..."
+    kubectl --context=${CONTEXT} cp ./mongobackup ${NS_API}/$(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}'):/tmp/mongobackup
+    echo "Restoring mongo..."
+    kubectl --context=${CONTEXT} exec -n ${NS_API} $(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "mongorestore --uri=${MONGO} --gzip /tmp/mongobackup"
+    exit 0
+fi
+
 # require full option or quit
 if [ "$1" != "full" ]; then
     echo "Usage:"
@@ -484,6 +508,7 @@ if [ "$1" != "full" ]; then
     echo "$0 pipeline-credentials - deploy pipeline credentials"
     echo "$0 pipeline-configmap - deploy pipeline configmap"
     echo "$0 pipeline-restart-pods - restart all pods in pipeline"
+    echo "$0 backup-mongo - backup mongo"
     exit 1
 fi
 

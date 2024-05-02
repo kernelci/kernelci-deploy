@@ -47,6 +47,12 @@ while [ $i -lt 5 ]; do
     fi
 done
 
+# check for expect
+if [ -z "$(which expect)" ]; then
+    echo "expect is not installed, please install it"
+    exit 1
+fi
+
 # INFO, if you have issues with stale/old data, check for 
 # docker volume kernelci-api_mongodata and delete it
 ../../helpers/scripts_setup_admin_user.exp "${YOUR_EMAIL}" "${ADMIN_PASSWORD}"
