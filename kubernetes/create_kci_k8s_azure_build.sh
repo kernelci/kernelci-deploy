@@ -73,5 +73,18 @@ function install_secrets() {
 #create_cluster rg-kbuild-westus3 aks-kbuild-big-1 westus3 Standard_F32s_v2 4 0.1375
 #install_secrets aks-kbuild-big-1
 
-#create_cluster rg-kbuild-westus3 aks-kbuild-medium-1 westus3 Standard_D8as_v5 13 0.04
-install_secrets aks-kbuild-medium-1
+if [ "$1" == "secrets" ]; then
+    install_secrets aks-kbuild-medium-1
+    exit 0
+fi
+
+if [ "$1" == "full" ]; then
+    create_cluster rg-kbuild-westus3 aks-kbuild-medium-1 westus3 Standard_D8as_v5 13 0.04
+    install_secrets aks-kbuild-medium-1
+    exit 0
+fi
+
+echo "Usage:"
+echo "$0 full - deploy everything"
+echo "$0 secrets - (re)install secrets"
+exit 1

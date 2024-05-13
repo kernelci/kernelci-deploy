@@ -273,7 +273,6 @@ function deploy_nginx {
         --set controller.scope.enabled=true \
         --set controller.scope.namespace=${NS_API} \
 
-
     echo "Deploying ingress-nginx for pipeline..."
     helm install ingress-nginx2 ingress-nginx/ingress-nginx \
         -n ${NS_PIPELINE} \
@@ -292,6 +291,19 @@ function deploy_nginx {
         --set controller.IngressClassByName=true \
         --set controller.scope.enabled=true \
         --set controller.scope.namespace=${NS_PIPELINE}
+}
+
+function patch_nginx_config {
+    echo "Patching nginx config..."
+    # patch nginx config for large lava callbacks
+    # set:
+    # data:
+    #   client-max-body-size: 128m
+    kubectl --context=${CONTEXT} patch configmap ingress-nginx2-controller -n ${NS_PIPELINE} --type merge --patch '{"data":{"proxy-body-size":"128m"}}'
+    # update creationTimestamp
+    kubectl --context=${CONTEXT} patch configmap ingress-nginx2-controller -n ${NS_PIPELINE} --type merge --patch '{"metadata":{"creationTimestamp":null}}'
+    # redeploy ingress-nginx
+    kubectl --context=${CONTEXT} rollout restart deployment ingress-nginx2-controller -n ${NS_PIPELINE}
 }
 
 function deploy_cert_manager {
@@ -485,16 +497,32 @@ if [ "$1" == "backup-mongo" ]; then
     kubectl --context=${CONTEXT} exec -n ${NS_API} $(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "du -sh /tmp/mongobackup"
     echo "Copying backup..."
     kubectl --context=${CONTEXT} cp ${NS_API}/$(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}'):/tmp/mongobackup ./mongobackup
+    tar -czf mongobackup-$(date +%Y%m%d-%H%M%S).tar.gz mongobackup
     exit 0
 fi
 
 # restore-mongo
 if [ "$1" == "restore-mongo" ]; then
     echo "Restoring MongoDB at ${MONGO}..."
+    echo "Cleaning up old backup directory on k8s..."
+    kubectl --context=${CONTEXT} exec -n ${NS_API} $(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "rm -rf /tmp/mongobackup"
     echo "Copying backup..."
     kubectl --context=${CONTEXT} cp ./mongobackup ${NS_API}/$(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}'):/tmp/mongobackup
     echo "Restoring mongo..."
-    kubectl --context=${CONTEXT} exec -n ${NS_API} $(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "mongorestore --uri=${MONGO} --gzip /tmp/mongobackup"
+    kubectl --context=${CONTEXT} exec -n ${NS_API} $(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "mongorestore --drop --uri=${MONGO} --gzip /tmp/mongobackup"
+    exit 0
+fi
+
+# mongo-shell
+if [ "$1" == "mongo-shell" ]; then
+    echo "Mongo shell..."
+    kubectl --context=${CONTEXT} exec -n ${NS_API} -it $(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "mongosh kernelci"
+    exit 0
+fi
+
+# patch nginx config
+if [ "$1" == "patch-nginx" ]; then
+    patch_nginx_config
     exit 0
 fi
 
@@ -509,6 +537,9 @@ if [ "$1" != "full" ]; then
     echo "$0 pipeline-configmap - deploy pipeline configmap"
     echo "$0 pipeline-restart-pods - restart all pods in pipeline"
     echo "$0 backup-mongo - backup mongo"
+    echo "$0 restore-mongo - restore mongo"
+    echo "$0 mongo-shell - mongo shell"
+    echo "$0 patch-nginx - patch nginx config"
     exit 1
 fi
 
