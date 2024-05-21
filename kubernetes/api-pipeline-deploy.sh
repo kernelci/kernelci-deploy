@@ -491,13 +491,19 @@ if [ "$1" == "backup-mongo" ]; then
     echo "Backup MongoDB at ${MONGO}..."
     echo "Cleaning up old backup directory on k8s..."
     kubectl --context=${CONTEXT} exec -n ${NS_API} $(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "rm -rf /tmp/mongobackup"
+    echo "Cleaning old tarball..."
+    kubectl --context=${CONTEXT} exec -n ${NS_API} $(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "rm -rf /tmp/mongobackup.tar.gz"
     echo "Backing up mongo..."
     kubectl --context=${CONTEXT} exec -n ${NS_API} $(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "mongodump --uri=${MONGO} --out=/tmp/mongobackup --gzip"
     echo "Print sizes..."
     kubectl --context=${CONTEXT} exec -n ${NS_API} $(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "du -sh /tmp/mongobackup"
+    echo "Create tarball..."
+    kubectl --context=${CONTEXT} exec -n ${NS_API} $(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "tar -czf /tmp/mongobackup.tar.gz /tmp/mongobackup"
     echo "Copying backup..."
-    kubectl --context=${CONTEXT} cp ${NS_API}/$(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}'):/tmp/mongobackup ./mongobackup
-    tar -czf mongobackup-$(date +%Y%m%d-%H%M%S).tar.gz mongobackup
+    kubectl --context=${CONTEXT} cp --retries 10 ${NS_API}/$(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}'):/tmp/mongobackup.tar.gz ./mongobackup.tar.gz
+    echo "Renaming backup..."
+    mv mongobackup.tar.gz mongobackup-$(date +%Y%m%d%H%M%S).tar.gz
+    echo "Backup done"
     exit 0
 fi
 

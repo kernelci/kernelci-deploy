@@ -5,6 +5,7 @@ import os
 import requests
 import json
 import time
+import argparse
 
 DOCKER_HUB_API = "https://hub.docker.com/v2/"
 JWT_TOKEN = ""
@@ -14,6 +15,7 @@ def read_auth():
     #with open(os.path.expanduser("~/.docker/config.json"), "r") as f:
     #    data = json.load(f)
     #    return data["auths"]["https://index.docker.io/v1/"]["auth"]
+
     # file .dockerhub, first line user, second password
     with open(os.path.expanduser(".dockerhub"), "r") as f:
         user = f.readline().strip()
@@ -129,23 +131,29 @@ def delete_tag(org, image, tag):
 
 
 def main():
+    args = argparse.ArgumentParser()
+    args.add_argument("--maxage", type=int, default=24, help="Max age of image in month")
+    args.add_argument("--clean", action="store_true", help="Clean images")
+    args = args.parse_args()
+    if not args.clean:
+        print("Not cleaning, use --clean to delete old images, --help for help")
+
     images = list_all_images("kernelci")
     for image in images:
         print(f"Image: {image}")
         print(f"  Last updated: {images[image]['last_updated']}")
-        # if age more than 2 years - delete image
-        #img_date = time.strptime(images[image]['last_updated'], "%Y-%m-%dT%H:%M:%S.%fZ")
-        #if img_date.tm_year < 2020:
-        #    print(f"  Image is too old, delete it")
-        #    # delete image
-        #    delete_image("kernelci", image)
         tags = list_all_tags("kernelci", image)
         for tag in tags:
             print(f"  Tag: {tag}")
             print(f"    Last updated: {tags[tag]['last_updated']}")
             print(f"    Full size: {tags[tag]['full_size']}")
+            if not args.clean:
+                continue
             img_date = time.strptime(tags[tag]['last_updated'], "%Y-%m-%dT%H:%M:%S.%fZ")
-            if img_date.tm_year < 2020:
+            img_unix_ts = time.mktime(img_date)
+            now = time.time()
+            # month is "approximative"
+            if (now - img_unix_ts) > (args.maxage * 30 * 24 * 60 * 60):
                 print(f"    Image/tag is too old, delete it")
                 # delete image
                 delete_tag("kernelci", image, tag)
