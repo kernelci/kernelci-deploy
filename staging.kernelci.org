@@ -154,25 +154,6 @@ cmd_frontend() {
     fi
 }
 
-cmd_website() {
-    echo "Updating static website"
-    ./pending.py kernelci-project --push
-    topd=$PWD
-    cd checkout/kernelci-project/kernelci.org
-    git prune
-    git-lfs checkout
-    git submodule update --init --recursive
-    for d in external/*; do
-        echo "Checking out staging branch for $d"
-        cd "$d"
-        git remote update origin
-        git checkout origin/staging.kernelci.org || echo "Never mind"
-        cd -
-    done
-    ./docker-hugo -D -F -b https://static.staging.kernelci.org/
-    cd "$topd"
-}
-
 cmd_kernel() {
     tree="${1:-next}"
 
@@ -406,9 +387,7 @@ cmd_all() {
     cmd_docker
     cmd_monitor
     cmd_api_pipeline
-    cmd_website
     tools/kci-slackbot.py --message "Staging completed"
-
 }
 
 cmd="${1}"
