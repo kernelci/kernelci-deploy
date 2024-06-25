@@ -399,6 +399,11 @@ function deploy_api {
     #kubectl --context=${CONTEXT} wait --for=condition=ready --timeout=300s ingress api-ingress --namespace=${NS_API}
 }
 
+function backup_pipeline_configmap {
+    echo "Backup pipeline-configmap..."
+    kubectl --context=${CONTEXT} get configmap pipeline-configmap --namespace=${NS_PIPELINE} -o yaml > pipeline-configmap.yaml
+}
+
 if [ -z "$API_TOKEN" ]; then
     # TODO(nuclearcat): reference to documentation
     echo "API_TOKEN not set, please follow procedure to create users and issue token after deployment"
@@ -454,6 +459,12 @@ if [ "$1" == "token" ]; then
     #kubectl --context=${CONTEXT} create secret generic kernelci-api-token --from-literal=token=${API_TOKEN} --namespace=${NS_PIPELINE}
     deploy_pipeline_configmap
     deploy_once_pipeline
+    exit 0
+fi
+
+# if argument backup-config set just backup pipeline configmap and exit
+if [ "$1" == "backup-config" ]; then
+    backup_pipeline_configmap
     exit 0
 fi
 
@@ -538,6 +549,7 @@ if [ "$1" != "full" ]; then
     echo "$0 full - deploy everything"
     echo "$0 delete - delete all namespaces"
     echo "$0 token - post-install procedure, install API token"
+    echo "$0 backup-config - backup pipeline configmap"
     echo "$0 config - deploy pipeline configmap"
     echo "$0 pipeline-credentials - deploy pipeline credentials"
     echo "$0 pipeline-configmap - deploy pipeline configmap"
