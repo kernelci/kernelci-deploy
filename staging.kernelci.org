@@ -258,19 +258,19 @@ cmd_docker() {
     for arch in arm arm64 mips riscv64 x86; do
 	./kci docker $args clang-17 kselftest kernelci --arch $arch
     done
-    # clang-14 for chromeos
-    ./kci docker $args clang-14 kselftest kernelci
+    # clang-15 for chromeos
+    ./kci docker $args clang-15 kselftest kernelci
     for arch in arm64 x86; do
-	./kci docker $args clang-14 kselftest kernelci --arch $arch
+	./kci docker $args clang-15 kselftest kernelci --arch $arch
     done
-    # gcc-10 for everything (including weekly linux-next full build)
+    # gcc-12 for everything (including weekly linux-next full build)
     for arch in arc arm armv5 arm64 mips riscv64 x86; do
-	./kci docker $args gcc-10 kselftest kernelci --arch $arch
+	./kci docker $args gcc-12 kselftest kernelci --arch $arch
     done
     # missing -dev packages for sparc64
-    ./kci docker $args gcc-10 kernelci --arch sparc
+    ./kci docker $args gcc-12 kernelci --arch sparc
     # only x86 is useful for KUnit (for now)
-    ./kci docker $args gcc-10 kunit kernelci --arch x86
+    ./kci docker $args gcc-12 kunit kernelci --arch x86
     # additional images for Rust
     if [ -f "$rust_flag_file" ]; then
         for rustc in rustc-1.74 rustc-1.75; do
