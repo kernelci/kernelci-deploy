@@ -36,8 +36,8 @@ index 00000000..5c95bf4c
 +
 +
 +# Staging build configurations using GCC
-+staging-gcc-10: &staging-gcc-10
-+  build_environment: gcc-10
++staging-gcc-12: &staging-gcc-12
++  build_environment: gcc-12
 +  fragments: [kselftest]
 +  architectures:
 +    arm:
@@ -74,26 +74,26 @@ index 00000000..5c95bf4c
 +    tree: kernelci
 +    branch: 'staging-android'
 +    variants:
-+      gcc-10: *staging-gcc-10
++      gcc-12: *staging-gcc-12
 +      clang-17: *staging-clang-17
 +
 +  kernelci_staging-cip:
 +    tree: kernelci
 +    branch: 'staging-cip'
 +    variants:
-+      gcc-10: *staging-gcc-10
++      gcc-12: *staging-gcc-12
 +
 +  kernelci_staging-mainline:
 +    tree: kernelci
 +    branch: 'staging-mainline'
 +    variants:
-+      gcc-10: *staging-gcc-10
++      gcc-12: *staging-gcc-12
 +
 +  kernelci_staging-next:
 +    tree: kernelci
 +    branch: 'staging-next'
 +    variants:
-+      gcc-10: *staging-gcc-10
++      gcc-12: *staging-gcc-12
 +      clang-17: *staging-clang-17
 +      rustc-1.75:
 +        build_environment: rustc-1.75
@@ -108,8 +108,8 @@ index 00000000..5c95bf4c
 +    tree: kernelci
 +    branch: 'staging-stable'
 +    variants:
-+      gcc-10:
-+        build_environment: gcc-10
++      gcc-12:
++        build_environment: gcc-12
 +        architectures:
 +          arm: *arm_defconfig
 +          arm64:
@@ -128,7 +128,7 @@ index 00000000..5c95bf4c
 +    tree: mainline
 +    branch: 'master'
 +    variants:
-+      gcc-10: *staging-gcc-10
++      gcc-12: *staging-gcc-12
 -- 
 2.39.2
 
