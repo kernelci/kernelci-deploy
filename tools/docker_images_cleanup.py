@@ -6,6 +6,7 @@ import requests
 import json
 import time
 import argparse
+import re
 
 DOCKER_HUB_API = "https://hub.docker.com/v2/"
 JWT_TOKEN = ""
@@ -132,17 +133,28 @@ def delete_tag(org, image, tag):
 
 def main():
     args = argparse.ArgumentParser()
-    args.add_argument("--maxage", type=int, default=24, help="Max age of image in month")
+    args.add_argument("--maxage", type=int, default=24, help="Max age of image in month (default 24)")
     args.add_argument("--clean", action="store_true", help="Clean images")
+    args.add_argument("--pattern", help="Delete images matching regex pattern")
     args = args.parse_args()
     if not args.clean:
         print("Not cleaning, use --clean to delete old images, --help for help")
-
+    
+    print(f"Listing all images, max age: {args.maxage} months")
     images = list_all_images("kernelci")
     for image in images:
+        if args.pattern and not re.match(args.pattern, image):
+            continue
         print(f"Image: {image}")
         print(f"  Last updated: {images[image]['last_updated']}")
         tags = list_all_tags("kernelci", image)
+        if not tags:
+            print(f"  No tags found")
+            if not args.clean:
+                continue
+            # delete image
+            print(f"  Image is not used, deleting it")
+            delete_image("kernelci", image)
         for tag in tags:
             print(f"  Tag: {tag}")
             print(f"    Last updated: {tags[tag]['last_updated']}")
@@ -154,7 +166,7 @@ def main():
             now = time.time()
             # month is "approximative"
             if (now - img_unix_ts) > (args.maxage * 30 * 24 * 60 * 60):
-                print(f"    Image/tag is too old, delete it")
+                print(f"    Image/tag is too old, deleting it")
                 # delete image
                 delete_tag("kernelci", image, tag)
             
