@@ -219,6 +219,7 @@ function deploy_once_pipeline {
     echo "Setting kernelci-secrets.toml..."
     kubectl --context=${CONTEXT} delete secret pipeline-secrets --namespace=${NS_PIPELINE} || true
     kubectl --context=${CONTEXT} create secret generic pipeline-secrets --from-file=kernelci.toml=kernelci-secrets.toml --namespace=${NS_PIPELINE}
+    kubectl --context=${CONTEXT} --namespace=${NS_PIPELINE} patch secret pipeline-secrets -p '{"data": {"kcidb-credentials.json": "'$(cat secrets/kcidb-credentials.json | base64 -w 0)'"}}'
 
     echo "Setting kernelci-api-secret/secret-key"
     kubectl --context=${CONTEXT} delete secret kernelci-api-secret --namespace=${NS_API} || true
@@ -373,6 +374,10 @@ function deploy_pipeline {
     # Deploy ingress
     echo "Deploying ingress..."
     kubectl --context=${CONTEXT} apply -f kernelci-pipeline/kube/aks/ingress.yaml --namespace=${NS_PIPELINE}
+
+    # Deploy pipeline-kcidb
+    echo "Deploying pipeline-kcidb..."
+    kubectl --context=${CONTEXT} apply -f kernelci-pipeline/kube/aks/pipeline-kcidb.yaml --namespace=${NS_PIPELINE}
     sleep 5
 
     # wait until ingress is ready

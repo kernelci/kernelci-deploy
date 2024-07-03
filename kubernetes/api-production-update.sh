@@ -81,6 +81,9 @@ update_manifests() {
 
     UPD=".spec.template.spec.containers[0].image = \"kernelci/kernelci:pipeline@$SHA256_KERNELCI_PIPELINE\""
     ./yq e "$UPD" -i kernelci-pipeline/kube/aks/trigger.yaml
+
+    UPD=".spec.template.spec.containers[0].image = \"kernelci/kernelci:pipeline@$SHA256_KERNELCI_PIPELINE\""
+    ./yq e "$UPD" -i kernelci-pipeline/kube/aks/pipeline-kcidb.yaml
 }
 
 apply_manifests() {
@@ -91,6 +94,8 @@ apply_manifests() {
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/scheduler-k8s.yaml
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/scheduler-lava.yaml
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/tarball.yaml
+    kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/pipeline-kcidb.yaml
+
     # BUG/FIXME: trigger need some delay, otherwise if other components are not ready, it will waste the job
     echo "Sleeping 10 seconds before applying trigger"
     sleep 10
