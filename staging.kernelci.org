@@ -257,6 +257,9 @@ cmd_docker() {
     ./kci docker $args clang-17 kselftest kernelci
     for arch in arm arm64 mips riscv64 x86; do
 	./kci docker $args clang-17 kselftest kernelci --arch $arch
+    # temporary push to ghcr.io to solve docker hub limits
+    docker tag kernelci/staging-clang-17:$arch-kselftest-kernelci ghcr.io/kernelci/staging-clang-17:$arch-kselftest-kernelci
+    docker push ghcr.io/kernelci/staging-clang-17:$arch-kselftest-kernelci
     done
     # clang-15 for chromeos
     ./kci docker $args clang-15 kselftest kernelci
@@ -266,6 +269,9 @@ cmd_docker() {
     # gcc-12 for everything (including weekly linux-next full build)
     for arch in arc arm armv5 arm64 mips riscv64 x86; do
 	./kci docker $args gcc-12 kselftest kernelci --arch $arch
+    # temporary push to ghcr.io to solve docker hub limits
+    docker tag kernelci/staging-gcc-12:$arch-kselftest-kernelci ghcr.io/kernelci/staging-gcc-12:$arch-kselftest-kernelci
+    docker push ghcr.io/kernelci/staging-gcc-12:$arch-kselftest-kernelci
     done
     # missing -dev packages for sparc64
     ./kci docker $args gcc-12 kernelci --arch sparc
