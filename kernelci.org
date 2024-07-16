@@ -367,7 +367,6 @@ cmd_update() {
     cmd_dsl
     cmd_backend
     cmd_frontend
-    cmd_website
     cmd_test_definitions
     cmd_docker
     cmd_kernel
