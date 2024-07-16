@@ -242,21 +242,21 @@ cmd_docker() {
     ./kci docker $args kernelci api --version="$api_rev"
 
     # Compiler toolchains
-    for clang in clang-11 clang-12 clang-13 clang-14 clang-15 clang-16 clang-17; do
+    for clang in clang-14 clang-15 clang-16 clang-17; do
 	./kci docker $args $clang
     done
-    for clang in clang-11 clang-14 clang-15 clang-16 clang-17; do
+    for clang in clang-14 clang-15 clang-16 clang-17; do
         for arch in arm arm64 armv5 mips riscv64 x86; do
             ./kci docker $args $clang kselftest kernelci --arch $arch
         done
     done
     for arch in arc arm armv5 arm64 mips riscv64 x86; do
-	./kci docker $args gcc-10 kselftest kernelci --arch $arch
+	./kci docker $args gcc-12 kselftest kernelci --arch $arch
     done
     # missing -dev packages for sparc64
-    ./kci docker $args gcc-10 kernelci --arch sparc
+    ./kci docker $args gcc-12 kernelci --arch sparc
     # only x86 is useful for KUnit (for now)
-    ./kci docker $args gcc-10 kunit kernelci --arch x86
+    ./kci docker $args gcc-12 kunit kernelci --arch x86
     # additional images for Rust
     for rustc in rustc-1.74 rustc-1.75; do
         ./kci docker $args $rustc kselftest kernelci
