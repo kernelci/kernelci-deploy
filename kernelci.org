@@ -242,10 +242,10 @@ cmd_docker() {
     ./kci docker $args kernelci api --version="$api_rev"
 
     # Compiler toolchains
-    for clang in clang-14 clang-15 clang-16 clang-17; do
+    for clang in clang-15 clang-16 clang-17; do
 	./kci docker $args $clang
     done
-    for clang in clang-14 clang-15 clang-16 clang-17; do
+    for clang in clang-15 clang-16 clang-17; do
         for arch in arm arm64 armv5 mips riscv64 x86; do
             ./kci docker $args $clang kselftest kernelci --arch $arch
         done
