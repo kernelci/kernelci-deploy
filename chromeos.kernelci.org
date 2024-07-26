@@ -175,6 +175,9 @@ cmd_monitor() {
 cmd_all() {
     tree="$1"
 
+    echo "Disabled, sunsetting"
+    exit 1
+
     cmd_pull
     cmd_jenkins
     cmd_core
