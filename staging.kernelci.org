@@ -387,8 +387,8 @@ cmd_all() {
     cmd_buildroot
     cmd_test_definitions
     cmd_kcidb
-    cmd_backend
-    cmd_frontend
+    #cmd_backend
+    #cmd_frontend
     cmd_kernel $tree
     cmd_docker
     cmd_monitor
