@@ -332,14 +332,22 @@ function deploy_certissuer {
 }
 
 function deploy_pipeline_configmap {
+    CFGDIR="config/*"
+    # if $2 is set, then we use it as a cfg directory
+    if [ ! -z "$1" ]; then
+        echo "Using ${1} as config directory"
+        CFGDIR="$1"
+    else
+        echo "Using default config directory"
+    fi
     # replace in config/ all 'https://staging.kernelci.org:9100' to 'https://kernelci-pipeline.westus3.cloudapp.azure.com'
     echo "Updating pipeline-configmap..."
-    sed -i 's|https://staging.kernelci.org:9100|https://${DNS_PIPELINE}.${LOCATION}.cloudapp.azure.com|g' config/*
+    sed -i 's|https://staging.kernelci.org:9100|https://${DNS_PIPELINE}.${LOCATION}.cloudapp.azure.com|g' ${CFGDIR}/*.yaml
 
     echo "Deleting old pipeline-configmap..."
     kubectl --context=${CONTEXT} delete configmap pipeline-configmap --namespace=${NS_PIPELINE} || true
     echo "Deploying pipeline-configmap..."
-    kubectl --context=${CONTEXT} create configmap pipeline-configmap --from-file=config/ --namespace=${NS_PIPELINE}
+    kubectl --context=${CONTEXT} create configmap pipeline-configmap --namespace=${NS_PIPELINE} --from-file=${CFGDIR}/
 }
 
 function deploy_pipeline {
@@ -474,7 +482,7 @@ if [ "$1" == "backup-config" ]; then
 fi
 
 if [ "$1" == "config" ]; then
-    deploy_pipeline_configmap
+    deploy_pipeline_configmap $2
     exit 0
 fi
 

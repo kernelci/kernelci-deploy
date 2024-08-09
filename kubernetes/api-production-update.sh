@@ -102,9 +102,19 @@ apply_manifests() {
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/trigger.yaml
 }
 
+update_configs() {
+    CURRENT_DIR=$(pwd)
+    TMPDIR=$(mktemp -d)
+    echo "Using temporary directory: $TMPDIR"
+    cd $TMPDIR
+    git clone https://github.com/kernelci/kernelci-pipeline.git
+    ls -la kernelci-pipeline
+    cd $CURRENT_DIR
+    ./api-pipeline-deploy.sh config $TMPDIR/kernelci-pipeline/config
+    rm -rf $TMPDIR
+}
 
-
-
+echo "Building kernelci-core docker images"
 build_kci2_docker_images
 
 echo "Fetching sha256 for kernelci images"
@@ -121,3 +131,6 @@ update_manifests
 
 echo "Applying manifests"
 apply_manifests
+
+echo "Updating configs"
+update_configs
