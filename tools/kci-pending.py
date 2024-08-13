@@ -25,11 +25,16 @@ logging.addLevelName(logging.WARNING, "\033[1;33m%s\033[1;0m" % logging.getLevel
 logging.addLevelName(logging.DEBUG, "\033[1;34m%s\033[1;0m" % logging.getLevelName(logging.DEBUG))
 
 
-def clone_repo(owner, repo):
-    url = f'https://github.com/{owner}/{repo}.git'
-    if os.path.exists(repo):
-        os.system(f'rm -rf {repo}')
+def clone_repo(owner, args):
+    url = f'https://github.com/{owner}/{args.repo}.git'
+    if os.path.exists(args.repo):
+        os.system(f'rm -rf {args.repo}')
     os.system(f'git clone --depth 1 {url}')
+    # if args.push then add push url
+    if args.push:
+        os.chdir(args.repo)
+        os.system(f'git remote set-url origin https://{args.push}@github.com/{owner}/{args.repo}')
+        os.chdir('..')
 
 
 def get_prs(owner, repo):
@@ -38,6 +43,9 @@ def get_prs(owner, repo):
         'Accept': 'application/vnd.github.v3+json'
     }
     response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        logging.error(f'Failed to fetch PRs for {owner}/{repo}: {response.status_code} {response.text}')
+        sys.exit(1)
     return response.json()
 
 
@@ -63,8 +71,6 @@ def apply_patch(pr, repo, push=None):
     os.system(f'cd {repo} && git add .')
     # commit
     os.system(f'cd {repo} && git commit -a -m "Staging PR {pr["number"]}"')
-    if push:
-        os.system(f'cd {repo} && git push origin HEAD:{push}')
 
 
 def save_pr_info(pr):
@@ -88,7 +94,7 @@ def read_users(filename):
     return users
 
 def merge_prs(args, users):
-    clone_repo(PROJECT, args.repo)
+    clone_repo(PROJECT, args)
     prs = get_prs(PROJECT, args.repo)
     for pr in prs:
         #save_pr_info(pr)
@@ -112,10 +118,17 @@ def merge_prs(args, users):
         else:
             logging.info(f'Skipping PR {pr["number"]} due to staging-skip label')
 
+    if args.push:
+        logging.info('Pushing changes to remote')
+        os.system(f'cd {args.repo} && git push origin HEAD:{args.branch} --force')
+        logging.info('Changes pushed to remote')
+    else:
+        logging.info('Changes not pushed to remote')
+
 def main():
     parser = argparse.ArgumentParser(description='KernelCI staging v2')
     parser.add_argument('repo', help='GitHub repo to poll')
-    parser.add_argument('--push', action='store_true', help='Push changes to staging branch')
+    parser.add_argument('--push', help='Push changes to staging branch, using push token (github PAT token)')
     parser.add_argument('--branch', help='Staging branch name', default='staging-snapshot')
     parser.add_argument('--userlist', help='File with users allowed to test PRs', default='../data/staging.ini')
     args = parser.parse_args()
