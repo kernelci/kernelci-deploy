@@ -386,6 +386,11 @@ function deploy_pipeline {
     # Deploy pipeline-kcidb
     echo "Deploying pipeline-kcidb..."
     kubectl --context=${CONTEXT} apply -f kernelci-pipeline/kube/aks/pipeline-kcidb.yaml --namespace=${NS_PIPELINE}
+
+    # Deploy pipeline-regression
+    echo "Deploying pipeline-regression..."
+    kubectl --context=${CONTEXT} apply -f kernelci-pipeline/kube/aks/regression.yaml --namespace=${NS_PIPELINE}
+
     sleep 5
 
     # wait until ingress is ready
