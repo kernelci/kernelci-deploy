@@ -14,15 +14,39 @@ import argparse
 import threading
 
 active_containers = []
-#finished_containers = []
 thread = {}
 current_date = time.strftime('%Y-%m-%d', time.localtime())
 tlock = threading.Lock()
-crash_keywords=['Traceback (most recent call last)']
+crash_keywords = ['Traceback (most recent call last)']
 
 
 def message_bot(msg):
     os.system(f'./kci-slackbot.py --message "{msg}"')
+
+
+THROTTLE_WIN_START = 0
+THROTTLE_WIN_COUNT = 0
+THROTTLE_WIN_SIZE = 600
+THROTTLE_WIN_COUNT_MAX = 5
+
+
+def is_msg_throttle():
+    '''
+    If last 5 minutes we got more than 5 messages, throttle it
+    '''
+    global THROTTLE_WIN_START, THROTTLE_WIN_COUNT
+    if THROTTLE_WIN_START == 0:
+        THROTTLE_WIN_START = time.time()
+    if time.time() - THROTTLE_WIN_START > THROTTLE_WIN_SIZE:
+        THROTTLE_WIN_START = time.time()
+        THROTTLE_WIN_COUNT = 0
+    THROTTLE_WIN_COUNT += 1
+    if THROTTLE_WIN_COUNT == THROTTLE_WIN_COUNT_MAX:
+        logging.error(f'Message throttled, count: {THROTTLE_WIN_COUNT}')
+        message_bot(f'Message throttled, count: {THROTTLE_WIN_COUNT}')
+    if THROTTLE_WIN_COUNT > THROTTLE_WIN_COUNT_MAX:
+        return True
+    return False
 
 
 def container_logger_thread(container, logpath):
@@ -30,14 +54,17 @@ def container_logger_thread(container, logpath):
     active_containers.append(container.id)
     with open(logpath, 'a') as logfile:
         for line in container.logs(stream=True):
+            logfile.write(line.decode('utf-8'))
             # detect crash keywords, lowercase both
             if any(keyword.lower() in line.decode('utf-8').lower() for keyword in crash_keywords):
-                logging.error(f'Crash detected in container: {container.name} id: {container.id}')
-                message_bot(f'Crash detected in container: {container.name} id: {container.id}')
-            logfile.write(line.decode('utf-8'))
+                if is_msg_throttle():
+                    logging.error(f'Crash detected in container: {container.name} id: {container.id}, but throttled')
+                    continue
+                else:
+                    logging.error(f'Crash detected in container: {container.name} id: {container.id}')
+                    message_bot(f'Crash detected in container: {container.name} id: {container.id}')
     with tlock:
         active_containers.remove(container.id)
-    #finished_containers.append(container.id)
 
 
 def get_containers_by_pattern(client, pattern, exclude=None):
@@ -104,6 +131,7 @@ def main():
             active_containers.clear()
             current_date = time.strftime('%Y-%m-%d', time.localtime())
         time.sleep(1)
+
 
 if __name__ == '__main__':
     main()
