@@ -55,14 +55,13 @@ def container_logger_thread(container, logpath):
     with open(logpath, 'a') as logfile:
         for line in container.logs(stream=True):
             logfile.write(line.decode('utf-8'))
-            # detect crash keywords, lowercase both
-            if any(keyword.lower() in line.decode('utf-8').lower() for keyword in crash_keywords):
-                if is_msg_throttle():
-                    logging.error(f'Crash detected in container: {container.name} id: {container.id}, but throttled')
-                    continue
-                else:
-                    logging.error(f'Crash detected in container: {container.name} id: {container.id}')
-                    message_bot(f'Crash detected in container: {container.name} id: {container.id}')
+
+    if is_msg_throttle():
+        logging.error(f'Crash detected in container: {container.name} id: {container.id}, but throttled')
+    else:
+        logging.error(f'Crash detected in container: {container.name} id: {container.id}')
+        message_bot(f'Crash detected in container: {container.name} id: {container.id}')
+
     with tlock:
         active_containers.remove(container.id)
 
