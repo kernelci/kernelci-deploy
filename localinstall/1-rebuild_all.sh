@@ -96,11 +96,11 @@ failonerror
 echo Build docker images: clang-17+kselftest+kernelci for x86
 ./kci docker $args clang-17 kselftest kernelci --arch x86
 failonerror
-echo Build docker images: gcc-10+kselftest+kernelci for x86
-./kci docker $args gcc-10 kselftest kernelci --arch x86
+echo Build docker images: gcc-12+kselftest+kernelci for x86
+./kci docker $args gcc-12 kselftest kernelci --arch x86
 failonerror
-echo Build docker images: gcc-10+kselftest+kernelci for arm64
-./kci docker $args gcc-10 kselftest kernelci --arch arm64
+echo Build docker images: gcc-12+kselftest+kernelci for arm64
+./kci docker $args gcc-12 kselftest kernelci --arch arm64
 failonerror
 
 
