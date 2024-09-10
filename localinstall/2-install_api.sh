@@ -28,8 +28,8 @@ fi
 cat ../../ssh.key.pub > docker/ssh/user-data/authorized_keys
 
 # down, just in case old containers are running
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose up -d
 echo "Waiting for API to be up"
 sleep 1
 # loop until the API is up, try 5 times
