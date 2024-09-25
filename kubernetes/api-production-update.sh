@@ -30,8 +30,30 @@ clone_kernelci_core() {
     git clone https://github.com/kernelci/kernelci-core.git
 }
 
-build_kci2_docker_images() {
+clone_kernelci_api() {
+    if [ -d kernelci-api ]; then
+        echo "Removing existing kernelci-api directory"
+        rm -rf kernelci-api
+    fi
+    git clone https://github.com/kernelci/kernelci-api.git
+}
+
+clone_kernelci_pipeline() {
+    if [ -d kernelci-pipeline ]; then
+        echo "Removing existing kernelci-pipeline directory"
+        rm -rf kernelci-pipeline
+    fi
+    git clone https://github.com/kernelci/kernelci-pipeline.git
+}
+
+clone_repos() {
     clone_kernelci_core
+    clone_kernelci_api
+    clone_kernelci_pipeline
+    cp configmap.yaml kernelci-api/kube/aks/
+}
+
+build_kci2_docker_images() {
     # This will invalidate the cache
     cd kernelci-core
     core_rev=$(git show --pretty=format:%H -s origin/main)
@@ -118,6 +140,19 @@ update_configs() {
     ./api-pipeline-deploy.sh config $TMPDIR/kernelci-pipeline/config
     rm -rf $TMPDIR
 }
+
+verify_deps() {
+    # configmap.yaml should exist
+    if [ ! -f configmap.yaml ]; then
+        echo "configmap.yaml is missing"
+        exit 1
+    fi
+}
+
+verify_deps
+
+echo "Cloning all repositories"
+clone_repos
 
 echo "Building kernelci-core docker images"
 build_kci2_docker_images
