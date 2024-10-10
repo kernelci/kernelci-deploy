@@ -68,7 +68,11 @@ def container_logger_thread(container, logpath):
 
 def get_containers_by_pattern(client, pattern, exclude=None):
     '''Get containers by pattern'''
-    containers = client.containers.list()
+    try:
+        containers = client.containers.list()
+    except Exception as e:
+        logging.error(f'Failed to list containers: {e}')
+        return []
     matched = []
     for container in containers:
         if container.status != 'running':
