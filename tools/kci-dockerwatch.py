@@ -18,6 +18,7 @@ thread = {}
 current_date = time.strftime('%Y-%m-%d', time.localtime())
 tlock = threading.Lock()
 crash_keywords = ['Traceback (most recent call last)']
+messaging = False
 
 
 def message_bot(msg):
@@ -43,7 +44,8 @@ def is_msg_throttle():
     THROTTLE_WIN_COUNT += 1
     if THROTTLE_WIN_COUNT == THROTTLE_WIN_COUNT_MAX:
         logging.error(f'Message throttled, count: {THROTTLE_WIN_COUNT}')
-        message_bot(f'Message throttled, count: {THROTTLE_WIN_COUNT}')
+        if messaging:
+            message_bot(f'Message throttled, count: {THROTTLE_WIN_COUNT}')
     if THROTTLE_WIN_COUNT > THROTTLE_WIN_COUNT_MAX:
         return True
     return False
@@ -59,8 +61,9 @@ def container_logger_thread(container, logpath):
     if is_msg_throttle():
         logging.error(f'Crash detected in container: {container.name} id: {container.id}, but throttled')
     else:
-        logging.error(f'Crash detected in container: {container.name} id: {container.id}')
-        message_bot(f'Crash detected in container: {container.name} id: {container.id}')
+        logging.error(f'Crash detected in container: {container.name} id: {container.id} status: {container.status}')
+        if messaging:
+            message_bot(f'Crash detected in container: {container.name} id: {container.id} status: {container.status}')
 
     with tlock:
         active_containers.remove(container.id)
