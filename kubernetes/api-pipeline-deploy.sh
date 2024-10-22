@@ -228,6 +228,13 @@ function deploy_once_pipeline {
             --namespace=${NS_API}
 }
 
+function deploy_secrets_toml_only {
+    echo "Setting kernelci-secrets.toml..."
+    kubectl --context=${CONTEXT} delete secret pipeline-secrets --namespace=${NS_PIPELINE} || true
+    kubectl --context=${CONTEXT} create secret generic pipeline-secrets --from-file=kernelci.toml=kernelci-secrets.toml --namespace=${NS_PIPELINE}
+    kubectl --context=${CONTEXT} --namespace=${NS_PIPELINE} patch secret pipeline-secrets -p '{"data": {"kcidb-credentials.json": "'$(cat secrets/kcidb-credentials.json | base64 -w 0)'"}}'
+}
+
 function deploy_once_api {
     # Set secret
     #echo "Setting secret..."
@@ -515,6 +522,12 @@ if [ "$1" == "pipeline-restart-pods" ]; then
     exit 0
 fi
 
+if [ "$1" == "api-restart-pods" ]; then
+    kubectl --context=${CONTEXT} delete pods --all --namespace=${NS_API}
+    exit 0
+fi
+
+
 # backup-mongo
 if [ "$1" == "backup-mongo" ]; then
     echo "Backup MongoDB at ${MONGO}..."
@@ -561,6 +574,12 @@ if [ "$1" == "patch-nginx" ]; then
     exit 0
 fi
 
+# deploy_secret_toml_only
+if [ "$1" == "deploy_secret_toml_only" ]; then
+    deploy_secrets_toml_only
+    exit 0
+fi
+
 # require full option or quit
 if [ "$1" != "full" ]; then
     echo "Usage:"
@@ -572,10 +591,12 @@ if [ "$1" != "full" ]; then
     echo "$0 pipeline-credentials - deploy pipeline credentials"
     echo "$0 pipeline-configmap - deploy pipeline configmap"
     echo "$0 pipeline-restart-pods - restart all pods in pipeline"
+    echo "$0 api-restart-pods - restart all pods in api"
     echo "$0 backup-mongo - backup mongo"
     echo "$0 restore-mongo - restore mongo"
     echo "$0 mongo-shell - mongo shell"
     echo "$0 patch-nginx - patch nginx config"
+    echo "$0 deploy_secret_toml_only - deploy kernelci-secrets.toml only"
     exit 1
 fi
 

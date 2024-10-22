@@ -174,3 +174,4 @@ apply_manifests
 
 echo "Updating configs"
 update_configs
+./api-pipeline-deploy.sh pipeline-restart-pods
