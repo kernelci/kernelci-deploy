@@ -456,13 +456,6 @@ if [ -z "$EMAIL_USER" ] || [ -z "$EMAIL_PASSWORD" ]; then
     exit 1
 fi
 
-# verify k8s.tgz, this file should(might) contain:
-# .kube , .config/gcloud , .azure
-if [ ! -f k8s.tgz ]; then
-    echo "k8s.tgz not found, exiting"
-    exit 1
-fi
-
 # Local toolset setup
 local_setup
 
@@ -475,6 +468,13 @@ if [ "$1" == "delete" ]; then
 fi
 
 if [ "$1" == "token" ]; then
+    # verify k8s.tgz, this file should(might) contain:
+    # .kube , .config/gcloud , .azure
+    if [ ! -f k8s.tgz ]; then
+        echo "k8s.tgz not found, exiting"
+        exit 1
+    fi
+
     #echo "Post-install procedure, installing API token"
     #echo "Deleting old secrets..."
     #kubectl --context=${CONTEXT} delete secret kernelci-api-secret --namespace=${NS_API} || true
@@ -506,6 +506,12 @@ fi
 
 # pipeline-credentials
 if [ "$1" == "pipeline-credentials" ]; then
+    # verify k8s.tgz, this file should(might) contain:
+    # .kube , .config/gcloud , .azure
+    if [ ! -f k8s.tgz ]; then
+        echo "k8s.tgz not found, exiting"
+        exit 1
+    fi
     deploy_once_pipeline
     exit 0
 fi
@@ -617,6 +623,13 @@ if [ -z "$IP_API" ] || [ -z "$IP_PIPELINE" ]; then
     azure_ip_permissions
     echo "Waiting IP to propagate, 30 seconds..."
     sleep 30
+fi
+
+# verify k8s.tgz, this file should(might) contain:
+# .kube , .config/gcloud , .azure
+if [ ! -f k8s.tgz ]; then
+    echo "k8s.tgz not found, exiting"
+    exit 1
 fi
 
 azure_ip_permissions
