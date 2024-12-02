@@ -1,164 +1,101 @@
-<!--
-SPDX-License-Identifier: LGPL-2.1-or-later
+# KernelCI API/Pipeline Kubernetes deployment
 
-Copyright (C) 2023 Collabora Limited
-Author: Guillaume Tucker <guillaume.tucker@collabora.com>
-Author: Denys Fedoryshchenko <denys.f@collabora.com>
--->
+This document describes how to deploy the KernelCI API and Pipeline services
+using Kubernetes.
+We cover initial deployment, and regular updates of the services.
 
-KernelCI API/Pipeline Deployment in Azure Kubernetes Services (AKS)
-==========================================================
+## Prerequisites
 
-This guide goes through all the steps required to deploy the KernelCI API
-service in
-[AKS](https://azure.microsoft.com/en-us/products/kubernetes-service).  It
-relies on an external Atlas account for MongoDB and does not include any
-storage solution.
+### Configuration files
 
-## Azure account
+The deployment uses a set of configuration files to define the services and
+their configuration.
+Some of files contain sensitive information, such as passwords and API keys,
+they are available in separate repositories and are not included in this
+repository.
 
-The first prerequisite is to have a [Microsoft Azure](https://azure.com)
-account.  If you already have one, you can skip this step and carry on with
-setting up an AKS cluster.  Otherwise, please create one now typically with an
-`@outlook.com` email address.  You can create a new address on
-[outlook.com](https://outlook.com) for this purpose if needed.
+Such configuration files are:
 
-## AKS cluster
+- `deploy.cfg`: Main configuration file for the deployment.
+Contains following variables, set as "export VARIABLE=PARAMETER"
+API_TOKEN - API Token used by Pipeline to authenticate with API
+MONGO - MongoDB connection string
+API_SECRET_KEY - Secret key used by API to sign JWT tokens
+EMAIL_USER - Email address used by API/Pipeline to send emails
+EMAIL_PASSWORD - Password for the email address
+IP_API - IP address of the API service namespace endpoint, might be detected automatically
+IP_PIPELINE - IP address of the Pipeline service namespace endpoint, might be detected automatically
 
-Please create an AKS cluster via the [Azure
-portal](https://portal.azure.com/#create/Microsoft.AKS).  The standard settings
-are fine for this use-case although you might need to adjust a few things to
-match the scale of your particular deployment.
+- k8s.tgz - Kubernetes configuration files to access build clusters (k8s-credentials)
 
-## Atlas MongoDB account
+Other configuration options available:
 
-This AKS reference deployment relies on an Atlas account for MongoDB in order
-to keep everything in the Cloud and application setup to the bare minimal.  As
-such, please [create an Atlas
-account](https://www.mongodb.com/cloud/atlas/register) if you don't already
-have one and set up a database.  The MongoDB service string will be needed
-later on to let the API service connect to it.
-
-The recommended way to set up a subscription is to create a "MongoDB Atlas
-(pay-as-you-go)" resource via the Azure Marketplace.
-
-To set up a database:
-
-* create a cluster with the appropriate tier for the deployment
-* add a database in the project via the web UI with "Create Database"
-* go to "Database Access" to create a user and password with the
-  `readWriteAnyDatabase` built-in role
-
-You should now be able to connect to the database with a connection string of
-the form `mongodb+srv://user:password@something.mongodb.net`.  To verify it's
-working:
+api-pipeline-deploy.sh contains several variables that can be set to customize the deployment:
 
 ```
-$ mongo mongodb+srv://user:password@something.mongodb.net
-[...]
-MongoDB Enterprise atlas-ucvcf2-shard-0:PRIMARY> show databases
-admin      0.000GB
-kernelci   0.004GB
-local     22.083GB
+# Azure resource group and location for cluster deployment
+AZURE_RG="kernelci-api-1_group"
+LOCATION="westus3"
+
+# Cluster name and context (kubectl)
+CONTEXT="kernelci-api-1"
+CLUSTER_NAME="kernelci-api-1"
+
+# Pipeline namespace and DNS label
+NS_PIPELINE="kernelci-pipeline"
+DNS_PIPELINE="kernelci-pipeline"
+
+# API namespace and DNS label
+DNS_API="kernelci-api"
+NS_API="kernelci-api"
+
+# ACME type - staging or production
+# If you are experimenting, use staging, to not hit rate limits
+# If you are deploying a production instance, use production
+ACME="staging"
+
+# git branch for kernelci-api and pipeline projects, normally it is
+# stable snapshot: kernelci.org or main
+BRANCH="main"
 ```
 
-The string used with the `mongo` shell here is the same one that needs to be
-stored as a Kubernetes secret for the API service as described in a later
-section of this documentation page.
+## Deployment
 
-## Command line tools
+### Initial deployment
 
-Configuring this AKS deployment relies on `az`, `kubectl` and `helm` to be
-installed. Deploy script will verify if all of them are installed.
-
-## Get `kubectl` credentials
-
-The container started in the previous section has a `home` directory mounted
-from the host.  This allows Azure credentials to be stored there persistently,
-so if the container is restarted they'll still be available.
-
-To create the initial credentials, you can run the `az login` command from
-within the container and then login by pasting the temporary code into the [web
-page](https://microsoft.com/devicelogin):
+To deploy the KernelCI API and Pipeline services, run the following command:
 
 ```
-$ az login --use-device-code
-To sign in, use a web browser to open the page https://microsoft.com/devicelogin and enter the code XXXYYYZZZ to authenticate.
+./api-pipeline-deploy.sh
 ```
 
-After following the instructions on the web page, you should be able to access
-your AKS cluster.  Still from within the container, run the following commands
-with your own cluster name instead of `kernelci-api-1`:
+This script will deploy the services to a Kubernetes cluster, create the
+necessary namespaces, and configure the services.
+
+Details of the deployment can be found in the `api-pipeline-deploy.sh` script.
+We will document the deployment process in more detail in the future.
+
+### Updating the deployment
+
+To update the deployment, run the following command:
 
 ```
-$ az aks list -o table
-Name                    Location        ResourceGroup              KubernetesVersion    [...]
-----------------------  --------------  -------------------------  -------------------  [...]
-kernelci-api-1          eastus          kernelci-api               1.26.6               [...]
-$ az aks get-credentials -n kernelci-api-1 -g kernelci-api
-Merged "kernelci-api-1" as current context in /tmp/home/.kube/config
-$ kubectl config use-context kernelci-api-1
-Switched to context "kernelci-api-1".
-$ kubectl get nodes
-NAME                                STATUS   ROLES   AGE    VERSION
-aks-agentpool-23485665-vmss000000   Ready    agent   4h3m   v1.26.6
-aks-userpool-23485665-vmss000000    Ready    agent   4h3m   v1.26.6
+./api-production-update.sh
 ```
 
-### Add variables to the deployment script
+This script will update the deployment to the latest version of the services.
+This script does the following:
 
-Deployment script `api-pipeline-deploy.sh` needs few variables to be set.
-Please edit the script and set the following variables:
+- Pulls the latest versions of kernelci-core, kernelci-api, kernelci-pipeline
+repositories, build latest docker images, record their sha256sums and push them to the registry.
+- Update k8s manifests with the new sha256sums
+- Apply the new manifests to the cluster, so the new images are deployed
+- Upload new configuration files to the cluster (kernelci-pipeline/config as pipeline configmap)
+- Restart the pipeline service to apply the new configuration
 
-* AZURE_RG="kernelci-api-staging"
-Azure resource group name. This is the name of the resource group where AKS cluster is deployed.
+After production it is recommended to execute:
+`kubectl get pods -n kernelci-pipeline` and `kubectl get pods -n kernelci-api` to check if the pods are running correctly,
+not restarting and not in error state.
 
-* LOCATION="eastus"
-Location of the AKS cluster.
-
-* CONTEXT="kernelci-api-staging-1-admin"
-kubectl context name. This is the name of the context created by `az aks get-credentials` command.
-
-* CLUSTER_NAME="kernelci-api-staging-1"
-AKS cluster name.
-
-* NS_API="kernelci-api-testns"
-Kubernetes namespace name. This is the name of the namespace where API will be deployed.
-
-* DNSLABEL_API="kernelci-api-staging"
-DNS label for the API service. Full hostname will look like ${DNSLABEL}.${LOCATION}.cloudapp.azure.com
-
-* MONGO=""
-MongoDB connection string. This is the connection string to the MongoDB database created in the previous section.
-
-### Deploy the API+Pipeline services
-
-Now that the `kubectl` credentials are set up, you can run the deployment by running the following command:
-
-```
-$ ./api-pipeline-deploy.sh
-```
-
-Then if all went well, you will see following output:
-
-```
-Test API availability by curl https://HOSTNAME/latest/
-Test LAVA callback by curl https://HOSTNAME/
-```
-
-Example:
-```
-$ curl https://kernelci-api.eastus.cloudapp.azure.com/latest/
-{"message":"KernelCI API"}
-```
-
-The interactive API documentation should also be available on
-[https://kernelci-api.eastus.cloudapp.azure.com/latest/docs](https://kernelci-api.eastus.cloudapp.azure.com/latest/docs)
-
-## Enjoy!
-
-Now you have a publicly available API/Pipeline instance suitable for production.  To
-make best use of it, you can try the `kci` command line tools to do things by
-hand and run the `kernelci-pipeline` services to automatically run jobs, send
-email reports etc.  See the main documentation for pointers with more details.
+After that you can check the services are running correctly by accessing the API and Pipeline services endpoints.
 
