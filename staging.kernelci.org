@@ -391,7 +391,7 @@ cmd_all() {
     #cmd_frontend
     cmd_kernel $tree
     cmd_docker
-    cmd_monitor
+    #cmd_monitor
     cmd_api_pipeline
     #tools/kci-slackbot.py --message "Staging completed"
 }
