@@ -57,9 +57,13 @@ build_kci2_docker_images() {
     # This will invalidate the cache
     cd kernelci-core
     core_rev=$(git show --pretty=format:%H -s origin/main)
+    cd ../kernelci-api
+    api_rev=$(git show --pretty=format:%H -s origin/main)
+    cd ../kernelci-pipeline
+    pipeline_rev=$(git show --pretty=format:%H -s origin/main)
     cd ..
-    rev_arg="--build-arg core_rev=$core_rev"
-    echo "Building kernelci-core docker images with rev: $core_rev"
+    rev_arg="--build-arg core_rev=$core_rev --build-arg api_rev=$api_rev --build-arg pipeline_rev=$pipeline_rev"
+    echo "Building kernelci-core docker images with rev: $core_rev $api_rev $pipeline_rev"
     echo "#!/bin/bash" > kernelci-core/dockerbuilds.sh
     echo "python3 -m pip install '.[dev]'" >> kernelci-core/dockerbuilds.sh
     echo "./kci docker build ${rev_arg} --prefix=kernelci/ -v --push kernelci" >> kernelci-core/dockerbuilds.sh
@@ -166,12 +170,14 @@ echo "SHA256 API: $SHA256_KERNELCI_API CREATED: $(fetch_age_docker_image kernelc
 echo "SHA256 PIPELINE: $SHA256_KERNELCI_PIPELINE CREATED: $(fetch_age_docker_image kernelci/kernelci pipeline)"
 echo "SHA256 LAVA: $SHA256_KERNELCI_LAVA CREATED: $(fetch_age_docker_image kernelci/kernelci lava-callback)"
 
+echo "Updating configs"
+update_configs
+#./api-pipeline-deploy.sh pipeline-restart-pods
+
+
 echo "Updating manifests"
 update_manifests
 
 echo "Applying manifests"
 apply_manifests
 
-echo "Updating configs"
-update_configs
-./api-pipeline-deploy.sh pipeline-restart-pods
