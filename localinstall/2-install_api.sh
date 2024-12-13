@@ -1,6 +1,14 @@
 #!/bin/sh
 . ./main.cfg
 
+# is docker-compose exists? if not use docker compose
+if [ -z "$(which docker-compose)" ]; then
+    echo "docker-compose is not installed, using docker compose"
+    DOCKER_COMPOSE="docker compose"
+else
+    DOCKER_COMPOSE="docker-compose"
+fi
+
 # i am groot?
 if [ $(id -u) -ne 0 ]; then
     SUDO=sudo
@@ -28,8 +36,8 @@ fi
 cat ../../ssh.key.pub > docker/ssh/user-data/authorized_keys
 
 # down, just in case old containers are running
-docker-compose down
-docker-compose up -d
+${DOCKER_COMPOSE} down
+${DOCKER_COMPOSE} up -d
 echo "Waiting for API to be up"
 sleep 1
 # loop until the API is up, try 5 times
