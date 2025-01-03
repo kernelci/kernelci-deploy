@@ -59,12 +59,15 @@ function install_secrets() {
     API_TOKEN_STAGING=$(cat secrets/token-staging-api)
     API_TOKEN_EARLY_ACCESS=$(cat secrets/token-early-access)
     AZURE_SAS_STAGING=$(cat secrets/azure_sas_staging)
+    TOKEN_STORAGE_STAGING=$(cat secrets/storage_token_staging)
     kubectl --context=$1 delete secret kci-api-jwt-staging
     kubectl --context=$1 delete secret kci-api-jwt-early-access
     kubectl --context=$1 delete secret kci-api-azure-files-sas-staging
+    kubectl --context=$1 delete secret kci-storage-tokens
     kubectl --context=$1 create secret generic kci-api-jwt-staging --from-literal=token="${API_TOKEN_STAGING}"
     kubectl --context=$1 create secret generic kci-api-jwt-early-access --from-literal=token="${API_TOKEN_EARLY_ACCESS}"
     kubectl --context=$1 create secret generic kci-api-azure-files-sas-staging --from-literal=azure-files-sas="${AZURE_SAS_STAGING}"
+    kubectl --context=$1 create secret generic kci-storage-tokens --from-literal=staging="${TOKEN_STORAGE_STAGING}"
 }
 
 ### After creation we might have nodepool with some unnecessary running nodes, it needs about 10-15 min to scale down
