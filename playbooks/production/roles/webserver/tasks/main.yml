@@ -1,13 +1,3 @@
-- name: Update apt cache
-  apt: update_cache=yes cache_valid_time=3600
-
-#- name: Mount the disk
-#  mount: path=/data src=UUID="64d72737-f1de-4f67-a22a-f693a79f228f" fstype=ext4 state=mounted
-
-- name: Create data directories
-  file: path={{ item.data_dir }} state=directory
-  with_items: "{{ vhosts }}"
-
 - name: Install nginx package
   apt: name=nginx state=present
 

@@ -2,10 +2,8 @@
   gather_facts: true
   become: true
   roles:
-<<<<<<< HEAD
     - common
     - webserver
     - storage
-=======
     - webserver
->>>>>>> c176510 (Add(ansible): Add ansible recipe for production)
+
