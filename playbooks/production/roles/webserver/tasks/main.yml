@@ -1,0 +1,36 @@
+- name: Update apt cache
+  apt: update_cache=yes cache_valid_time=3600
+
+#- name: Mount the disk
+#  mount: path=/data src=UUID="64d72737-f1de-4f67-a22a-f693a79f228f" fstype=ext4 state=mounted
+
+- name: Create data directories
+  file: path={{ item.data_dir }} state=directory
+  with_items: "{{ vhosts }}"
+
+- name: Install nginx package
+  apt: name=nginx state=present
+
+- name: Enable nginx service
+  service: name=nginx enabled=yes state=started
+
+- name: Start nginx service
+  service: name=nginx state=started
+
+# configure virtual host for docs kernelci.org
+# vars vhost_name and data_dir
+- name: Add virtual hosts
+  template:
+    src=templates/vhost.j2
+    dest=/etc/nginx/sites-available/{{ item.vhost_name }}.conf
+  with_items: "{{ vhosts }}"
+
+- name: Enable virtual hosts
+  file: src=/etc/nginx/sites-available/{{ item.vhost_name }}.conf dest=/etc/nginx/sites-enabled/{{ item.vhost_name }}.conf state=link
+  with_items: "{{ vhosts }}"
+  notify: Reload nginx
+
+- name: Reload nginx
+  service: name=nginx state=reloaded
+
+
