@@ -1,0 +1,14 @@
+# nginx virtual host for {{ item.vhost_name }}
+server {
+    listen 80;
+    server_name {{ item.vhost_name }};
+    root {{ item.data_dir }};
+    index index.html;
+    location / {
+        try_files $uri $uri/ =404;
+#        fancyindex on;
+#        fancyindex_exact_size off;
+    }
+    access_log /var/log/nginx/{{ item.vhost_name }}.access.log;
+    error_log /var/log/nginx/{{ item.vhost_name }}.error.log;
+}
