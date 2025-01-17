@@ -120,10 +120,17 @@ def merge_prs(args, users):
 
     if args.push:
         logging.info('Pushing changes to remote')
-        os.system(f'cd {args.repo} && git push origin HEAD:{args.branch} --force')
+        r = os.system(f'cd {args.repo} && git push origin HEAD:{args.branch} --force')
+        # if git failed - hard fail here
+        if r:
+            logging.error('Failed to push changes to remote')
+            sys.exit(1)
+
+
         logging.info('Changes pushed to remote')
     else:
         logging.info('Changes not pushed to remote')
+
 
 def main():
     parser = argparse.ArgumentParser(description='KernelCI staging v2')
