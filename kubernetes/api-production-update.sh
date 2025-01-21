@@ -7,6 +7,16 @@
 
 CONTEXT="kernelci-api-1"
 
+
+install_deps() {
+    # install yq
+    if ! command -v yq &> /dev/null; then
+        echo "yq is missing, installing"
+        wget https://github.com/mikefarah/yq/releases/download/v4.45.1/yq_freebsd_amd64 -O yq
+        chmod +x yq
+    fi
+}
+
 fetch_sha256_docker_image() {
     local image=$1
     local tag=$2
@@ -154,26 +164,29 @@ verify_deps() {
 }
 
 verify_deps
+install_deps
 
-echo "Cloning all repositories"
-clone_repos
+# if we dont have argument "workflow"
+# then we will clone all repositories, build docker images, update manifests and apply them
+if [ "$1" != "workflow" ]; then
+    echo "Cloning all repositories"
+    clone_repos
 
-echo "Building kernelci-core docker images"
-build_kci2_docker_images
+    echo "Building kernelci-core docker images"
+    build_kci2_docker_images
+fi
 
 echo "Fetching sha256 for kernelci images"
 SHA256_KERNELCI_API=$(fetch_sha256_docker_image kernelci/kernelci api)
 SHA256_KERNELCI_PIPELINE=$(fetch_sha256_docker_image kernelci/kernelci pipeline)
 SHA256_KERNELCI_LAVA=$(fetch_sha256_docker_image kernelci/kernelci lava-callback)
-# DEBUG
+
 echo "SHA256 API: $SHA256_KERNELCI_API CREATED: $(fetch_age_docker_image kernelci/kernelci api)"
 echo "SHA256 PIPELINE: $SHA256_KERNELCI_PIPELINE CREATED: $(fetch_age_docker_image kernelci/kernelci pipeline)"
 echo "SHA256 LAVA: $SHA256_KERNELCI_LAVA CREATED: $(fetch_age_docker_image kernelci/kernelci lava-callback)"
 
 echo "Updating configs"
 update_configs
-#./api-pipeline-deploy.sh pipeline-restart-pods
-
 
 echo "Updating manifests"
 update_manifests

@@ -1,0 +1,34 @@
+- name: Update apt cache
+  apt: update_cache=yes cache_valid_time=3600
+
+- name: Install packages
+  apt: name={{ item }}
+  with_items:
+    - git
+    - docker.io
+    - docker-compose
+    - python3-pip
+    - python3-venv
+    - curl
+    - libssl-dev
+    - pkg-config
+
+#- name: Add to fstab
+#  ansible.builtin.lineinfile:
+#    path: /etc/fstab
+#    line: "UUID=64d72737-f1de-4f67-a22a-f693a79f228f /data ext4 defaults,nofail 0 2"
+#    state: present
+
+- name: Mount the disk
+  ansible.posix.mount:
+    path=/data src=UUID=64d72737-f1de-4f67-a22a-f693a79f228f fstype=ext4 state=mounted
+  # its ok if it fails (for simulation purposes)
+  ignore_errors: true
+
+
+- name: Create data directories if they don't exist
+  ansible.builtin.file: path={{ item.data_dir }} state=directory
+  with_items: "{{ vhosts }}"
+
+- name: Create data directory for storage
+  ansible.builtin.file: path=/data/storage state=directory
