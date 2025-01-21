@@ -1,0 +1,10 @@
+- name: Create kernelci-storage /srv/kernelci-storage directory
+  ansible.builtin.file:
+    path: /srv/kernelci-storage
+    state: directory
+
+- name: Create kernelci-storage config from template
+  template:
+    src: kernelci-storage.toml.j2
+    dest: /srv/kernelci-storage/kernelci-storage.toml
+
