@@ -1,0 +1,15 @@
+# kernelci-storage systemd service file
+[Unit]
+Description=kernelci-storage
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/kernelci-storage -c /etc/kernelci-storage.toml
+Restart=always
+RestartSec=5
+WorkingDirectory=/data/storage
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,7 @@
+vhosts:
+  - vhost_name: docs.kernelci.org
+    data_dir: /data/kernelci.org
+  - vhost_name: storage.kernelci.org
+    data_dir: /data/storage.kernelci.org
+  - vhost_name: storage.chromeos.kernelci.org
+    data_dir: /data/storage.chromeos.kernelci.org
