@@ -284,7 +284,7 @@ def main():
         print("rootfs_type not found in config")
         exit(1)
 
-    docker_image = f"kernelci/{prefix}{rootfs_type}:kernelci"
+    docker_image = f"{args.prefix}{rootfs_type}:kernelci"
     prepare_docker_container(docker_image, containerid)
 
     # if args.arch have a comma, build for all archs in the list
