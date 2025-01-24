@@ -244,8 +244,7 @@ def main():
     parser.add_argument('--name', help='Name of the rootfs to build')
     parser.add_argument('--branch', help='Branch of kernelci-core to use', default="main")
     parser.add_argument('--all', help='Build all rootfs images', action='store_true')
-    # We might use dockerhub, but preferable to move to ghcr.io then we have different prefix now
-    parser.add_argument('--prefix', help='Prefix for rootfs image docker builder (dhcr.io/kernelci-staging or /kernelci or /kernelci-staging)', default="ghcr.io/kernelci")
+    parser.add_argument('--prefix', help='Prefix for rootfs builder Docker image (ghcr.io/kernelci/staging- or kernelci/staging- or kernelci/)', default="ghcr.io/kernelci/")
     args = parser.parse_args()
 
     containerid = get_containerid()
@@ -262,7 +261,6 @@ def main():
         for rootfs in allfs:
             arch_list = allfs[rootfs]["arch_list"]
             rootfs_type = allfs[rootfs]["rootfs_type"]
-            #docker_image = f"kernelci/{prefix}{rootfs_type}:kernelci"
             docker_image = f"{args.prefix}{rootfs_type}:kernelci"
             prepare_docker_container(docker_image, containerid)
             for arch in arch_list:
