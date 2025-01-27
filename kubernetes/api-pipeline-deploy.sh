@@ -429,6 +429,25 @@ function backup_pipeline_configmap {
     kubectl --context=${CONTEXT} get configmap pipeline-configmap --namespace=${NS_PIPELINE} -o yaml > pipeline-configmap.yaml
 }
 
+
+
+if [ -z "$AZURE_RG" ]; then
+    echo "AZURE_RG not set, not an Azure deployment"
+    echo "You need to retrieve the static IP address of the ingress controller and set the IP variable in pipeline-initial-deploy.cfg"
+    exit 1
+fi
+
+
+
+
+# Local toolset setup
+local_setup
+
+if [ "$1" == "config" ]; then
+    deploy_pipeline_configmap $2
+    exit 0
+fi
+
 if [ -z "$API_TOKEN" ]; then
     # TODO(nuclearcat): reference to documentation
     echo "API_TOKEN not set, please follow procedure to create users and issue token after deployment"
@@ -437,13 +456,6 @@ fi
 if [ -z "$API_SECRET_KEY" ]; then
     # TODO(nuclearcat): reference to documentation
     echo "API_SECRET_KEY not set. Suggested to keep it persistent for same token"
-fi
-
-
-if [ -z "$AZURE_RG" ]; then
-    echo "AZURE_RG not set, not an Azure deployment"
-    echo "You need to retrieve the static IP address of the ingress controller and set the IP variable in pipeline-initial-deploy.cfg"
-    exit 1
 fi
 
 if [ -z "$MONGO" ]; then
@@ -456,8 +468,6 @@ if [ -z "$EMAIL_USER" ] || [ -z "$EMAIL_PASSWORD" ]; then
     exit 1
 fi
 
-# Local toolset setup
-local_setup
 
 # if argument delete set just delete namespace and exit
 if [ "$1" == "delete" ]; then
@@ -490,11 +500,6 @@ fi
 # if argument backup-config set just backup pipeline configmap and exit
 if [ "$1" == "backup-config" ]; then
     backup_pipeline_configmap
-    exit 0
-fi
-
-if [ "$1" == "config" ]; then
-    deploy_pipeline_configmap $2
     exit 0
 fi
 
