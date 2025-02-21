@@ -224,10 +224,10 @@ function deploy_once_pipeline {
     # do not forget to install public part on storage account for nipa@ user
     echo "Setting id_rsa... this part not tested yet"
     ID_RSA_BASE64=$(cat id_rsa | base64 -w 0)
-    PATCH_JSON=$(cat <<EOF
-    {"data": {"id_rsa": "${ID_RSA_BASE64}"}}
-    EOF
-    )
+PATCH_JSON=$(cat <<EOF
+{"data": {"id_rsa": "${ID_RSA_BASE64}"}}
+EOF
+)
     kubectl --context=${CONTEXT} patch secret pipeline-secrets --namespace=${NS_PIPELINE} --patch "${PATCH_JSON}"
     kubectl --context=${CONTEXT} --namespace=${NS_PIPELINE} patch secret pipeline-secrets -p '{"data": {"kcidb-credentials.json": "'$(cat secrets/kcidb-credentials.json | base64 -w 0)'"}}'
 
