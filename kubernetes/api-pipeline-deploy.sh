@@ -380,6 +380,9 @@ function deploy_pipeline {
     echo "Deploying scheduler-k8s..."
     kubectl --context=${CONTEXT} apply -f kernelci-pipeline/kube/aks/scheduler-k8s.yaml --namespace=${NS_PIPELINE}
 
+    echo "Deploying scheduler-shell..."
+    kubectl --context=${CONTEXT} apply -f kernelci-pipeline/kube/aks/scheduler-shell.yaml --namespace=${NS_PIPELINE}
+
     # Deploy scheduler-lava
     echo "Deploying scheduler-lava..."
     kubectl --context=${CONTEXT} apply -f kernelci-pipeline/kube/aks/scheduler-lava.yaml --namespace=${NS_PIPELINE}

@@ -113,6 +113,9 @@ update_manifests() {
     ./yq e "$UPD" -i kernelci-pipeline/kube/aks/scheduler-lava.yaml
 
     UPD=".spec.template.spec.containers[0].image = \"kernelci/kernelci:pipeline@$SHA256_KERNELCI_PIPELINE\""
+    ./yq e "$UPD" -i kernelci-pipeline/kube/aks/scheduler-shell.yaml
+
+    UPD=".spec.template.spec.containers[0].image = \"kernelci/kernelci:pipeline@$SHA256_KERNELCI_PIPELINE\""
     ./yq e -i "$UPD" kernelci-pipeline/kube/aks/tarball.yaml
 
     UPD=".spec.template.spec.containers[0].image = \"kernelci/kernelci:pipeline@$SHA256_KERNELCI_PIPELINE\""
@@ -133,6 +136,7 @@ apply_manifests() {
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/nodehandlers.yaml
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/scheduler-k8s.yaml
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/scheduler-lava.yaml
+    kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/scheduler-shell.yaml
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/tarball.yaml
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/pipeline-kcidb.yaml
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/regression.yaml
