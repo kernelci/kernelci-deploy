@@ -218,7 +218,17 @@ function deploy_once_pipeline {
 
     echo "Setting kernelci-secrets.toml..."
     kubectl --context=${CONTEXT} delete secret pipeline-secrets --namespace=${NS_PIPELINE} || true
+    # kernelci-secrets.toml needs to be in the same directory as this script
     kubectl --context=${CONTEXT} create secret generic pipeline-secrets --from-file=kernelci.toml=kernelci-secrets.toml --namespace=${NS_PIPELINE}
+    # id_rsa needs to be in the same directory as this script, this one used for NIPA ssh access to upload artifacts
+    # do not forget to install public part on storage account for nipa@ user
+    echo "Setting id_rsa... this part not tested yet"
+    ID_RSA_BASE64=$(cat id_rsa | base64 -w 0)
+    PATCH_JSON=$(cat <<EOF
+    {"data": {"id_rsa": "${ID_RSA_BASE64}"}}
+    EOF
+    )
+    kubectl --context=${CONTEXT} patch secret pipeline-secrets --namespace=${NS_PIPELINE} --patch "${PATCH_JSON}"
     kubectl --context=${CONTEXT} --namespace=${NS_PIPELINE} patch secret pipeline-secrets -p '{"data": {"kcidb-credentials.json": "'$(cat secrets/kcidb-credentials.json | base64 -w 0)'"}}'
 
     echo "Setting kernelci-api-secret/secret-key"
