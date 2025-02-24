@@ -27,6 +27,7 @@ spec:
         selector:
           dnsNames:
             - 'kernelci-api.westus3.cloudapp.azure.com'
+            - 'api.kernelci.org'
       - http01:
           ingress:
             ingressTemplate:
@@ -41,3 +42,4 @@ spec:
         selector:
           dnsNames:
             - 'kernelci-pipeline.westus3.cloudapp.azure.com'
+            - 'api.kernelci.org'
