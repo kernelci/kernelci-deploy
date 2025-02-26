@@ -17,7 +17,6 @@ crash() {
     [ "$exit_code" -eq 0 ] && exit 0
     # Generate syslog message
     logger -t kernelci-deploy "Error in script $0"
-    ${ABSDIR}/tools/kci-slackbot.py --message "Staging FAILED!!!"
     # remove pidfile
     rm -f $PIDFILE
     exit $exit_code
@@ -376,7 +375,6 @@ cmd_all() {
 
     [ -z $tree ] && tree=$(cmd_rotate_tree)
     echo "Kernel tree: $tree"
-    tools/kci-slackbot.py --message "Staging starts on tree $tree"
 
     cmd_pull
     #cmd_jenkins
@@ -393,7 +391,6 @@ cmd_all() {
     cmd_docker
     #cmd_monitor
     cmd_api_pipeline
-    #tools/kci-slackbot.py --message "Staging completed"
 }
 
 cmd="${1}"
