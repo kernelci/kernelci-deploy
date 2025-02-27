@@ -5,7 +5,7 @@
   register: users_exist
 
 - name: Add users for various content upload
-  when: not users_exist.results | default(false) | bool
+  when: users_exist.results | default(false) | bool
   user:
     name: "{{ item.username }}"
     home: "{{ item.home }}"
@@ -31,17 +31,18 @@
     repo: https://github.com/kernelci/kernelci-deploy.git
     dest: /tmp/kernelci-deploy
     version: main
-    version: main
     force: yes
 
 - name: Copy kernelci-deploy/tools/firmware-updater.py to /usr/local/bin/firmware-updater
-  copy:
-    src: /tmp/kernelci-deploy/tools/firmware-updater.py
-    dest: /usr/local/bin/firmware-updater
-    mode: 0755
+  command: cp /tmp/kernelci-deploy/tools/firmware-updater.py /usr/local/bin/firmware-updater.py
+  args:
+    creates: /usr/local/bin/firmware-updater.py
+
+- name: Make firmware-updater.py executable
+  command: chmod +x /usr/local/bin/firmware-updater.py
 
 - name: Run it to self-install
-  command: /usr/local/bin/firmware-updater
+  command: /usr/local/bin/firmware-updater.py
 
 - name: Remove kernelci-deploy repository
   file:
