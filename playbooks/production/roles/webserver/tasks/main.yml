@@ -1,0 +1,93 @@
+- name: Is nginx installed?
+  command: nginx -v
+  register: nginx_installed
+
+- name: Install nginx package
+  when: not nginx_installed.rc | default(false) | bool
+  apt: name=nginx state=present
+
+- name: Enable nginx service
+  when: not nginx_installed.rc | default(false) | bool
+  service: name=nginx enabled=yes state=started
+
+- name: Start nginx service
+  when: not nginx_installed.rc | default(false) | bool
+  service: name=nginx state=started
+
+- name: Check if virtual hosts are already configured
+  stat:
+    path: /etc/nginx/sites-available/{{ item.vhost_name }}.conf
+  with_items: "{{ vhosts }}"
+  register: vhost_files
+
+- name: Add virtual hosts
+  when: vhost_files.stat.exists | default(false) | bool
+  template:
+    src=templates/vhost.j2
+    dest=/etc/nginx/sites-available/{{ item.vhost_name }}.conf
+  with_items: "{{ vhosts }}"
+
+- name: Enable virtual hosts
+  when: vhost_files.stat.exists | default(false) | bool
+  file: src=/etc/nginx/sites-available/{{ item.vhost_name }}.conf dest=/etc/nginx/sites-enabled/{{ item.vhost_name }}.conf state=link
+  with_items: "{{ vhosts }}"
+  notify: Reload nginx
+
+- name: Install libnginx-mod-http-fancyindex
+  when: vhost_files.stat.exists | default(false) | bool
+  apt: name=libnginx-mod-http-fancyindex state=present
+
+- name: Enable fancy autoindex for storage.kernelci.org in config
+  when: vhost_files.stat.exists | default(false) | bool
+  lineinfile:
+    path: /etc/nginx/sites-available/storage.kernelci.org.conf
+    regexp: '^ *# *fancyindex on;'
+    line: '    fancyindex on;'
+
+- name: Enable fancy autoindex for storage.chromeos.kernelci.org in config
+  lineinfile:
+    path: /etc/nginx/sites-available/storage.chromeos.kernelci.org.conf
+    regexp: '^ *# *fancyindex on;'
+    line: '    fancyindex on;'
+
+- name: Reload nginx
+  when: vhost_files.stat.exists | default(false) | bool
+  service: name=nginx state=reloaded
+
+- name: Check if certbot is already installed
+  stat:
+    path: /usr/bin/certbot
+  register: certbot_installed
+
+- name: Install certbot
+  when: not certbot_installed.stat.exists | default(false) | bool
+  apt: name=certbot state=present
+
+- name: Install certbot nginx plugin
+  when: not certbot_installed.stat.exists | default(false) | bool
+  apt: name=python3-certbot-nginx state=present
+
+- name: Create string for certbot with domains
+  when: not certbot_installed.stat.exists | default(false) | bool
+  set_fact:
+    certbot_domains: "{{ vhosts | map(attribute='vhost_name') | join(' -d ') }}"
+
+- name: Activate certbot
+  when: not certbot_installed.stat.exists | default(false) | bool
+  command: certbot --nginx -d {{ certbot_domains }} --non-interactive --agree-tos --no-eff-email --email bot@kernelci.org --expand
+  register: certbot_output
+
+- name: Print certbot output
+  when: not certbot_installed.stat.exists | default(false) | bool
+  debug: var=certbot_output.stdout
+
+- name: Create cron job for certbot
+  when: not certbot_installed.stat.exists | default(false) | bool
+  cron:
+    minute: "0 0 * * *"
+    user: root
+    job: "certbot renew --quiet"
+
+- name: Reload nginx
+  when: not certbot_installed.stat.exists | default(false) | bool
+  service: name=nginx state=reloaded

@@ -5,3 +5,5 @@
     - common
     - webserver
     - storage
+    - webserver
+    - kernelci

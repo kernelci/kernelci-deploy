@@ -19,6 +19,17 @@
 #    line: "UUID=64d72737-f1de-4f67-a22a-f693a79f228f /data ext4 defaults,nofail 0 2"
 #    state: present
 
+- name: Change ssh port to 22022
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    line: "Port 22022"
+    state: present
+
+- name: Restart ssh service
+  ansible.builtin.service:
+    name: ssh
+    state: restarted
+
 - name: Mount the disk
   ansible.posix.mount:
     path=/data src=UUID=64d72737-f1de-4f67-a22a-f693a79f228f fstype=ext4 state=mounted

@@ -1,0 +1,8 @@
+users:
+  - username: upload
+    home: /home/upload
+    key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCr34L5+X8r4eR4cjfTma14Qq9s/z0UCjrkIs84DBPiy6DWJVSiDeUqETPuAkUiq8RF2wvTSS9OABOObhzZGKuVEk08raxM6bjoUh8/6kLdlFX5rHcHMSjVVKDNN81vjkNe+RyeUTn1YI690iHBsR8CY8Nb9GHwZVI3BP/TNzu+y5DyjjtxN0EP0e67948tsfyJUWbG95SnaXmKwBfrAAb+wl2jGK6Y34rT7VyhzmQ8aQYX3pk1QNyZsVGSnI0g5UKo0Cl2RoTbl0/bTGOpxXmA6gQhBA+2pRrk4lySCp/kvQ9ME73/toKKnQvTyXTQ0FInS9tVmd8D/GQtLuhJciXLZcJL90B35GloeA7zRXwNsp84/xA9gm29vl1wV+qUT4SW8SrsYoNVIJ+Inun4C1ehsEKDxvsOq7/ZbjgFYKrYuLFVj4WfzfwdYoS4mTM/bkO0e85nmEJQrwqf359J4+ESNf0zOoV47I0btpsVw3Hyfx4ai/1z27YSUqkkNeFRQk0= uploadkey
+  - username: nipa
+    home: /data/storage.kernelci.org/netdev-results
+    key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNXiq5BsGPYl4M+UO/ElUi7BxDs4BBTdWVDXsGX9kxObGGPLWMFbvywFvtbEox78Wo0XLoiSisKIj2jyglMiJG5/HpVKMBSrtDI1//dL2/OXMSB+HJnoJ8CkmX7tiqwlWgZBZJ73HLpETxBhsUWIXn8JKutohNZAQ7sUp+eQFXkYoeb9+Fp7IpxJf2xktpIhG5asvrCJDuN1t+yOifhjNGT5GuzusBsjp9aYDtPNc/PvWDgdTU9GZfHGhsaqRq+XMUERduQJTIqEWxwQj7VBDnci7Ovrhb3DOyTclRUm9M49wjfZJmSTqu1a7W0PmMrpJKmQlTvv9sLUGi+23cdjZF nipakey
+    
