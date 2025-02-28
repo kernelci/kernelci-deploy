@@ -375,12 +375,6 @@ cmd_api_pipeline() {
 }
 
 cmd_ghworkflow() {
-    # check if jq is installed
-    if ! command -v jq &> /dev/null; then
-        echo "jq could not be found"
-        exit 1
-    fi
-
     # fail if .github_token is not set
     GH_TOKEN=$(cat .github_token)
     if [ -z "$GH_TOKEN" ]; then
