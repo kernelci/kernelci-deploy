@@ -342,11 +342,12 @@ cmd_api_pipeline() {
 -f docker-compose-lava.yaml \
 -f docker-compose-production.yaml \
 "
-
+    api_services="api db redis"
     echo "Stopping pipeline containers"
     cd checkout/kernelci-pipeline
     git prune
-    git pull --ff-only
+    git fetch origin
+    git checkout origin/staging.kernelci.org
     echo "Pulling pipeline containers"
     docker-compose $compose_files pull
     docker-compose $compose_files down --remove-orphans
@@ -356,12 +357,13 @@ cmd_api_pipeline() {
     echo "Pulling API containers"
     cd checkout/kernelci-api
     git prune
-    git pull --ff-only
-    docker-compose pull
+    git fetch origin
+    git checkout origin/staging.kernelci.org
+    docker-compose pull $api_services
     echo "Stopping API containers"
     docker-compose down
     echo "Starting API containers"
-    docker-compose up -d
+    docker-compose up -d $api_services
     cd -
 
     cd checkout/kernelci-pipeline
