@@ -346,25 +346,27 @@ cmd_api_pipeline() {
     echo "Stopping pipeline containers"
     cd checkout/kernelci-pipeline
     git prune
+    git pull --ff-only
+    echo "Pulling pipeline containers"
+    docker-compose $compose_files pull
     docker-compose $compose_files down --remove-orphans
     cd -
 
-    ./pending.py kernelci-api --push
-    echo "Stopping API containers"
+    #./pending.py kernelci-api --push
+    echo "Pulling API containers"
     cd checkout/kernelci-api
     git prune
+    git pull --ff-only
+    docker-compose pull
+    echo "Stopping API containers"
     docker-compose down
     echo "Starting API containers"
-    docker-compose build --no-cache
     docker-compose up -d
     cd -
 
-    echo "Updating pipeline branch"
-    ./pending.py kernelci-pipeline --push
-
-    echo "Starting pipeline containers"
     cd checkout/kernelci-pipeline
-    REQUIREMENTS=requirements-dev.txt docker-compose $compose_files build --no-cache
+    #REQUIREMENTS=requirements-dev.txt docker-compose $compose_files build --no-cache
+    echo "Starting pipeline containers"
     SETTINGS=/home/kernelci/config/staging.kernelci.org.secrets.toml \
             docker-compose $compose_files up -d
     cd -
@@ -378,17 +380,17 @@ cmd_all() {
 
     cmd_pull
     #cmd_jenkins
-    cmd_core
-    cmd_api
-    cmd_pipeline
-    cmd_bootrr
-    cmd_buildroot
-    cmd_test_definitions
+    #cmd_core
+    #cmd_api
+    #cmd_pipeline
+    #cmd_bootrr
+    #cmd_buildroot
+    #cmd_test_definitions
     #cmd_kcidb
     #cmd_backend
     #cmd_frontend
     cmd_kernel $tree
-    cmd_docker
+    #cmd_docker
     #cmd_monitor
     cmd_api_pipeline
 }
