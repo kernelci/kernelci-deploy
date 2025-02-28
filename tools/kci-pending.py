@@ -136,7 +136,7 @@ def main():
     parser = argparse.ArgumentParser(description='KernelCI staging v2')
     parser.add_argument('repo', help='GitHub repo to poll')
     parser.add_argument('--push', help='Push changes to staging branch, using push token (github PAT token)')
-    parser.add_argument('--branch', help='Staging branch name', default='staging-snapshot')
+    parser.add_argument('--branch', help='Staging branch name', default='staging.kernelci.org')
     parser.add_argument('--userlist', help='File with users allowed to test PRs', default='../data/staging.ini')
     args = parser.parse_args()
     # check repo name is valid
