@@ -374,12 +374,49 @@ cmd_api_pipeline() {
     cd -
 }
 
+cmd_ghworkflow() {
+    # check if jq is installed
+    if ! command -v jq &> /dev/null; then
+        echo "jq could not be found"
+        exit 1
+    fi
+
+    # fail if .github_token is not set
+    GH_TOKEN=$(cat .github_token)
+    if [ -z "$GH_TOKEN" ]; then
+        echo "GH_TOKEN is not set"
+        # The fine-grained token must have the following permission set:
+        # "Actions" repository permissions (write)
+        exit 1
+    fi
+
+    # trigger the workflow
+    echo "Triggering workflow"
+    curl -L \
+    -X POST \
+    -H "Accept: application/vnd.github+json" \
+    -H "Authorization: Bearer $GH_TOKEN" \
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    https://api.github.com/repos/kernelci/kernelci-core/actions/workflows/staging.yml/dispatches \
+    -d '{"ref":"main","inputs":{}}'
+
+    # wait for the workflow to finish
+    while true; do
+        echo "Waiting for workflow to finish..."
+        sleep 10
+        status=$(curl -s -X GET "https://api.github.com/repos/kernelci/kernelci-core/actions/workflows/staging.yml/runs" | jq -r '.workflow_runs[0].status')
+        if [ "$status" = "completed" ]; then
+            break
+        fi
+    done
+}
+
 cmd_all() {
     tree="$1"
 
     [ -z $tree ] && tree=$(cmd_rotate_tree)
     echo "Kernel tree: $tree"
-
+    cmd_ghworkflow
     cmd_pull
     #cmd_jenkins
     #cmd_core
