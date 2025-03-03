@@ -238,11 +238,16 @@ EOF
             --namespace=${NS_API}
 }
 
+
+function retrieve_secrets_toml {
+    echo "Retrieving kernelci-secrets.toml..."
+    kubectl --context=${CONTEXT} get secret pipeline-secrets --namespace=${NS_PIPELINE} -o yaml > allsecrets.yaml
+    python3 extract_secret.py allsecrets.yaml kernelci.toml kernelci-secrets.toml
+}
+
 function deploy_secrets_toml_only {
     echo "Setting kernelci-secrets.toml..."
-    kubectl --context=${CONTEXT} delete secret pipeline-secrets --namespace=${NS_PIPELINE} || true
-    kubectl --context=${CONTEXT} create secret generic pipeline-secrets --from-file=kernelci.toml=kernelci-secrets.toml --namespace=${NS_PIPELINE}
-    kubectl --context=${CONTEXT} --namespace=${NS_PIPELINE} patch secret pipeline-secrets -p '{"data": {"kcidb-credentials.json": "'$(cat secrets/kcidb-credentials.json | base64 -w 0)'"}}'
+    kubectl --context=${CONTEXT} patch secret pipeline-secrets -p '{"data": {"kernelci.toml": "'$(cat kernelci-secrets.toml | base64 -w 0)'"}}' --namespace=${NS_PIPELINE}
 }
 
 function deploy_once_api {
@@ -604,6 +609,12 @@ if [ "$1" == "deploy_secret_toml_only" ]; then
     exit 0
 fi
 
+# retrieve_secrets_toml
+if [ "$1" == "retrieve_secrets_toml" ]; then
+    retrieve_secrets_toml
+    exit 0
+fi
+
 # require full option or quit
 if [ "$1" != "full" ]; then
     echo "Usage:"
@@ -621,6 +632,7 @@ if [ "$1" != "full" ]; then
     echo "$0 mongo-shell - mongo shell"
     echo "$0 patch-nginx - patch nginx config"
     echo "$0 deploy_secret_toml_only - deploy kernelci-secrets.toml only"
+    echo "$0 retrieve_secrets_toml - retrieve kernelci-secrets.toml"
     exit 1
 fi
 
