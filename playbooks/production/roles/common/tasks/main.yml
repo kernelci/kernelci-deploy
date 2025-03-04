@@ -12,6 +12,7 @@
     - curl
     - libssl-dev
     - pkg-config
+    - rsync
 
 #- name: Add to fstab
 #  ansible.builtin.lineinfile:
