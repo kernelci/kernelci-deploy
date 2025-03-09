@@ -1,0 +1,16 @@
+# kci-storage docker compose yaml
+version: '3.7'
+
+services:
+  storage:
+# This is temporary repository, it will be moved to kernelci org
+    image: ghcr.io/nuclearcat/kernelci-storage:latest
+    container_name: kernelci-storage
+    restart: always
+    environment:
+      - KCI_STORAGE_CONFIG=/etc/kernelci-storage.toml
+    volumes:
+      - /srv/kernelci-storage/kernelci-storage.toml:/etc/kernelci-storage.toml
+      - /srv/kernelci-storage/workdir:/workdir
+    ports:
+      - "3000:3000"
