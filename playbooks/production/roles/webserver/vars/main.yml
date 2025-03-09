@@ -1,0 +1,9 @@
+vhosts:
+  - vhost_name: storage.kernelci.org
+    root_path: /data/storage.kernelci.org
+  - vhost_name: docs.kernelci.org
+    root_path: /data/kernelci.org
+  - vhost_name: storage.chromeos.kernelci.org
+    root_path: /data/storage.chromeos.kernelci.org
+  - vhost_name: files.kernelci.org
+    port: 3000

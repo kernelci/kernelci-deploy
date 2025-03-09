@@ -3,8 +3,23 @@
     path: /srv/kernelci-storage
     state: directory
 
+- name: Verify kernelci-storage config file
+  stat:
+    path: /srv/kernelci-storage/kernelci-storage.toml
+  register: kernelci_storage_config_file
+
 - name: Create kernelci-storage config from template
+  when: not kernelci_storage_config_file.stat.exists | default(false) | bool
   template:
     src: kernelci-storage.toml.j2
     dest: /srv/kernelci-storage/kernelci-storage.toml
 
+- name: Create kernelci-storage docker-compose.yml from template
+  template:
+    src: storage-docker-compose.yaml.j2
+    dest: /srv/kernelci-storage/docker-compose.yml
+
+- name: Start kernelci-storage docker container
+  command: docker-compose -f /srv/kernelci-storage/docker-compose.yml up -d
+  args:
+    chdir: /srv/kernelci-storage

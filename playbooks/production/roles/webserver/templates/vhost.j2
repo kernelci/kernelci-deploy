@@ -1,0 +1,50 @@
+# nginx virtual host for {{ vhost_name }}
+server {
+    server_name {{ vhost_name }};
+{% if root_path is defined %}
+    root {{ root_path }};
+    index index.html;
+    location / {
+        try_files $uri $uri/ =404;
+#        fancyindex on;
+#        fancyindex_exact_size off;
+    }
+{% endif %}
+{% if port is defined %}
+    # Act as a forward proxy for the given port
+    location / {
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_pass http://localhost:{{ port }};
+    }
+{% endif %}
+# increase maximum upload size
+    client_max_body_size 10000M;
+    client_body_buffer_size 10000M;
+    client_body_timeout 120s;
+    client_header_timeout 120s;
+    send_timeout 120s;
+    access_log /var/log/nginx/{{ vhost_name }}.access.log;
+    error_log /var/log/nginx/{{ vhost_name }}.error.log;
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/docs.kernelci.org/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/docs.kernelci.org/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+}
+
+server {
+    if ($host = {{ vhost_name }}) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    listen 80;
+    server_name {{ vhost_name }};
+    return 404; # managed by Certbot
+}
+
