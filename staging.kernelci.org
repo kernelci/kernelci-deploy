@@ -44,43 +44,6 @@ cmd_pull() {
     git pull --ff-only
 }
 
-cmd_jenkins() {
-    echo "Updating Jenkins jobs"
-    ./pending.py kernelci-jenkins --push
-
-    [ -d checkout/kernelci-jenkins/data ] || {
-        # To set this up:
-        # git clone https://github.com/kernelci/kernelci-jenkins-data.git data
-        # cd data; git-crypt unlock
-        # cd ..; ln -s data/bot.staging.kernelci.org/env .env
-
-        echo "Encrypted kernelci-jenkins-data repository not set up"
-        return 1
-    }
-
-    echo "Updating encrypted data checkout"
-    topdir=$(pwd)
-    cd checkout/kernelci-jenkins/data
-    git prune
-    git remote update origin
-    data_diff=$(git diff origin/main)
-    if [ -n "$data_diff" ]; then
-        git checkout origin/main
-        cd "$topdir/checkout/kernelci-jenkins"
-        echo "Recreating Jenkins container"
-        docker-compose down
-        docker-compose up --build -d
-        sleep 60  # magic - another way to do this would be to poll something
-    else
-        cd "$topdir/checkout/kernelci-jenkins"
-        # ToDo: restart the container but only when there were some changes in
-        # kernelci-jenkins to avoid aborting running jobs unnecessarily
-    fi
-    cd "$topdir"
-
-    echo "Triggering Jenkins seed job"
-    python3 job.py --no-params trigger job-dsl
-}
 
 cmd_core() {
     echo "Updating kernelci-core"
@@ -111,46 +74,6 @@ cmd_test_definitions() {
     echo "Updating test-definitions"
     ./pending.py test-definitions --push --main=master
     ./pending.py iec-security --push --main=master
-}
-
-cmd_kcidb() {
-    echo "Updating KCIDB"
-    ./pending.py kcidb --push
-}
-
-cmd_backend() {
-    opt="$1"
-
-    echo "Checking for missing indexes by finding COLLSCAN events"
-    echo "db.system.profile.aggregate([{\$match: {ns: {\$in: ['kernel-ci.test_case', 'kernel-ci.test_group', 'kernel-ci.test_regression', 'kernel-ci.build']}, planSummary: 'COLLSCAN'}}, {\$group: {_id: {ns: '\$ns', planSummary: '\$planSummary'}}}])" | mongo kernel-ci
-
-    if [ "$opt" = "indexes" ]; then
-        echo "Dropping Mongo DB indexes"
-        echo "db.test_case.dropIndexes(); db.test_group.dropIndexes(); db.test_regression.dropIndexes(); db.build.dropIndexes();" | mongo kernel-ci
-    fi
-
-    echo "Updating kernelci-backend"
-
-    if ./pending.py kernelci-backend --diff-only; then
-        ./pending.py kernelci-backend --push
-        ./ansible kernelci-backend api.staging.kernelci.org
-    else
-        echo "No changes, skipping Ansible"
-    fi
-
-    echo "Resetting and enabling the Mongo DB profiler"
-    echo "db.setProfilingLevel(0); db.system.profile.drop(); db.setProfilingLevel(2);" | mongo kernel-ci
-}
-
-cmd_frontend() {
-    echo "Updating kernelci-frontend"
-
-    if ./pending.py kernelci-frontend --diff-only; then
-        ./pending.py kernelci-frontend --push
-        ./ansible kernelci-frontend staging.kernelci.org
-    else
-        echo "No changes, skipping Ansible"
-    fi
 }
 
 cmd_kernel() {
@@ -192,121 +115,6 @@ cmd_kernel() {
         --from-branch=$branch \
         --branch=staging-"$tree" \
         --tag-prefix=staging-"$tree"-
-}
-
-cmd_docker() {
-    echo "Updating Docker images"
-
-    # Build without cache if flag file doesn't exist or older than x days
-    purge_flag_file=".last_docker_purge"
-    rust_flag_file=".build_rust"
-    if [ -f "$purge_flag_file" ]; then
-        flag_time=$(date -r "$purge_flag_file" +%s)
-        week_ago=$(date -d 'now - 7 days' +%s)
-    fi
-    if [ ! -f "$purge_flag_file" ] || [ $flag_time -le $week_ago ]; then
-        echo "Building without cache"
-        cache_arg="--no-cache"
-        touch "$purge_flag_file"
-    else
-        cache_arg=""
-    fi
-
-    # Get API revision to tag the image
-    cd checkout/kernelci-api
-    api_rev=$(git show --pretty=format:%H -s origin/staging.kernelci.org)
-    cd -
-
-    # Get pipeline revision to tag the image
-    cd checkout/kernelci-pipeline
-    pipeline_rev=$(git show --pretty=format:%H -s origin/staging.kernelci.org)
-    cd -
-
-    # Build the images with kci docker
-    cd checkout/kernelci-core
-    git prune
-
-    core_rev=$(git show --pretty=format:%H -s origin/staging.kernelci.org)
-    rev_arg="--build-arg core_rev=$core_rev --build-arg api_rev=$api_rev --build-arg pipeline_rev=$pipeline_rev"
-    px_arg='--prefix=kernelci/staging-'
-    args="build --push $px_arg $cache_arg $rev_arg"
-
-    # KernelCI tools
-    ./kci docker $args kernelci
-    ./kci docker $args k8s kernelci
-
-    ./kci docker $args kernelci api --version="$api_rev"
-    # TODO - add this functionality to kci docker
-    docker tag kernelci/staging-kernelci:api-$api_rev kernelci/staging-kernelci:api
-    docker push kernelci/staging-kernelci:api
-
-    ./kci docker $args kernelci pipeline --version="$pipeline_rev"
-    # TODO - add this functionality to kci docker
-    docker tag kernelci/staging-kernelci:pipeline-$pipeline_rev kernelci/staging-kernelci:pipeline
-    docker push kernelci/staging-kernelci:pipeline
-
-    ./kci docker $args kernelci lava-callback --version="$pipeline_rev"
-    # lava-callback fragment
-    docker tag kernelci/staging-kernelci:lava-callback-$pipeline_rev kernelci/staging-kernelci:lava-callback
-    docker push kernelci/staging-kernelci:lava-callback
-
-    # Compiler toolchains
-
-    # clang-17 for linux-next (including weekly full build)
-    ./kci docker $args clang-17 kselftest kernelci
-    for arch in arm arm64 mips riscv64 x86; do
-	./kci docker $args clang-17 kselftest kernelci --arch $arch
-    # temporary push to ghcr.io to solve docker hub limits
-    docker tag kernelci/staging-clang-17:$arch-kselftest-kernelci ghcr.io/kernelci/staging-clang-17:$arch-kselftest-kernelci
-    docker push ghcr.io/kernelci/staging-clang-17:$arch-kselftest-kernelci
-    done
-    # clang-15 for chromeos
-    ./kci docker $args clang-15 kselftest kernelci
-    for arch in arm64 x86; do
-	./kci docker $args clang-15 kselftest kernelci --arch $arch
-    done
-    # gcc-12 for everything (including weekly linux-next full build)
-    for arch in arc arm armv5 arm64 mips riscv64 x86; do
-	./kci docker $args gcc-12 kselftest kernelci --arch $arch
-    # temporary push to ghcr.io to solve docker hub limits
-    docker tag kernelci/staging-gcc-12:$arch-kselftest-kernelci ghcr.io/kernelci/staging-gcc-12:$arch-kselftest-kernelci
-    docker push ghcr.io/kernelci/staging-gcc-12:$arch-kselftest-kernelci
-    done
-    # missing -dev packages for sparc64
-    ./kci docker $args gcc-12 kernelci --arch sparc
-    # only x86 is useful for KUnit (for now)
-    ./kci docker $args gcc-12 kunit kernelci --arch x86
-    # additional images for Rust
-    if [ -f "$rust_flag_file" ]; then
-        for rustc in rustc-1.74 rustc-1.75; do
-            ./kci docker $args $rustc kselftest kernelci
-            for arch in x86; do
-                ./kci docker $args $rustc kselftest kernelci --arch $arch
-            done
-        done
-        echo "Rust images not built, please touch .build_rust file to build them"
-    fi
-
-    # rootfs
-    ./kci docker $args buildroot kernelci
-    ./kci docker $args debos kernelci
-
-    # QEMU
-    ./kci docker $args qemu
-
-    # Other tools
-    ./kci docker $args cvehound kernelci
-    ./kci docker $args dt-validation # kernelci (PyYAML conflict)
-    cd -
-}
-
-cmd_monitor() {
-    echo "Triggering Jenkins kernel-tree-monitor job"
-    python3 \
-        job.py \
-        --json=data/staging-monitor.json \
-        trigger \
-        kernel-tree-monitor
 }
 
 cmd_rotate_tree() {
@@ -351,6 +159,16 @@ cmd_api_pipeline() {
     echo "Pulling pipeline containers"
     docker-compose $compose_files pull
     docker-compose $compose_files down --remove-orphans
+    # verify if it failed due orphaned network bug
+    if [ $? -ne 0 ]; then
+        echo "Failed to stop pipeline containers, restarting containerd and docker"
+        sudo systemctl restart containerd docker
+        echo "Waiting 5 seconds for services to restart"
+        sleep 5
+        ~/run-dozzle
+        echo "Attempting to restart pipeline containers again"
+        docker-compose $compose_files down --remove-orphans
+    fi
     cd -
 
     #./pending.py kernelci-api --push
