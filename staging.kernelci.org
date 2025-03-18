@@ -143,6 +143,14 @@ cmd_rotate_tree() {
     echo $tree
 }
 
+docker_workaround() {
+    echo "Restarting containerd and docker"
+    sudo systemctl restart containerd docker
+    echo "Waiting 5 seconds for services to restart"
+    sleep 5
+    ~/run-dozzle
+}
+
 cmd_api_pipeline() {
     compose_files="\
 -f docker-compose.yaml \
@@ -158,14 +166,11 @@ cmd_api_pipeline() {
     git checkout origin/staging.kernelci.org
     echo "Pulling pipeline containers"
     docker-compose $compose_files pull
-    docker-compose $compose_files down --remove-orphans
+    docker-compose $compose_files down --remove-orphans || true
     # verify if it failed due orphaned network bug
     if [ $? -ne 0 ]; then
         echo "Failed to stop pipeline containers, restarting containerd and docker"
-        sudo systemctl restart containerd docker
-        echo "Waiting 5 seconds for services to restart"
-        sleep 5
-        ~/run-dozzle
+        docker_workaround
         echo "Attempting to restart pipeline containers again"
         docker-compose $compose_files down --remove-orphans
     fi
@@ -179,7 +184,14 @@ cmd_api_pipeline() {
     git checkout origin/staging.kernelci.org
     docker-compose pull $api_services
     echo "Stopping API containers"
-    docker-compose down
+    docker-compose down || true
+    # verify if it failed due orphaned network bug
+    if [ $? -ne 0 ]; then
+        echo "Failed to stop API containers, restarting containerd and docker"
+        docker_workaround
+        echo "Attempting to restart API containers again"
+        docker-compose down
+    fi
     echo "Starting API containers"
     docker-compose up -d $api_services
     cd -
