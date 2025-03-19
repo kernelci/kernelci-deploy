@@ -251,9 +251,9 @@ def main():
     verify_docker()
     prepare_kci_source(args.branch)
     
-    # if branch set to staging, check if staging- prefix is used, if not - suggest to use --staging
-    if args.branch == "staging.kernelci.org" and not args.staging:
-        print("WARNING! You are building rootfs for staging.kernelci.org, please use --staging")
+    # if branch is set to staging, print a warning to ensure the correct prefix is used.
+    if args.branch == "staging.kernelci.org":
+        print("WARNING! You are building rootfs for staging.kernelci.org, please use --prefix ghcr.io/kernelci/staging- or --prefix kernelci/staging-")
 
     if args.all:
         # iterate key,value
