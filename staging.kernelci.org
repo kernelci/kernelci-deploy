@@ -92,15 +92,7 @@ cmd_kernel() {
             ;;
         stable)
             url=https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-            branch=linux-6.1.y
-            ;;
-        cip)
-            url=https://git.kernel.org/pub/scm/linux/kernel/git/cip/linux-cip.git
-            branch=linux-5.10.y-cip
-            ;;
-        android)
-            url=https://android.googlesource.com/kernel/common
-            branch=android13-5.15
+            branch=linux-6.13.y
             ;;
         *)
             echo "Unknown tree"
@@ -166,14 +158,17 @@ cmd_api_pipeline() {
     git checkout origin/staging.kernelci.org
     echo "Pulling pipeline containers"
     docker-compose $compose_files pull
-    docker-compose $compose_files down --remove-orphans || true
+    set +e
+    docker-compose $compose_files down --remove-orphans
     # verify if it failed due orphaned network bug
     if [ $? -ne 0 ]; then
         echo "Failed to stop pipeline containers, restarting containerd and docker"
         docker_workaround
         echo "Attempting to restart pipeline containers again"
+        set -e
         docker-compose $compose_files down --remove-orphans
     fi
+    set -e
     cd -
 
     #./pending.py kernelci-api --push
@@ -184,14 +179,17 @@ cmd_api_pipeline() {
     git checkout origin/staging.kernelci.org
     docker-compose pull $api_services
     echo "Stopping API containers"
-    docker-compose down || true
+    set +e
+    docker-compose down
     # verify if it failed due orphaned network bug
     if [ $? -ne 0 ]; then
         echo "Failed to stop API containers, restarting containerd and docker"
         docker_workaround
         echo "Attempting to restart API containers again"
+        set -e
         docker-compose down
     fi
+    set -e
     echo "Starting API containers"
     docker-compose up -d $api_services
     cd -
