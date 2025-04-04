@@ -74,11 +74,16 @@ echo Retrieve API revision and branch
 api_rev=$(git show --pretty=format:%H -s origin/$KCI_API_BRANCH)
 api_url=$(git remote get-url origin)
 cd ..
+cd kernelci-pipeline
+echo Retrieve Pipeline revision and branch
+pipeline_rev=$(git show --pretty=format:%H -s origin/$KCI_PIPELINE_BRANCH)
+pipeline_url=$(git remote get-url origin)
+cd ..
 cd kernelci-core
 echo Retrieve Core revision and branch
 core_rev=$(git show --pretty=format:%H -s origin/$KCI_CORE_BRANCH)
 core_url=$(git remote get-url origin)
-build_args="--build-arg core_rev=$core_rev --build-arg api_rev=$api_rev --build-arg core_url=$core_url --build-arg api_url=$api_url"
+build_args="--build-arg pipeline_rev=$pipeline_rev --build-arg core_rev=$core_rev --build-arg api_rev=$api_rev --build-arg pipeline_url=$pipeline_url --build-arg core_url=$core_url --build-arg api_url=$api_url"
 px_arg='--prefix=local/staging-'
 args="build --verbose $px_arg $build_args"
 echo Build docker images: kernelci args=$args
@@ -90,8 +95,14 @@ failonerror
 echo Build docker images: api
 ./kci docker $args kernelci api --version="$api_rev"
 failonerror
+echo Build docker images: pipeline
+./kci docker $args kernelci pipeline --version="$pipeline_rev"
+failonerror
 echo Tag docker image of api to latest
 docker tag local/staging-kernelci:api-$api_rev local/staging-kernelci:api
+failonerror
+echo Tag docker image of pipeline to latest
+docker tag local/staging-kernelci:pipeline-$pipeline_rev local/staging-kernelci:pipeline
 failonerror
 echo Build docker images: clang-17+kselftest+kernelci for x86
 ./kci docker $args clang-17 kselftest kernelci --arch x86
