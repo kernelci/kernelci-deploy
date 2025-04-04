@@ -82,7 +82,6 @@ build_configs:
   kernelci_staging-stable:
     tree: kernelci
     branch: 'staging-stable'
-    variants: *build-variants
 EOF
 
 #create .env
