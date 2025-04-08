@@ -89,5 +89,16 @@ API_TOKEN=$(cat admin-token.txt)
 echo "KCI_STORAGE_CREDENTIALS=/home/kernelci/data/ssh/id_rsa_tarball" > .env
 echo "KCI_API_TOKEN=${API_TOKEN}" >> .env
 echo "API_TOKEN=${API_TOKEN}" >> .env
+echo "KCI_INSTANCE_CALLBACK=http://callback.local:8100" >> .env
 cp .env kernelci/kernelci-pipeline/.docker-env
 mv .env kernelci/kernelci-pipeline/.env
+
+# Add JWT section with the secret key to kernelci.toml for pipeline callback
+sed -i 's/#\[jwt\]$/[jwt]/' kernelci/kernelci-pipeline/config/kernelci.toml
+sed -i 's/#secret = "SomeSecretString"/secret = "'"${PIPELINE_SECRET_KEY}"'"/' kernelci/kernelci-pipeline/config/kernelci.toml
+# Generate kci-dev token
+pip install pyjwt
+TOKEN=$(kernelci/kernelci-pipeline/tools/jwt_generator.py --toml kernelci/kernelci-pipeline/config/kernelci.toml \
+--email ${YOUR_EMAIL} --permissions checkout,testretry,patchset | grep "JWT token:" | cut -d' ' -f3)
+echo $TOKEN > kci-dev-token.txt
+echo "kci-dev token saved to kci-dev-token.txt"
