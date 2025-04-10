@@ -49,7 +49,7 @@ sed -i "s|- '/data/kernelci-deploy-checkout/kernelci-pipeline/data/ssh/|- '$PIPE
 sed -i "s|- '/data/kernelci-deploy-checkout/kernelci-pipeline/data/output/|- '$PIPELINE_PWD/data/output/|g" config/pipeline.yaml
 
 # set 777 to data/output and data/ssh (TODO: or set proper uid, kernelci is 1000?)
-chmod -R 777 data
+chmod -R 777 data/output
 chmod 777 data/ssh
 cp ../../ssh.key data/ssh/id_rsa_tarball
 chown 1000:1000 data/ssh/id_rsa_tarball
