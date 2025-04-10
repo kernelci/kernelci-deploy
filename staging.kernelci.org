@@ -157,16 +157,16 @@ cmd_api_pipeline() {
     git fetch origin
     git checkout origin/staging.kernelci.org
     echo "Pulling pipeline containers"
-    docker-compose $compose_files pull
+    docker compose $compose_files pull
     set +e
-    docker-compose $compose_files down --remove-orphans
+    docker compose $compose_files down --remove-orphans
     # verify if it failed due orphaned network bug
     if [ $? -ne 0 ]; then
         echo "Failed to stop pipeline containers, restarting containerd and docker"
         docker_workaround
         echo "Attempting to restart pipeline containers again"
         set -e
-        docker-compose $compose_files down --remove-orphans
+        docker compose $compose_files down --remove-orphans
     fi
     set -e
     cd -
@@ -177,28 +177,28 @@ cmd_api_pipeline() {
     git prune
     git fetch origin
     git checkout origin/staging.kernelci.org
-    docker-compose pull $api_services
+    docker compose pull $api_services
     echo "Stopping API containers"
     set +e
-    docker-compose down
+    docker compose down
     # verify if it failed due orphaned network bug
     if [ $? -ne 0 ]; then
         echo "Failed to stop API containers, restarting containerd and docker"
         docker_workaround
         echo "Attempting to restart API containers again"
         set -e
-        docker-compose down
+        docker compose down
     fi
     set -e
     echo "Starting API containers"
-    docker-compose up -d $api_services
+    docker compose up -d $api_services
     cd -
 
     cd checkout/kernelci-pipeline
-    #REQUIREMENTS=requirements-dev.txt docker-compose $compose_files build --no-cache
+    #REQUIREMENTS=requirements-dev.txt docker compose $compose_files build --no-cache
     echo "Starting pipeline containers"
     SETTINGS=/home/kernelci/config/staging.kernelci.org.secrets.toml \
-            docker-compose $compose_files up -d
+            docker compose $compose_files up -d
     cd -
 }
 

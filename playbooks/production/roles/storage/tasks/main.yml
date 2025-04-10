@@ -20,6 +20,6 @@
     dest: /srv/kernelci-storage/docker-compose.yml
 
 - name: Start kernelci-storage docker container
-  command: docker-compose -f /srv/kernelci-storage/docker-compose.yml up -d
+  command: docker compose -f /srv/kernelci-storage/docker-compose.yml up -d
   args:
     chdir: /srv/kernelci-storage
