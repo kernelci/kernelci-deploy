@@ -1,5 +1,4 @@
-#!/bin/sh
-. ./main.cfg
+#!/bin/bash
 
 # is docker-compose exists? if not use docker compose
 if [ -z "$(which docker-compose)" ]; then
@@ -9,13 +8,9 @@ else
     DOCKER_COMPOSE="docker-compose"
 fi
 
-function fail_with_error() {
-    echo "ERROR: $1"
-    exit 1
-}
+. ./config/main.cfg
 
 set -e
-trap 'fail_with_error "Command failed at line $LINENO"' ERR
 
 # i am groot?
 if [ $(id -u) -ne 0 ]; then
@@ -24,24 +19,25 @@ else
     SUDO=
 fi
 
-cp .env-api kernelci/kernelci-api/.env
-cp api-configs.yaml kernelci/kernelci-core/config/core/
-cp kernelci-cli.toml kernelci/kernelci-core/kernelci.toml
+cp config/.env-api kernelci/kernelci-api/.env
+cp config/api-configs.yaml kernelci/kernelci-core/config/core/
+cp config/kernelci-cli.toml kernelci/kernelci-core/kernelci.toml
 
 cd kernelci/kernelci-api
 mkdir -p docker/redis/data
 ${SUDO} chmod -R 0777 docker/storage/data
 ${SUDO} chmod -R 0777 docker/redis/data
 # enable ssh and storage nginx
+mkdir -p ../../config/out
 sed -i 's/^#  /  /' docker-compose.yaml
-if [ -f ../../ssh.key ]; then
+if [ -f ../../config/out/ssh.key ]; then
     echo "ssh.key already exists"
 else
     # generate non-interactively ssh key to ssh.key
-    ssh-keygen -t rsa -b 4096 -N "" -f ../../ssh.key
+    ssh-keygen -t rsa -b 4096 -N "" -f ../../config/out/ssh.key
 fi
 # get public key and add to docker/ssh/user-data/authorized_keys
-cat ../../ssh.key.pub > docker/ssh/user-data/authorized_keys
+cat ../../config/out/ssh.key.pub > docker/ssh/user-data/authorized_keys
 
 # down, just in case old containers are running
 ${DOCKER_COMPOSE} down

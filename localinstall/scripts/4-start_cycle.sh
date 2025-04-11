@@ -1,5 +1,4 @@
 #!/bin/bash
-. ./main.cfg
 
 # is docker-compose exists? if not use docker compose
 if [ -z "$(which docker-compose)" ]; then
@@ -9,13 +8,9 @@ else
     DOCKER_COMPOSE="docker-compose"
 fi
 
-function fail_with_error() {
-    echo "ERROR: $1"
-    exit 1
-}
+. ./config/main.cfg
 
 set -e
-trap 'fail_with_error "Command failed at line $LINENO"' ERR
 
 cd kernelci/kernelci-pipeline
 ${DOCKER_COMPOSE} down

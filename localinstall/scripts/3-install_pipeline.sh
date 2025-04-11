@@ -1,13 +1,8 @@
 #!/bin/bash
-. ./main.cfg
 
-function fail_with_error() {
-    echo "ERROR: $1"
-    exit 1
-}
+. ./config/main.cfg
 
 set -e
-trap 'fail_with_error "Command failed at line $LINENO"' ERR
 
 ## This is hacky way of inserting things that probably will outlive trivial patch after changes
 # find line number with storage:
@@ -62,7 +57,7 @@ sed -i "s|- '/data/kernelci-deploy-checkout/kernelci-pipeline/data/output/|- '$P
 # set 777 to data/output and data/ssh (TODO: or set proper uid, kernelci is 1000?)
 chmod -R 777 data
 chmod 777 data/ssh
-cp ../../ssh.key data/ssh/id_rsa_tarball
+cp ../../config/out/ssh.key data/ssh/id_rsa_tarball
 chown 1000:1000 data/ssh/id_rsa_tarball
 chmod 600 data/ssh/id_rsa_tarball
 cd ../..
@@ -95,7 +90,7 @@ EOF
 #KCI_STORAGE_CREDENTIALS=L0CALT0KEN
 #KCI_API_TOKEN=
 #API_TOKEN=
-API_TOKEN=$(cat admin-token.txt)
+API_TOKEN=$(cat config/out/admin-token.txt)
 echo "KCI_STORAGE_CREDENTIALS=/home/kernelci/data/ssh/id_rsa_tarball" > .env
 echo "KCI_API_TOKEN=${API_TOKEN}" >> .env
 echo "API_TOKEN=${API_TOKEN}" >> .env

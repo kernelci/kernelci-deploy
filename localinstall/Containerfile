@@ -1,0 +1,48 @@
+FROM kernelci/kernelci:latest
+
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+
+USER root
+
+# Install dependencies for Docker installation
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    sudo \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+
+# Add Docker's official GPG key
+RUN mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+    chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Set up Docker repository (assuming Debian-based image)
+RUN echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+    $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Install Docker Engine, CLI, and Compose plugin
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    docker-ce \
+    docker-ce-cli \
+    containerd.io \
+    docker-compose-plugin \
+    expect
+
+# Make sure a user exists with the same USER_ID/GROUP_ID as the host user
+# to allow access to the host docker socket
+RUN groupadd -g ${GROUP_ID} kernelci || true && \
+    useradd -u ${USER_ID} -g ${GROUP_ID} -m -s /bin/bash kernelci || true
+
+# Add the user to the sudoers
+RUN usermod -aG sudo kernelci && \
+    echo "kernelci ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+USER kernelci
+WORKDIR /home/kernelci
+
+ENTRYPOINT ["/bin/bash", "./scripts/run.sh"]
