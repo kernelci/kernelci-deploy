@@ -87,10 +87,6 @@ core_url=$(git remote get-url origin)
 build_args="--build-arg pipeline_rev=$pipeline_rev --build-arg core_rev=$core_rev --build-arg api_rev=$api_rev --build-arg pipeline_url=$pipeline_url --build-arg core_url=$core_url --build-arg api_url=$api_url"
 px_arg='--prefix=local/staging-'
 args="build --verbose $px_arg $build_args"
-echo Build docker images: kernelci args=$args
-./kci docker $args kernelci 
-echo Build docker images: k8s+kernelci
-./kci docker $args k8s kernelci
 echo Build docker images: api
 ./kci docker $args kernelci api --version="$api_rev"
 echo Build docker images: pipeline
