@@ -12,9 +12,11 @@ def extract_secret(filename, secret_name, dstfile):
     with open(filename, 'r') as f:
         data = yaml.safe_load(f)
         encoded = data['data'][secret_name]
-        decoded = base64.b64decode(encoded).decode('utf-8')
-        with open(dstfile, 'w') as f:
-            f.write(decoded)
+        #decoded = base64.b64decode(encoded).decode('utf-8')
+        decoded_binary = base64.b64decode(encoded)
+        # write binary data to file
+        with open(dstfile, 'wb') as out:
+            out.write(decoded_binary)
 
 
 if __name__ == "__main__":

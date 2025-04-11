@@ -556,7 +556,6 @@ if [ "$1" == "api-restart-pods" ]; then
     exit 0
 fi
 
-
 # backup-mongo
 if [ "$1" == "backup-mongo" ]; then
     echo "Backup MongoDB at ${MONGO}..."
@@ -615,6 +614,27 @@ if [ "$1" == "retrieve_secrets_toml" ]; then
     exit 0
 fi
 
+# retrieve_k8s_credentials
+if [ "$1" == "retrieve_k8s_credentials" ]; then
+    echo "Retrieving k8s credentials..."
+    kubectl --context=${CONTEXT} get secret k8scredentials --namespace=${NS_PIPELINE} -o yaml > k8s-credentials.yaml
+    python3 extract_secret.py k8s-credentials.yaml k8s-credentials.tgz k8s-old.tgz
+    exit 0
+fi
+
+# update_k8s_credentials
+if [ "$1" == "update_k8s_credentials" ]; then
+    # check if k8s-new.tgz exist
+    if [ ! -f k8s-new.tgz ]; then
+        echo "k8s-new.tgz not found, exiting"
+        exit 1
+    fi
+    echo "Updating k8s credentials..."
+    kubectl --context=${CONTEXT} delete secret k8scredentials --namespace=${NS_PIPELINE} || true
+    kubectl --context=${CONTEXT} create secret generic k8scredentials --from-file=k8s-credentials.tgz=k8s-new.tgz --namespace=${NS_PIPELINE}
+    exit 0
+fi
+
 # require full option or quit
 if [ "$1" != "full" ]; then
     echo "Usage:"
@@ -633,6 +653,8 @@ if [ "$1" != "full" ]; then
     echo "$0 patch-nginx - patch nginx config"
     echo "$0 deploy_secret_toml_only - deploy kernelci-secrets.toml only"
     echo "$0 retrieve_secrets_toml - retrieve kernelci-secrets.toml"
+    echo "$0 retrieve_k8s_credentials - retrieve k8s credentials"
+    echo "$0 update_k8s_credentials - update k8s credentials"
     exit 1
 fi
 
