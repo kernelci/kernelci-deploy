@@ -1,19 +1,20 @@
 #!/bin/bash
 . ./main.cfg
 
+function fail_with_error() {
+    echo "ERROR: $1"
+    exit 1
+}
+
+set -e
+trap 'fail_with_error "Command failed at line $LINENO"' ERR
+
 # i am groot?
 if [ $(id -u) -ne 0 ]; then
     SUDO=sudo
 else
     SUDO=
 fi
-
-function failonerror {
-    if [ $? -ne 0 ]; then
-        echo "Failed"
-        exit 1
-    fi
-}
 
 # if directry kernelci doesn't exist, then we dont have repos cloned
 if [ ! -d kernelci ]; then
@@ -88,30 +89,21 @@ px_arg='--prefix=local/staging-'
 args="build --verbose $px_arg $build_args"
 echo Build docker images: kernelci args=$args
 ./kci docker $args kernelci 
-failonerror
 echo Build docker images: k8s+kernelci
 ./kci docker $args k8s kernelci
-failonerror
 echo Build docker images: api
 ./kci docker $args kernelci api --version="$api_rev"
-failonerror
 echo Build docker images: pipeline
 ./kci docker $args kernelci pipeline --version="$pipeline_rev"
-failonerror
 echo Tag docker image of api to latest
 docker tag local/staging-kernelci:api-$api_rev local/staging-kernelci:api
-failonerror
 echo Tag docker image of pipeline to latest
 docker tag local/staging-kernelci:pipeline-$pipeline_rev local/staging-kernelci:pipeline
-failonerror
 echo Build docker images: clang-17+kselftest+kernelci for x86
 ./kci docker $args clang-17 kselftest kernelci --arch x86
-failonerror
 echo Build docker images: gcc-12+kselftest+kernelci for x86
 ./kci docker $args gcc-12 kselftest kernelci --arch x86
-failonerror
 echo Build docker images: gcc-12+kselftest+kernelci for arm64
 ./kci docker $args gcc-12 kselftest kernelci --arch arm64
-failonerror
 
 

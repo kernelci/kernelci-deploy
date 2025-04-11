@@ -9,6 +9,14 @@ else
     DOCKER_COMPOSE="docker-compose"
 fi
 
+function fail_with_error() {
+    echo "ERROR: $1"
+    exit 1
+}
+
+set -e
+trap 'fail_with_error "Command failed at line $LINENO"' ERR
+
 # i am groot?
 if [ $(id -u) -ne 0 ]; then
     SUDO=sudo
