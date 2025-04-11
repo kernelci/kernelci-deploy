@@ -71,7 +71,7 @@ fi
 
 # INFO, if you have issues with stale/old data, check for 
 # docker volume kernelci-api_mongodata and delete it
-../../helpers/scripts_setup_admin_user.exp "${YOUR_EMAIL}" "${ADMIN_PASSWORD}"
+expect ../../helpers/scripts_setup_admin_user.exp "${YOUR_EMAIL}" "${ADMIN_PASSWORD}"
 
 cd ../kernelci-core
 echo "Issuing token for admin user"
