@@ -146,8 +146,6 @@ docker_workaround() {
 cmd_api_pipeline() {
     compose_files="\
 -f docker-compose.yaml \
--f docker-compose-kcidb.yaml \
--f docker-compose-lava.yaml \
 -f docker-compose-production.yaml \
 "
     api_services="api db redis"
