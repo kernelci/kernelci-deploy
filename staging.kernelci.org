@@ -224,8 +224,8 @@ cmd_ghworkflow() {
 
     # wait for the workflow to finish
     while true; do
-        echo "Waiting for workflow to finish..."
-        sleep 10
+        echo "Waiting for workflow to finish... (60 seconds)"
+        sleep 60
         status=$(curl -s -X GET "https://api.github.com/repos/kernelci/kernelci-core/actions/workflows/staging.yml/runs" | jq -r '.workflow_runs[0].status')
         if [ "$status" = "completed" ]; then
             break
