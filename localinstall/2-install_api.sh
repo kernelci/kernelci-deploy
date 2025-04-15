@@ -68,7 +68,7 @@ fi
 cd ../kernelci-core
 echo "Issuing token for admin user"
 ../../helpers/kci_user_token_admin.exp "${ADMIN_PASSWORD}" > ../../admin-token.txt
-ADMIN_TOKEN=$(cat ../../admin-token.txt)
+ADMIN_TOKEN=$(cat ../../admin-token.txt | tr -d '\r\n')
 
 echo "[kci.secrets]
 api.\"docker-host\".token = \"$ADMIN_TOKEN\" 
