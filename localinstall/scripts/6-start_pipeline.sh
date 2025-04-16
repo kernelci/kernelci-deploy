@@ -1,5 +1,4 @@
 #!/bin/bash
-. ./main.cfg
 
 # is docker-compose exists? if not use docker compose
 if [ -z "$(which docker-compose)" ]; then
@@ -8,6 +7,10 @@ if [ -z "$(which docker-compose)" ]; then
 else
     DOCKER_COMPOSE="docker-compose"
 fi
+
+. ./config/main.cfg
+
+set -e
 
 cd kernelci/kernelci-pipeline
 ${DOCKER_COMPOSE} down
