@@ -8,15 +8,16 @@ ACTION=""
 CONTAINER_ARGS=()
 
 function print_help() {
-  echo "Usage: $0 [--build] (run|stop) [args...]"
+  echo "Usage: $0 [--build] (deploy|start|stop) [args...]"
   echo
   echo "Options:"
   echo "  --build     Force rebuild of the Deployer image (optional)"
-  echo "  run         Run kernelci deployment (default if no action specified)"
-  echo "  stop        Stop and remove kernelci deployment"
+  echo "  deploy      Configure and start the kernelci deployment"
+  echo "  start       Start the already configured kernelci deployment (default if no action specified)"
+  echo "  stop        Stop the kernelci deployment"
   echo "  -h, --help  Show this help message"
   echo
-  echo "Arguments after 'run' or 'stop' are passed to the container entrypoint"
+  echo "Arguments after 'deploy', 'start' or 'stop' are passed to the container entrypoint"
   exit 0
 }
 
@@ -27,9 +28,9 @@ while [[ $# -gt 0 ]]; do
       BUILD_IMAGE=true
       shift
       ;;
-    run|stop)
+    deploy|start|stop)
       if [[ -n "$ACTION" ]]; then
-        echo "Error: Cannot use both 'run' and 'stop'"
+        echo "Error: Cannot use more than one command among 'deploy', 'start' or 'stop'"
         exit 1
       fi
       ACTION=$1
@@ -49,7 +50,7 @@ done
 
 # Default
 if [[ -z "$ACTION" ]]; then
-  ACTION="run"
+  ACTION="start"
 fi
 
 USER_ID=$(id -u)

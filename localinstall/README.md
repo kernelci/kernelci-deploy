@@ -8,12 +8,17 @@ Get your own KernelCI instance up and running in no time.
 Configure and setup credentials in config files located in `config` folder.
 
 ## Run
-You can start your KernelCI deployment by simply executing:
+You can deploy your KernelCI deployment by simply executing:
 ```bash
-./kci-deploy.sh run
+./kci-deploy.sh deploy
 ```
-and
+
+You can stop your local deployment by executing:
 ```bash
 ./kci-deploy.sh stop
 ```
-to terminate it.
+and
+```bash
+./kci-deploy.sh start
+```
+to start it again.
