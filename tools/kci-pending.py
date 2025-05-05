@@ -53,20 +53,24 @@ def get_prs(owner, repo):
 
 
 def fetch_patch(pr, repo, token=None):
-    url = pr['patch_url']
+    #url = pr['patch_url']
+    #   https://api.github.com/repos/OWNER/REPO/pulls/123 \
+    url = f'https://api.github.com/repos/{pr["base"]["repo"]["full_name"]}/pulls/{pr["number"]}'
+    print(f'Fetching patch for PR {pr["number"]} from {url}')
     headers = {
-        'Accept': 'application/vnd.github.v3.patch',
+        'Accept': 'application/vnd.github.patch',
         'Accept-Language': 'en-US,en;q=0.5',
     }
     # if we have in env GH_TOKEN, use it
     if token:
-        print(f'Using token to bypass rate limits')
+        logging.debug(f'Using token for authentication')
         headers['Authorization'] = f'Bearer {token}'
 
     response = requests.get(url, headers=headers)
     if DEBUG:
         # print headers in reply
         logging.debug(f'Headers: {response.headers}')
+        logging.debug(f'BODY: {response.text}')
     if response.status_code != 200:
         logging.error(f'Failed to fetch patch for PR {pr["number"]}: {response.status_code} {response.text}')
         sys.exit(1)
@@ -134,10 +138,7 @@ def merge_prs(args, users, token=None):
             if args.push:
                 apply_patch(pr, args.repo, args.branch)
             else:
-                apply_patch(pr, args.repo)
-            # sleep to avoid rate limit
-            time.sleep(60)
-            
+                apply_patch(pr, args.repo)            
         else:
             logging.info(f'Skipping PR {pr["number"]} due to staging-skip label')
 
