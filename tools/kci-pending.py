@@ -17,6 +17,8 @@ import configparser
 PROJECT = 'kernelci'
 patch_files = []
 
+DEBUG=False
+
 # Set up logging, add colors
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logging.addLevelName(logging.INFO, "\033[1;32m%s\033[1;0m" % logging.getLevelName(logging.INFO))
@@ -49,12 +51,22 @@ def get_prs(owner, repo):
     return response.json()
 
 
-def fetch_patch(pr, repo):
+def fetch_patch(pr, repo, token=None):
     url = pr['patch_url']
     headers = {
         'Accept': 'application/vnd.github.v3.patch'
     }
+    # if we have in env GH_TOKEN, use it
+    if token:
+        headers['Authorization'] = f'Bearer {token}'
+
     response = requests.get(url, headers=headers)
+    if DEBUG:
+        # print headers in reply
+        logging.debug(f'Headers: {response.headers}')
+    if response.status_code != 200:
+        logging.error(f'Failed to fetch patch for PR {pr["number"]}: {response.status_code} {response.text}')
+        sys.exit(1)
     pfile = f'pr_{pr["number"]}.patch'
     with open(pfile, 'w') as f:
         f.write(response.text)
@@ -93,7 +105,7 @@ def read_users(filename):
     users = [user.lower() for user in users]
     return users
 
-def merge_prs(args, users):
+def merge_prs(args, users, token=None):
     clone_repo(PROJECT, args)
     prs = get_prs(PROJECT, args.repo)
     for pr in prs:
@@ -108,7 +120,7 @@ def merge_prs(args, users):
         # no labels staging-skip?
         if not pr["labels"] or not 'staging-skip' in [label['name'] for label in pr["labels"]]:
             logging.info(f'Processing PR {pr["number"]}')
-            pfile = fetch_patch(pr, args.repo)
+            pfile = fetch_patch(pr, args.repo, token)
             patch_files.append(pfile)
             if args.push:
                 apply_patch(pr, args.repo, args.branch)
@@ -133,12 +145,23 @@ def merge_prs(args, users):
 
 
 def main():
+    global DEBUG
+
     parser = argparse.ArgumentParser(description='KernelCI staging v2')
     parser.add_argument('repo', help='GitHub repo to poll')
     parser.add_argument('--push', help='Push changes to staging branch, using push token (github PAT token)')
     parser.add_argument('--branch', help='Staging branch name', default='staging.kernelci.org')
     parser.add_argument('--userlist', help='File with users allowed to test PRs', default='../data/staging.ini')
+    parser.add_argument('--debug', action='store_true', help='Enable debug mode')
+    parser.add_argument('--token', help='GitHub token for authentication')
     args = parser.parse_args()
+    token = None
+    if args.token:
+        token = args.token
+    if args.debug:
+        DEBUG = True
+        logging.getLogger().setLevel(logging.DEBUG)
+        logging.debug('Debug mode enabled')
     # check repo name is valid
     if not args.repo:
         print('Invalid repo name')
@@ -154,7 +177,7 @@ def main():
         sys.exit(1)
 
     with tempfile.TemporaryDirectory() as tmpdirname:
-        merge_prs(args, users)
+        merge_prs(args, users, token)
     
     logging.info('Done')
 
