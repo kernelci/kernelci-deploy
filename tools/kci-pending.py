@@ -42,7 +42,8 @@ def clone_repo(owner, args):
 def get_prs(owner, repo):
     url = f'https://api.github.com/repos/{owner}/{repo}/pulls'
     headers = {
-        'Accept': 'application/vnd.github.v3+json'
+        'Accept': 'application/vnd.github.v3+json',
+        'Accept-Language': 'en-US,en;q=0.5',
     }
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
@@ -54,10 +55,12 @@ def get_prs(owner, repo):
 def fetch_patch(pr, repo, token=None):
     url = pr['patch_url']
     headers = {
-        'Accept': 'application/vnd.github.v3.patch'
+        'Accept': 'application/vnd.github.v3.patch',
+        'Accept-Language': 'en-US,en;q=0.5',
     }
     # if we have in env GH_TOKEN, use it
     if token:
+        print(f'Using token to bypass rate limits')
         headers['Authorization'] = f'Bearer {token}'
 
     response = requests.get(url, headers=headers)
@@ -111,13 +114,19 @@ def merge_prs(args, users, token=None):
     for pr in prs:
         #save_pr_info(pr)
         logging.info(f'Checking PR {pr["number"]}: `{pr["title"]}` by {pr["user"]["login"]}')
-        #print(f'PR: {pr["title"]} ID: {pr["id"]}')
-        #print(f'Author: {pr["user"]["login"]}')
+        if DEBUG:
+            print(f'PR: {pr}')
+        # Do not test PRs if they are updated more than 2 weeks ago
+        # 'updated_at': '2025-05-01T09:34:52Z'
+        updated_at_raw = pr["updated_at"]
+        updated_at = time.strptime(updated_at_raw, '%Y-%m-%dT%H:%M:%SZ')
+        two_weeks_ago = time.time() - (14 * 24 * 60 * 60)
+        if time.mktime(updated_at) < two_weeks_ago:
+            logging.info(f'Skipping PR {pr["number"]} as it was updated more than 2 weeks ago')
+            continue
         if not pr["user"]["login"].lower() in users:
             logging.error(f'User {pr["user"]["login"]} not allowed to test PRs')
             continue
-        #print(f'Labels: {pr["labels"]}')
-        # no labels staging-skip?
         if not pr["labels"] or not 'staging-skip' in [label['name'] for label in pr["labels"]]:
             logging.info(f'Processing PR {pr["number"]}')
             pfile = fetch_patch(pr, args.repo, token)
@@ -126,6 +135,8 @@ def merge_prs(args, users, token=None):
                 apply_patch(pr, args.repo, args.branch)
             else:
                 apply_patch(pr, args.repo)
+            # sleep to avoid rate limit
+            time.sleep(60)
             
         else:
             logging.info(f'Skipping PR {pr["number"]} due to staging-skip label')
