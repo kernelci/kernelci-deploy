@@ -1,5 +1,4 @@
-#!/bin/sh
-. ./main.cfg
+#!/bin/bash
 
 # is docker-compose exists? if not use docker compose
 if [ -z "$(which docker-compose)" ]; then
@@ -9,6 +8,10 @@ else
     DOCKER_COMPOSE="docker-compose"
 fi
 
+. ./config/main.cfg
+
+set -e
+
 # i am groot?
 if [ $(id -u) -ne 0 ]; then
     SUDO=sudo
@@ -16,24 +19,25 @@ else
     SUDO=
 fi
 
-cp .env-api kernelci/kernelci-api/.env
-cp api-configs.yaml kernelci/kernelci-core/config/core/
-cp kernelci-cli.toml kernelci/kernelci-core/kernelci.toml
+cp config/.env-api kernelci/kernelci-api/.env
+cp config/api-configs.yaml kernelci/kernelci-core/config/core/
+cp config/kernelci-cli.toml kernelci/kernelci-core/kernelci.toml
 
 cd kernelci/kernelci-api
 mkdir -p docker/redis/data
 ${SUDO} chmod -R 0777 docker/storage/data
 ${SUDO} chmod -R 0777 docker/redis/data
 # enable ssh and storage nginx
+mkdir -p ../../config/out
 sed -i 's/^#  /  /' docker-compose.yaml
-if [ -f ../../ssh.key ]; then
+if [ -f ../../config/out/ssh.key ]; then
     echo "ssh.key already exists"
 else
     # generate non-interactively ssh key to ssh.key
-    ssh-keygen -t rsa -b 4096 -N "" -f ../../ssh.key
+    ssh-keygen -t rsa -b 4096 -N "" -f ../../config/out/ssh.key
 fi
 # get public key and add to docker/ssh/user-data/authorized_keys
-cat ../../ssh.key.pub > docker/ssh/user-data/authorized_keys
+cat ../../config/out/ssh.key.pub > docker/ssh/user-data/authorized_keys
 
 # down, just in case old containers are running
 ${DOCKER_COMPOSE} down
@@ -63,12 +67,12 @@ fi
 
 # INFO, if you have issues with stale/old data, check for 
 # docker volume kernelci-api_mongodata and delete it
-../../helpers/scripts_setup_admin_user.exp "${YOUR_EMAIL}" "${ADMIN_PASSWORD}"
+expect ../../helpers/scripts_setup_admin_user.exp "${YOUR_EMAIL}" "${ADMIN_PASSWORD}"
 
 cd ../kernelci-core
 echo "Issuing token for admin user"
-../../helpers/kci_user_token_admin.exp "${ADMIN_PASSWORD}" > ../../admin-token.txt
-ADMIN_TOKEN=$(cat ../../admin-token.txt)
+expect ../../helpers/kci_user_token_admin.exp "${ADMIN_PASSWORD}" > ../../config/out/admin-token.txt
+ADMIN_TOKEN=$(cat ../../config/out/admin-token.txt)
 
 echo "[kci.secrets]
 api.\"docker-host\".token = \"$ADMIN_TOKEN\" 
