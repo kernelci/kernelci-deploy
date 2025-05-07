@@ -212,6 +212,11 @@ function deploy_once_pipeline {
     kubectl --context=${CONTEXT} delete secret kernelci-api-token --namespace=${NS_PIPELINE} || true
     kubectl --context=${CONTEXT} create secret generic kernelci-api-token --from-literal=token=${API_TOKEN} --namespace=${NS_PIPELINE}
 
+    # kernelci-pipeline-env / kcidb_rest
+    echo "Setting kernelci-pipeline-env... for KCIDB_REST"
+    kubectl --context=${CONTEXT} delete configmap kernelci-pipeline-env --namespace=${NS_PIPELINE} || true
+    kubectl --context=${CONTEXT} create configmap kernelci-pipeline-env --from-literal=KCIDB_REST=${KCIDB_REST} --namespace=${NS_PIPELINE}
+
     echo "Setting k8s credentials..."
     kubectl --context=${CONTEXT} delete secret k8scredentials --namespace=${NS_PIPELINE} || true
     kubectl --context=${CONTEXT} create secret generic k8scredentials --from-file=k8s-credentials.tgz=k8s.tgz --namespace=${NS_PIPELINE}
@@ -243,6 +248,7 @@ function retrieve_secrets_toml {
     echo "Retrieving kernelci-secrets.toml..."
     kubectl --context=${CONTEXT} get secret pipeline-secrets --namespace=${NS_PIPELINE} -o yaml > allsecrets.yaml
     python3 extract_secret.py allsecrets.yaml kernelci.toml kernelci-secrets.toml
+    echo "kernelci-secrets.toml extracted"
 }
 
 function deploy_secrets_toml_only {
@@ -483,6 +489,11 @@ fi
 
 if [ -z "$EMAIL_USER" ] || [ -z "$EMAIL_PASSWORD" ]; then
     echo "EMAIL_USER or EMAIL_PASSWORD not set, exiting"
+    exit 1
+fi
+
+if [ -z "$KCIDB_REST" ]; then
+    echo "KCIDB_REST not set, exiting"
     exit 1
 fi
 
