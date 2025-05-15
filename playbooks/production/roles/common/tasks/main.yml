@@ -5,20 +5,65 @@
   apt: name={{ item }}
   with_items:
     - git
-    - docker.io
-    - docker-compose
     - python3-pip
     - python3-venv
     - curl
     - libssl-dev
     - pkg-config
     - rsync
+    - ca-certificates
+    - gnupg
+    - lsb-release
 
 #- name: Add to fstab
 #  ansible.builtin.lineinfile:
 #    path: /etc/fstab
 #    line: "UUID=64d72737-f1de-4f67-a22a-f693a79f228f /data ext4 defaults,nofail 0 2"
 #    state: present
+
+- name: Remove unofficial docker packages
+  apt:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - docker.io
+    - docker-doc
+    - docker-compose
+    - docker-compose-v2
+    - podman-docker
+    - containerd
+    - runc
+
+- name: Ensure /etc/apt/keyrings directory exists
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Download Docker GPG key
+  get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+
+- name: Add Docker repository
+  apt_repository:
+    repo: "deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable"
+    state: present
+    filename: docker
+
+- name: Update apt cache
+  apt: update_cache=yes cache_valid_time=3600
+
+- name: Install Docker Engine and Compose plugin
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
 
 - name: Change ssh port to 22022
   ansible.builtin.lineinfile:
