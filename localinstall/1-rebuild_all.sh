@@ -64,6 +64,11 @@ if [ -n "$KCI_CACHE" ]; then
     fi
 fi
 
+# install virtualenv if necessary
+pip install virtualenv
+virtualenv .venv
+source .venv/bin/activate
+
 # build docker images
 # purge docker build cache with confirmation
 echo "Purge docker build cache"
@@ -80,6 +85,7 @@ pipeline_rev=$(git show --pretty=format:%H -s origin/$KCI_PIPELINE_BRANCH)
 pipeline_url=$(git remote get-url origin)
 cd ..
 cd kernelci-core
+pip install -r requirements.txt
 echo Retrieve Core revision and branch
 core_rev=$(git show --pretty=format:%H -s origin/$KCI_CORE_BRANCH)
 core_url=$(git remote get-url origin)
