@@ -98,11 +98,17 @@ failonerror
 echo Build docker images: pipeline
 ./kci docker $args kernelci pipeline --version="$pipeline_rev"
 failonerror
+echo Build docker images: lava-callback
+./kci docker $args kernelci lava-callback --version="$pipeline_rev"
+failonerror
 echo Tag docker image of api to latest
 docker tag local/staging-kernelci:api-$api_rev local/staging-kernelci:api
 failonerror
 echo Tag docker image of pipeline to latest
 docker tag local/staging-kernelci:pipeline-$pipeline_rev local/staging-kernelci:pipeline
+failonerror
+echo Tag docker image of lava-callback to latest
+docker tag local/staging-kernelci:lava-callback-$pipeline_rev local/staging-kernelci:lava-callback
 failonerror
 echo Build docker images: clang-17+kselftest+kernelci for x86
 ./kci docker $args clang-17 kselftest kernelci --arch x86
