@@ -1,0 +1,18 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata: {name: file-sync}
+spec:
+  schedule: "5 0 * * *"        # 00:05 every day
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: fetch
+            image: curlimages/curl:latest
+            args: ["-fsSLo", "/data/linux-firmware.tar.gz", "https://storage.kernelci.org/linux-firmware.tar.gz"]
+            volumeMounts:
+            - {name: data, mountPath: /data}
+          restartPolicy: OnFailure
+          volumes:
+          - {name: data, persistentVolumeClaim: {claimName: shared-data}}
