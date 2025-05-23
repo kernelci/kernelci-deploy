@@ -17,7 +17,7 @@ cd kernelci/kernelci-api
 docker compose down
 docker compose up -d
 echo "Waiting for API to be up"
-sleep 1
+sleep 5
 # loop until the API is up, try 5 times
 i=0
 while [ $i -lt 5 ]; do
