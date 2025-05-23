@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: file-sync
+spec:
+  schedule: "5 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: fetch
+            image: alpine:latest  # Changed to alpine as curlimages/curl with uid 0 might have issues
+            command:
+            - sh
+            - -c
+            - |
+              echo "Creating directory if needed..."
+              mkdir -p /data
+              echo "Setting permissions..."
+              chmod 777 /data
+              echo "Downloading file..."
+              wget -O /data/linux-firmware.tar.gz https://storage.kernelci.org/linux-firmware.tar.gz || \
+              (echo "wget failed, trying curl..." && \
+               apk add --no-cache curl && \
+               curl -fsSLo /data/linux-firmware.tar.gz https://storage.kernelci.org/linux-firmware.tar.gz)
+              echo "Download complete!"
+              ls -la /data/
+            volumeMounts:
+            - name: data
+              mountPath: /data
+          restartPolicy: OnFailure
+          volumes:
+          - name: data
+            persistentVolumeClaim:
+              claimName: shared-data

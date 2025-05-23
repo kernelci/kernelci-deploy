@@ -1,0 +1,125 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-backing-storage
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: standard-rwo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nfs-server
+spec:
+  type: ClusterIP
+  ports:
+  - { name: nfs-tcp,   port: 2049, protocol: TCP }
+  - { name: nfs-udp,   port: 2049, protocol: UDP }
+  - { name: rpc-tcp,   port: 111,  protocol: TCP }
+  - { name: rpc-udp,   port: 111,  protocol: UDP }
+  - { name: mountd-tcp,port: 20048,protocol: TCP }
+  - { name: mountd-udp,port: 20048,protocol: UDP }
+  selector:
+    app: nfs-server
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfs-server
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nfs-server
+  template:
+    metadata:
+      labels:
+        app: nfs-server
+    spec:
+      containers:
+      - name: nfs-server
+        image: gcr.io/google_containers/volume-nfs:0.8
+        env:
+        - name: EXPORT_OPTIONS          # overrides /etc/exports
+          value: "rw,insecure,no_subtree_check,no_root_squash"
+        ports:
+        - containerPort: 2049
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - SYS_ADMIN
+              - SETPCAP
+        volumeMounts:
+        - mountPath: /exports
+          name: storage
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: nfs-backing-storage
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: shared-data-pv
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    server: nfs-server.default.svc.cluster.local
+    path: "/exports"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared-data
+spec:
+  accessModes: [ReadWriteMany]
+  resources:
+    requests:
+      storage: 50Gi
+  volumeName: shared-data-pv
+  storageClassName: ""
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: file-sync
+spec:
+  schedule: "5 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: fetch
+            image: alpine:latest
+            command:
+            - sh
+            - -c
+            - |
+              echo "Creating directory if needed..."
+              mkdir -p /exports
+              echo "Downloading file..."
+              wget -O /exports/linux-firmware.tar.gz https://storage.kernelci.org/linux-firmware.tar.gz || \
+              (echo "wget failed, trying curl..." && \
+               apk add --no-cache curl && \
+               curl -fsSLo /exports/linux-firmware.tar.gz https://storage.kernelci.org/linux-firmware.tar.gz)
+              echo "Download complete!"
+              ls -la /exports/
+            volumeMounts:
+            - name: data
+              mountPath: /exports
+          restartPolicy: OnFailure
+          volumes:
+          - name: data
+            persistentVolumeClaim:
+              claimName: shared-data
