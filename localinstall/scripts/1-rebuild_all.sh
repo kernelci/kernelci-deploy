@@ -1,5 +1,8 @@
 #!/bin/bash
-. ./main.cfg
+
+. ./config/main.cfg
+
+set -e
 
 # i am groot?
 if [ $(id -u) -ne 0 ]; then
@@ -7,13 +10,6 @@ if [ $(id -u) -ne 0 ]; then
 else
     SUDO=
 fi
-
-function failonerror {
-    if [ $? -ne 0 ]; then
-        echo "Failed"
-        exit 1
-    fi
-}
 
 # if directry kernelci doesn't exist, then we dont have repos cloned
 if [ ! -d kernelci ]; then
@@ -86,32 +82,14 @@ core_url=$(git remote get-url origin)
 build_args="--build-arg pipeline_rev=$pipeline_rev --build-arg core_rev=$core_rev --build-arg api_rev=$api_rev --build-arg pipeline_url=$pipeline_url --build-arg core_url=$core_url --build-arg api_url=$api_url"
 px_arg='--prefix=local/staging-'
 args="build --verbose $px_arg $build_args"
-echo Build docker images: kernelci args=$args
-./kci docker $args kernelci 
-failonerror
-echo Build docker images: k8s+kernelci
-./kci docker $args k8s kernelci
-failonerror
 echo Build docker images: api
-./kci docker $args kernelci api --version="$api_rev"
-failonerror
+./kci docker $args kernelci api
 echo Build docker images: pipeline
-./kci docker $args kernelci pipeline --version="$pipeline_rev"
-failonerror
-echo Tag docker image of api to latest
-docker tag local/staging-kernelci:api-$api_rev local/staging-kernelci:api
-failonerror
-echo Tag docker image of pipeline to latest
-docker tag local/staging-kernelci:pipeline-$pipeline_rev local/staging-kernelci:pipeline
-failonerror
+./kci docker $args kernelci pipeline
 echo Build docker images: clang-17+kselftest+kernelci for x86
 ./kci docker $args clang-17 kselftest kernelci --arch x86
-failonerror
 echo Build docker images: gcc-12+kselftest+kernelci for x86
 ./kci docker $args gcc-12 kselftest kernelci --arch x86
-failonerror
 echo Build docker images: gcc-12+kselftest+kernelci for arm64
 ./kci docker $args gcc-12 kselftest kernelci --arch arm64
-failonerror
-
 
