@@ -38,18 +38,11 @@ PIPELINE_PWD=$(pwd)
 # This is BAD hack, but it works for now
 sed -i 's/lab_type: kubernetes/lab_type: docker/g' config/pipeline.yaml
 
-# replace data/output by $PIPELINE_PWD/data/output
-# might be two variants (default and staging)
-#      - '/data/kernelci-deploy-checkout/kernelci-pipeline/data/ssh/:/home/kernelci/data/ssh'
-#      - '/data/kernelci-deploy-checkout/kernelci-pipeline/data/output/:/home/kernelci/data/output'
-# AND
-#      - 'data/ssh/:/home/kernelci/data/ssh'
-#      - 'data/output/:/home/kernelci/data/output'
-sed -i "s|- 'data/output/|- '$PIPELINE_PWD/data/output/|g" config/pipeline.yaml
-sed -i "s|- 'data/ssh/|- '$PIPELINE_PWD/data/ssh/|g" config/pipeline.yaml
-# OR
-sed -i "s|- '/data/kernelci-deploy-checkout/kernelci-pipeline/data/ssh/|- '$PIPELINE_PWD/data/ssh/|g" config/pipeline.yaml
-sed -i "s|- '/data/kernelci-deploy-checkout/kernelci-pipeline/data/output/|- '$PIPELINE_PWD/data/output/|g" config/pipeline.yaml
+# replace named data/output and data/ssh volumes with absolute path since it is needed
+sed -i '/volumes:/,/data\/output/{
+  s|['\''"].*data\/ssh\/|'\'''"$PIPELINE_PWD"'\/data\/ssh\/|g;
+  s|['\''"].*data\/output\/|'\'''"$PIPELINE_PWD"'\/data\/output\/|g;
+}' config/pipeline.yaml
 
 chmod 777 data/ssh
 cp ../../config/out/ssh.key data/ssh/id_rsa_tarball
