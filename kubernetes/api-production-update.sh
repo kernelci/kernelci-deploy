@@ -127,14 +127,24 @@ update_manifests() {
 }
 
 apply_manifests() {
+    echo "[DEPLOY] Applying manifests to context: $CONTEXT"
+    echo "[DEPLOY] Applying kernelci-api manifests"
     kubectl --context=$CONTEXT apply --namespace kernelci-api -f kernelci-api/kube/aks/api.yaml
+    echo "[DEPLOY] Applying kernelci-pipeline manifests, lava-callback"
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/lava-callback.yaml
+    echo "[DEPLOY] Applying monitor"
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/monitor.yaml
+    echo "[DEPLOY] Applying nodehandlers"
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/nodehandlers.yaml
+    echo "[DEPLOY] Applying scheduler-k8s"
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/scheduler-k8s.yaml
+    echo "[DEPLOY] Applying scheduler-lava"
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/scheduler-lava.yaml
+    echo "[DEPLOY] Applying scheduler-shell"
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/scheduler-shell.yaml
+    echo "[DEPLOY] Applying tarball"
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/tarball.yaml
+    echo "[DEPLOY] Applying configmap"
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/pipeline-kcidb.yaml
 
     # BUG/FIXME: trigger need some delay, otherwise if other components are not ready, it will waste the job
