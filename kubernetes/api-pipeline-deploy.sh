@@ -588,13 +588,7 @@ fi
 
 # restore-mongo
 if [ "$1" == "restore-mongo" ]; then
-    echo "Restoring MongoDB at ${MONGO}..."
-    echo "Cleaning up old backup directory on k8s..."
-    kubectl --context=${CONTEXT} exec -n ${NS_API} $(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "rm -rf /tmp/mongobackup"
-    echo "Copying backup..."
-    kubectl --context=${CONTEXT} cp ./mongobackup ${NS_API}/$(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}'):/tmp/mongobackup
-    echo "Restoring mongo..."
-    kubectl --context=${CONTEXT} exec -n ${NS_API} $(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "mongorestore --drop --uri=${MONGO} --gzip /tmp/mongobackup"
+    echo "Broken at moment, we need to implement restore logic for tarball"
     exit 0
 fi
 
