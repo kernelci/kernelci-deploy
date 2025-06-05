@@ -360,7 +360,7 @@ function deploy_certissuer {
 }
 
 function deploy_pipeline_configmap {
-    CFGDIR="config/*"
+    CFGDIR="config/"
     # if $2 is set, then we use it as a cfg directory
     if [ ! -z "$1" ]; then
         echo "Using ${1} as config directory"
