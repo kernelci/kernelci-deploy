@@ -360,7 +360,7 @@ function deploy_certissuer {
 }
 
 function deploy_pipeline_configmap {
-    CFGDIR="config/*"
+    CFGDIR="config/"
     # if $2 is set, then we use it as a cfg directory
     if [ ! -z "$1" ]; then
         echo "Using ${1} as config directory"
@@ -510,6 +510,13 @@ if [ -z "$KCIDB_REST" ]; then
     exit 1
 fi
 
+# id_rsa is used for NIPA ssh access to upload artifacts
+# check for id_rsa existence
+if [ ! -f id_rsa ]; then
+    echo "id_rsa not found, exiting"
+    echo "You need to create id_rsa file with your private key for NIPA ssh access to upload artifacts"
+    exit 1
+fi
 
 # if argument delete set just delete namespace and exit
 if [ "$1" == "delete" ]; then
@@ -588,13 +595,7 @@ fi
 
 # restore-mongo
 if [ "$1" == "restore-mongo" ]; then
-    echo "Restoring MongoDB at ${MONGO}..."
-    echo "Cleaning up old backup directory on k8s..."
-    kubectl --context=${CONTEXT} exec -n ${NS_API} $(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "rm -rf /tmp/mongobackup"
-    echo "Copying backup..."
-    kubectl --context=${CONTEXT} cp ./mongobackup ${NS_API}/$(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}'):/tmp/mongobackup
-    echo "Restoring mongo..."
-    kubectl --context=${CONTEXT} exec -n ${NS_API} $(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "mongorestore --drop --uri=${MONGO} --gzip /tmp/mongobackup"
+    echo "Broken at moment, we need to implement restore logic for tarball"
     exit 0
 fi
 
