@@ -375,7 +375,10 @@ function deploy_pipeline_configmap {
     echo "Deleting old pipeline-configmap..."
     kubectl --context=${CONTEXT} delete configmap pipeline-configmap --namespace=${NS_PIPELINE} || true
     echo "Deploying pipeline-configmap..."
-    kubectl --context=${CONTEXT} create configmap pipeline-configmap --namespace=${NS_PIPELINE} --from-file=${CFGDIR}/
+    CFGFILES=$(find "$CFGDIR" -type f -printf '--from-file=%p ')
+    echo "Config files:"
+    echo "$CFGFILES"
+    kubectl --context=${CONTEXT} create configmap pipeline-configmap --namespace=${NS_PIPELINE} --from-file=$(find "$CFGDIR" -type f -printf '--from-file=%p ')
 }
 
 function deploy_pipeline {
