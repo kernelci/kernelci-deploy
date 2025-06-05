@@ -376,9 +376,8 @@ function deploy_pipeline_configmap {
     kubectl --context=${CONTEXT} delete configmap pipeline-configmap --namespace=${NS_PIPELINE} || true
     echo "Deploying pipeline-configmap..."
     CFGFILES=$(find "$CFGDIR" -type f -printf '--from-file=%p ')
-    echo "Config files:"
-    echo "$CFGFILES"
-    kubectl --context=${CONTEXT} create configmap pipeline-configmap --namespace=${NS_PIPELINE} --from-file=$(find "$CFGDIR" -type f -printf '--from-file=%p ')
+    echo "Config files: ${CFGFILES}"
+    kubectl --context=${CONTEXT} create configmap pipeline-configmap --namespace=${NS_PIPELINE} ${CFGFILES}
 }
 
 function deploy_pipeline {
@@ -470,6 +469,17 @@ fi
 # Local toolset setup
 local_setup
 
+# pipeline-restart-pods
+if [ "$1" == "pipeline-restart-pods" ]; then
+    kubectl --context=${CONTEXT} delete pods --all --namespace=${NS_PIPELINE}
+    exit 0
+fi
+
+if [ "$1" == "api-restart-pods" ]; then
+    kubectl --context=${CONTEXT} delete pods --all --namespace=${NS_API}
+    exit 0
+fi
+
 if [ "$1" == "config" ]; then
     deploy_pipeline_configmap $2
     exit 0
@@ -556,17 +566,6 @@ fi
 # pipeline-configmap
 if [ "$1" == "pipeline-configmap" ]; then
     deploy_pipeline_configmap
-    exit 0
-fi
-
-# pipeline-restart-pods
-if [ "$1" == "pipeline-restart-pods" ]; then
-    kubectl --context=${CONTEXT} delete pods --all --namespace=${NS_PIPELINE}
-    exit 0
-fi
-
-if [ "$1" == "api-restart-pods" ]; then
-    kubectl --context=${CONTEXT} delete pods --all --namespace=${NS_API}
     exit 0
 fi
 
