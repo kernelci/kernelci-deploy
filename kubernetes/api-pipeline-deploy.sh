@@ -510,6 +510,13 @@ if [ -z "$KCIDB_REST" ]; then
     exit 1
 fi
 
+# id_rsa is used for NIPA ssh access to upload artifacts
+# check for id_rsa existence
+if [ ! -f id_rsa ]; then
+    echo "id_rsa not found, exiting"
+    echo "You need to create id_rsa file with your private key for NIPA ssh access to upload artifacts"
+    exit 1
+fi
 
 # if argument delete set just delete namespace and exit
 if [ "$1" == "delete" ]; then
