@@ -44,37 +44,7 @@ cmd_pull() {
     git pull --ff-only
 }
 
-
-cmd_core() {
-    echo "Updating kernelci-core"
-    ./pending.py kernelci-core --push
-}
-
-cmd_api() {
-    echo "Updating kernelci-api"
-    ./pending.py kernelci-api --push
-}
-
-cmd_pipeline() {
-    echo "Updating kernelci-pipeline"
-    ./pending.py kernelci-pipeline --push
-}
-
-cmd_bootrr() {
-    echo "Updating bootrr"
-    ./pending.py bootrr --push
-}
-
-cmd_buildroot() {
-    echo "Updating buildroot"
-    ./pending.py buildroot --push
-}
-
-cmd_test_definitions() {
-    echo "Updating test-definitions"
-    ./pending.py test-definitions --push --main=master
-    ./pending.py iec-security --push --main=master
-}
+# TODO: Add update of test definitions
 
 cmd_kernel() {
     tree="${1:-next}"
