@@ -1,0 +1,78 @@
+- name: Download node_exporter
+  ansible.builtin.get_url:
+    url: "https://github.com/prometheus/node_exporter/releases/download/v1.9.1/node_exporter-1.9.1.linux-amd64.tar.gz"
+    dest: "/tmp/node_exporter-1.9.1.linux-amd64.tar.gz"
+    mode: '0644'
+
+- name: Check if node_exporter is already installed
+  ansible.builtin.stat:
+    path: "/usr/local/bin/node_exporter"
+  register: node_exporter_installed
+
+- ansible.builtin.fail:
+    msg: "node_exporter is already installed."
+  when: node_exporter_installed.stat.exists
+
+- name: Create directory for node_exporter
+  ansible.builtin.file:
+    path: "/tmp/node_exporter"
+    state: directory
+    mode: '0755'
+
+- name: Extract node_exporter
+  ansible.builtin.unarchive:
+    src: "/tmp/node_exporter-1.9.1.linux-amd64.tar.gz"
+    dest: "/tmp/node_exporter"
+    remote_src: yes
+    mode: '0755'    
+
+- name: Install node_exporter binary
+  ansible.builtin.copy:
+    src: "/tmp/node_exporter/node_exporter-1.9.1.linux-amd64/node_exporter"
+    dest: "/usr/local/bin/node_exporter"
+    mode: '0755'
+    remote_src: yes
+
+- name: Remove node_exporter tarball
+  ansible.builtin.file:
+    path: "/tmp/node_exporter-1.9.1.linux-amd64.tar.gz"
+    state: absent
+
+- name: Remove extracted node_exporter directory
+  ansible.builtin.file:
+    path: "/tmp/node_exporter"
+    state: absent
+
+- name: Create node_exporter systemd service file
+  ansible.builtin.copy:
+    dest: "/etc/systemd/system/node_exporter.service"
+    content: |
+      [Unit]
+      Description=Node Exporter
+      After=network.target
+
+      [Service]
+      User=root
+      ExecStart=/usr/local/bin/node_exporter --web.listen-address=":2000"
+      Restart=always
+      RestartSec=5s
+
+      [Install]
+      WantedBy=multi-user.target
+    mode: '0644'
+
+- name: Reload systemd to recognize new service
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Enable and start node_exporter service
+  ansible.builtin.systemd:
+    name: node_exporter
+    enabled: yes
+    state: started
+
+- name: Ensure node_exporter is running
+  ansible.builtin.systemd:
+    name: node_exporter
+    state: started
+    enabled: yes
