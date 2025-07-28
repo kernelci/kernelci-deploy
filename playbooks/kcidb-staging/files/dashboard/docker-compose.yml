@@ -1,0 +1,87 @@
+volumes:
+    backend-data:
+    runtime-data:
+    static-data:
+
+networks:
+    public:
+    private:
+    kcidb:
+        name: kcidb
+        external: true
+
+secrets:
+    postgres_password_secret:
+        file: ./backend/runtime/secrets/postgres_password_secret
+
+services:
+    redis:
+        image: redis:8.0-M04-alpine
+        restart: always
+        networks:
+            - private
+
+    backend:
+        build:
+            context: ./backend
+            args:
+                BACKEND_VOLUME_DIR: ${BACKEND_VOLUME_DIR:-/volume_data}
+        volumes:
+            - backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
+        restart: always
+        container_name: dashboard_backend_service
+        networks:
+            - private
+            - public
+            - kcidb
+        ports:
+            - target: 8000
+              published: 8000
+              protocol: tcp
+              mode: host
+        depends_on:
+            - redis
+        secrets:
+            - postgres_password_secret
+        environment:
+            - 'ALLOWED_HOSTS=["backend", "localhost"]'
+            - DB_DEFAULT_PASSWORD_FILE=/run/secrets/postgres_password_secret
+            - DB_DEFAULT_HOST=db
+            - DB_DEFAULT_USER=${DB_DEFAULT_USER:-kcidb_editor}
+            - DB_DEFAULT_NAME=${DB_DEFAULT_NAME:-kcidb}
+            - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+            - DEBUG=True
+            # - DISCORD_WEBHOOK_URL=  # TODO: Set this environment variable
+            - REDIS_HOST=redis
+            - GMAIL_API_TOKEN=gmail_api_token.json
+
+    dashboard:
+        build: ./dashboard
+        image: dashboard:latest
+
+    collect_static:
+        build: './collect_static'
+        image: collect_static:latest
+        depends_on:
+            - dashboard
+        volumes:
+            - static-data:/data/static
+
+    proxy:
+        build: ./proxy
+        restart: always
+        depends_on:
+            - backend
+            - collect_static
+        networks:
+            - public
+        volumes:
+            - static-data:/data/static
+        ports:
+            - target: 80
+              published: 7780
+              protocol: tcp
+              mode: host
+        environment:
+            - PROXY_TARGET=http://backend:8000
+

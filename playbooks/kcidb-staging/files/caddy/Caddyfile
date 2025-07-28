@@ -1,0 +1,15 @@
+staging.db.kernelci.org {
+    reverse_proxy /* 127.0.0.1:8880
+    log {
+        output file /var/log/caddy/staging.db.kernelci.org.log
+        format json
+    }
+}
+
+staging-dashboard.kernelci.org {
+    reverse_proxy /* 127.0.0.1:7780
+    log {
+        output file /var/log/caddy/staging-dashboard.kernelci.org.log
+        format json
+    }
+}
