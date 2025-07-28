@@ -1,0 +1,124 @@
+# kcidb-rest interface workers
+services:
+  kcidb-rest:
+    build:
+      context: .
+      dockerfile: Dockerfile.kcidb-rest-rs
+    env_file:
+      - .env
+    ports:
+      - "8443:443"
+      - "8880:80"
+    volumes:
+      - ./spool:/app/spool
+      #- /etc/letsencrypt:/etc/letsencrypt
+    restart: unless-stopped
+    networks:
+      - kcidb
+# To disable JWT auth
+#    command: ["/usr/local/bin/kcidb-restd-rs","-j",""]
+  ingester:
+    build:
+      context: .
+      dockerfile: Dockerfile.ingester
+    env_file:
+      - .env
+    volumes:
+      - ./spool:/app/spool
+      - ./state:/app/state
+      - ./cache:/app/cache
+    command: ["python", "/app/ingester.py", "--spool-dir", "/app/spool"]
+    restart: unless-stopped
+    networks:
+      - kcidb
+    depends_on:
+      db:
+        condition: service_healthy
+      dbinit:
+        condition: service_completed_successfully
+  logspec-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.logspec-worker
+    env_file:
+      - .env
+    volumes:
+      - ./spool:/app/spool
+      - ./cache:/cache
+      - ./state:/app/state
+      - ./config:/app/config
+    command: ["python", "/app/logspec_worker.py", "--spool-dir", "/app/spool", "--dry-run"]
+    restart: unless-stopped
+    networks:
+      - kcidb
+    depends_on:
+      db:
+        condition: service_healthy
+      dbinit:
+        condition: service_completed_successfully
+  postgres:
+    container_name: 'postgres'
+    image: 'gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest'
+    command: 'kernelci-production:us-central1:postgresql2 -c/config/db.json -a0.0.0.0'
+    volumes:
+      - './config:/config'
+    restart: on-failure
+    profiles: ["google-cloud-sql"]
+    networks:
+      - kcidb
+  db:
+    image: postgres:17
+    container_name: 'postgres'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s        # run every 10 s
+      timeout: 5s          # fail if probe > 5 s
+      retries: 5           # mark unhealthy after 5 failures
+      start_period: 5s     # give Postgres a moment to boot    
+    env_file:
+      - .env
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    profiles: ["self-hosted"]
+    networks:
+      - kcidb
+  dbinit:
+    build:
+      context: .
+      dockerfile: Dockerfile.dbinit
+    container_name: 'dbinit'
+    env_file:
+      - .env
+    restart: "no"
+    profiles: ["self-hosted"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - kcidb
+networks:
+  kcidb:
+    name: kcidb
+    driver: bridge
+
+# TODO: This is complicated to set up, due dashboard on same server
+#  certbot:
+#    image: certbot/certbot
+#    ports:
+#      - "80:80"
+#    volumes:
+#      - ./certs:/etc/letsencrypt
+#      - ./certs-data:/var/lib/letsencrypt
+#    environment:
+#      - CERTBOT_DOMAIN=${CERTBOT_DOMAIN}
+#      - CERTBOT_EMAIL=${CERTBOT_EMAIL}
+#    env_file:
+#      - .env
+#    # initially run certbot to get the certificate
+#    command: certonly --cert-name ${CERTBOT_DOMAIN} --standalone -d ${CERTBOT_DOMAIN} --email ${CERTBOT_EMAIL} --agree-tos --non-interactive --no-eff-email
+#    # Uncomment the following lines to run certbot in a loop, and comment the above line
+#    #entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+#    #restart: unless-stopped

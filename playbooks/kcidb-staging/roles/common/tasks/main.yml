@@ -1,0 +1,133 @@
+- name: Update apt cache
+  apt: update_cache=yes cache_valid_time=3600
+
+- name: Install packages
+  apt: name={{ item }}
+  with_items:
+    - git
+    - python3-pip
+    - python3-venv
+    - curl
+    - libssl-dev
+    - pkg-config
+    - rsync
+
+- name: Change ssh port to 22022
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    line: "Port 22022"
+    state: present
+
+- name: Restart ssh service
+  ansible.builtin.service:
+    name: ssh
+    state: restarted
+
+- name: Remove old Docker packages
+  ansible.builtin.apt:
+    name:
+      - docker
+      - docker-engine
+      - docker.io
+      - docker-ce
+      - docker-ce-cli
+      - containerd
+      - runc
+      - docker-compose
+    state: absent
+    purge: yes
+  ignore_errors: true
+
+- name: Install prerequisites
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+
+- name: Ensure keyring directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Add Docker GPG key (de‑armored)
+  ansible.builtin.shell: |
+    curl -fsSL https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg \
+      | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  args:
+    creates: /etc/apt/keyrings/docker.gpg
+
+- name: Configure Docker APT repo
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.gpg]
+      https://download.docker.com/linux/{{ ansible_distribution | lower }}
+      {{ ansible_distribution_release }} stable
+    filename: docker
+    state: present
+
+- name: Update APT cache (Docker repo)
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install Docker Engine, CLI, containerd, Compose plugin
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+    state: present
+
+# (Optional) legacy standalone docker‑compose binary
+# - name: Install legacy docker‑compose
+#   ansible.builtin.get_url:
+#     url: "https://github.com/docker/compose/releases/download/{{ compose_version }}/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
+#     dest: /usr/local/bin/docker-compose
+#     mode: "0755"
+#   vars:
+#     compose_version: "v2.24.7"  # example
+
+- name: Add current user to docker group
+  ansible.builtin.user:
+    name: "{{ lookup('env','SUDO_USER') | default(ansible_user_id) }}"
+    groups: docker
+    append: yes
+
+- name: Enable & start Docker service
+  ansible.builtin.service:
+    name: docker
+    enabled: yes
+    state: started
+
+- name: Verify Docker version
+  ansible.builtin.command: docker --version
+  register: docker_version
+
+- name: Verify Compose plugin
+  ansible.builtin.command: docker compose version
+  register: compose_version
+  failed_when: false
+
+- name: Show results
+  ansible.builtin.debug:
+    msg:
+      - "{{ docker_version.stdout }}"
+      - "{{ compose_version.stdout | default('Compose plugin installed; use \"docker compose\".') }}"
+
+- name: Reminder - Configure Discord webhook
+  ansible.builtin.debug:
+    msg: "REMINDER: Set DISCORD_WEBHOOK_URL environment variable in dashboard docker-compose.yml for notifications"
+
+# one of them deployment key
+- name: Install root ssh keys
+  ansible.builtin.copy:
+    src: files/keys/authorized_keys_root
+    dest: /root/.ssh/authorized_keys
+    owner: root
+    group: root
+    mode: '0600'
+

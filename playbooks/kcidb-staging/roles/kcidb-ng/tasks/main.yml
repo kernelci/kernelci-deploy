@@ -1,0 +1,54 @@
+- name: Check if kcidb-ng is installed
+  ansible.builtin.stat:
+    path: /srv/kcidb-ng/docker-compose.yaml
+  register: kcidb_ng_installed
+
+- name: Install self-hosted kcidb-ng from git
+  ansible.builtin.git:
+    repo: https://github.com/kernelci/kcidb-ng.git
+    dest: /srv/kcidb-ng
+    version: main
+  when: not kcidb_ng_installed.stat.exists
+
+- name: Copy patched kcidb-ng docker-compose.yaml
+  ansible.builtin.copy:
+    src: files/kcidb-ng/docker-compose.yaml
+    dest: /srv/kcidb-ng/docker-compose.yaml
+    owner: root
+    group: root
+    mode: '0644'
+  when: not kcidb_ng_installed.stat.exists
+
+- name: Start kcidb-ng with docker-compose
+  ansible.builtin.command:
+    cmd: docker compose up -d
+    chdir: /srv/kcidb-ng
+  when: not kcidb_ng_installed.stat.exists
+
+- name: Check if dashboard is installed
+  ansible.builtin.stat:
+    path: /srv/dashboard/docker-compose.yml
+  register: dashboard_installed
+
+- name: Install self-hosted dashboard from git
+  ansible.builtin.git:
+    repo: https://github.com/kernelci/dashboard/
+    dest: /srv/dashboard
+    version: main
+  when: not dashboard_installed.stat.exists
+
+- name: Copy patched dashboard docker-compose.yml
+  ansible.builtin.copy:
+    src: files/dashboard/docker-compose.yml
+    dest: /srv/dashboard/docker-compose.yml 
+    owner: root
+    group: root
+    mode: '0644'
+  when: not dashboard_installed.stat.exists
+
+- name: Start dashboard with docker-compose
+  ansible.builtin.command:
+    cmd: docker compose up -d
+    chdir: /srv/dashboard
+  when: not dashboard_installed.stat.exists
+

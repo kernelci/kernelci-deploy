@@ -1,0 +1,5 @@
+vhosts:
+  - vhost_name: staging.db.kernelci.org
+    port: 8880
+  - vhost_name: staging-dashboard.kernelci.org
+    port: 7780
