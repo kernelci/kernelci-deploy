@@ -1,3 +1,6 @@
+# This task more about installing node_exporter than monitoring in general
+# If any further components will be added for all hosts,
+# better to rename it
 - name: Download node_exporter
   ansible.builtin.get_url:
     url: "https://github.com/prometheus/node_exporter/releases/download/v1.9.1/node_exporter-1.9.1.linux-amd64.tar.gz"
