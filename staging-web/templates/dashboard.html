@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-tachometer-alt me-2"></i>Staging Cycle Overview</h5>
+            </div>
+            <div class="card-body">
+                {% if staging_runs %}
+                    {% set latest_run = staging_runs[0] %}
+                    <div class="row">
+                        <div class="col-md-3">
+                            <h6>Current Status</h6>
+                            {% if latest_run.status.value == 'running' %}
+                                <span class="badge bg-primary fs-6">
+                                    <i class="fas fa-spinner fa-spin me-1"></i>Running
+                                </span>
+                            {% elif latest_run.status.value == 'completed' %}
+                                <span class="badge bg-success fs-6">
+                                    <i class="fas fa-check me-1"></i>Completed
+                                </span>
+                            {% elif latest_run.status.value == 'failed' %}
+                                <span class="badge bg-danger fs-6">
+                                    <i class="fas fa-times me-1"></i>Failed
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary fs-6">
+                                    <i class="fas fa-clock me-1"></i>{{ latest_run.status.value.title() }}
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <h6>Current Step</h6>
+                            {% if latest_run.current_step %}
+                                <span class="badge bg-info">{{ latest_run.current_step.replace('_', ' ').title() }}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <h6>Kernel Tree</h6>
+                            {% if latest_run.kernel_tree %}
+                                <span class="badge bg-secondary">{{ latest_run.kernel_tree }}</span>
+                            {% else %}
+                                <span class="text-muted">Auto</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <h6>Duration</h6>
+                            {% if latest_run.end_time %}
+                                <p class="mb-0">{{ ((latest_run.end_time - latest_run.start_time).total_seconds() / 60) | round(1) }} min</p>
+                            {% else %}
+                                <p class="mb-0">In progress...</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if latest_run.status.value == 'running' %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6>Step Progress</h6>
+                            <div class="progress-container">
+                                {% for step in latest_run.steps | sort(attribute='sequence_order') %}
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="step-icon me-2">
+                                        {% if step.status.value == 'completed' %}
+                                            <i class="fas fa-check-circle text-success"></i>
+                                        {% elif step.status.value == 'partial_success' %}
+                                            <i class="fas fa-exclamation-circle text-warning"></i>
+                                        {% elif step.status.value == 'running' %}
+                                            <i class="fas fa-spinner fa-spin text-primary"></i>
+                                        {% elif step.status.value == 'failed' %}
+                                            <i class="fas fa-times-circle text-danger"></i>
+                                        {% else %}
+                                            <i class="fas fa-circle text-muted"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <strong>{{ step.step_type.value.replace('_', ' ').title() }}</strong>
+                                        {% if step.error_message %}
+                                            {% if 'Partial success' in step.error_message %}
+                                                <br><small class="text-warning">{{ step.error_message }}</small>
+                                            {% else %}
+                                                <br><small class="text-danger">{{ step.error_message }}</small>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                {% else %}
+                    <div class="text-center text-muted">
+                        <i class="fas fa-info-circle fa-3x mb-3"></i>
+                        <p>No staging runs yet. Start your first run!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Quick Stats</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-primary">{{ staging_runs|length }}</h4>
+                        <small class="text-muted">Total Runs</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success">
+                            {{ staging_runs | selectattr("status.value", "equalto", "completed") | list | length }}
+                        </h4>
+                        <small class="text-muted">Successful</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if user.role.value in ['admin', 'maintainer'] %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-play me-2"></i>Start New Run</h6>
+            </div>
+            <div class="card-body">
+                {% if running_staging %}
+                <div class="alert alert-warning" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Staging run #{{ running_staging.id }} is currently running.</strong><br>
+                    <small>Cannot start a new run while another is in progress.</small>
+                    <div class="mt-2">
+                        <a href="/staging/{{ running_staging.id }}" class="btn btn-outline-primary">
+                            <i class="fas fa-eye me-1"></i>View Current Run
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <form method="post" action="/staging/trigger" id="stagingTriggerForm">
+                    <div class="mb-3">
+                        <label for="kernel_tree" class="form-label">Kernel Tree</label>
+                        <select class="form-select" name="kernel_tree" id="kernel_tree">
+                            <option value="auto">Auto (Rotate)</option>
+                            <option value="next">Linux Next</option>
+                            <option value="mainline">Linux Mainline</option>
+                            <option value="stable">Linux Stable</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100" id="stagingTriggerBtn">
+                        <i class="fas fa-rocket me-2"></i>Trigger Staging Run
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Staging Runs</h5>
+            </div>
+            <div class="card-body">
+                {% if staging_runs %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Started By</th>
+                                <th>Kernel Tree</th>
+                                <th>Start Time</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Current Step</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for run in staging_runs %}
+                            <tr>
+                                <td><a href="/staging/{{ run.id }}" class="text-decoration-none">#{{ run.id }}</a></td>
+                                <td>{{ run.user.username }}</td>
+                                <td>
+                                    {% if run.kernel_tree %}
+                                        <span class="badge bg-secondary">{{ run.kernel_tree }}</span>
+                                    {% else %}
+                                        <span class="text-muted">Auto</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ run.start_time.strftime('%m/%d %H:%M') }}</td>
+                                <td>
+                                    {% if run.end_time %}
+                                        {{ ((run.end_time - run.start_time).total_seconds() / 60) | round(1) }}m
+                                    {% else %}
+                                        <span class="text-muted">Running...</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if run.status.value == 'running' %}
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-spinner fa-spin me-1"></i>Running
+                                        </span>
+                                    {% elif run.status.value == 'completed' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>Completed
+                                        </span>
+                                    {% elif run.status.value == 'failed' %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times me-1"></i>Failed
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">
+                                            {{ run.status.value.title() }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if run.current_step %}
+                                        <small class="badge bg-info">{{ run.current_step.replace('_', ' ').title() }}</small>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="/staging/{{ run.id }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-history fa-3x mb-3"></i>
+                    <p>No staging runs found.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if staging_runs and staging_runs[0].status.value == 'running' %}
+<script>
+// Auto-refresh for running staging runs
+setTimeout(function() {
+    window.location.reload();
+}, 30000); // Refresh every 30 seconds
+</script>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add loading to staging trigger form
+    const stagingForm = document.getElementById('stagingTriggerForm');
+    const stagingBtn = document.getElementById('stagingTriggerBtn');
+    
+    if (stagingForm && typeof window.AjaxLoader !== 'undefined') {
+        stagingForm.addEventListener('submit', function(e) {
+            // Show loading animation
+            AjaxLoader.show('Starting Staging Run...');
+            
+            // Disable form elements
+            const formElements = stagingForm.querySelectorAll('input, select, button');
+            formElements.forEach(element => {
+                element.disabled = true;
+            });
+            
+            // Update button text
+            if (stagingBtn) {
+                stagingBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Starting...';
+            }
+        });
+    }
+});
+</script>
+
+{% endblock %}

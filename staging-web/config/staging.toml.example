@@ -1,0 +1,75 @@
+[application]
+title = "KernelCI Staging Control"
+version = "2.0"
+host = "0.0.0.0"
+port = 9090
+
+[database]
+url = "sqlite:///./staging.db"
+
+[authentication]
+secret_key = "kernelci-staging-secret-key-change-in-production"
+algorithm = "HS256"
+access_token_expire_minutes = 30
+
+[paths]
+base_path = "/home/kernelci/kernelci-deploy"
+staging_web_path = "/home/kernelci/kernelci-deploy/staging-web"
+kernel_script_path = "/home/kernelci/kernelci-deploy/kernel.py"
+tree_file_path = "/home/kernelci/kernelci-deploy/.tree"
+api_path = "/home/kernelci/kernelci-deploy/checkout/kernelci-api"
+pipeline_path = "/home/kernelci/kernelci-deploy/checkout/kernelci-pipeline"
+ssh_key_path = "/home/kernelci/kernelci-deploy/keys/id_rsa_staging.kernelci.org"
+pipeline_settings_path = "/home/kernelci/config/staging.kernelci.org.secrets.toml"
+
+[docker]
+compose_files = [
+    "-f", "docker-compose.yaml",
+    "-f", "docker-compose-kcidb.yaml", 
+    "-f", "docker-compose-lava.yaml",
+    "-f", "docker-compose-production.yaml"
+]
+api_services = ["api", "db", "redis"]
+
+[github]
+repo = "kernelci/kernelci-core"
+workflow = "staging.yml"
+ref = "main"
+
+[orchestrator]
+interval_seconds = 60
+workflow_timeout_minutes = 60
+workflow_check_interval_seconds = 30
+
+[ui]
+auto_refresh_interval_seconds = 30
+ajax_update_interval_seconds = 15
+max_recent_runs = 10
+
+[default_admin]
+username = "admin"
+password = "admin"
+email = "admin@kernelci.org"
+
+[settings_keys]
+github_token = "github_token"
+discord_webhook_url = "discord_webhook_url"
+skip_self_update = "skip_self_update"
+
+[kernel_trees.next]
+url = "https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git"
+branch = "master"
+staging_branch = "staging-next"
+tag_prefix = "staging-next-"
+
+[kernel_trees.mainline]
+url = "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+branch = "master"
+staging_branch = "staging-mainline"
+tag_prefix = "staging-mainline-"
+
+[kernel_trees.stable]
+url = "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git"
+branch = "linux-6.13.y"
+staging_branch = "staging-stable"
+tag_prefix = "staging-stable-"

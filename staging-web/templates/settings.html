@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-cog me-2"></i>System Settings</h5>
+            </div>
+            <div class="card-body">
+                {% if success %}
+                <div class="alert alert-success" role="alert">
+                    <i class="fas fa-check me-2"></i>{{ success }}
+                </div>
+                {% endif %}
+
+                <form method="post" id="settingsForm">
+                    <div class="mb-4">
+                        <h6><i class="fab fa-github me-2"></i>GitHub Integration</h6>
+                        <div class="mb-3">
+                            <label for="github_token" class="form-label">GitHub Token</label>
+                            <input type="password" class="form-control" id="github_token" 
+                                   name="github_token" value="{{ github_token or '' }}"
+                                   placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+                            <div class="form-text">
+                                Fine-grained personal access token with "Actions" repository permissions (write) 
+                                for kernelci/kernelci-core repository.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-4">
+                        <h6><i class="fab fa-discord me-2"></i>Discord Notifications</h6>
+                        <div class="mb-3">
+                            <label for="discord_webhook_url" class="form-label">Discord Webhook URL</label>
+                            <input type="url" class="form-control" id="discord_webhook_url" 
+                                   name="discord_webhook_url" value="{{ discord_webhook_url or '' }}"
+                                   placeholder="https://discord.com/api/webhooks/...">
+                            <div class="form-text">
+                                Get a webhook URL from your Discord server settings. 
+                                Notifications will be sent when staging runs start and complete.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-4">
+                        <h6><i class="fas fa-sync-alt me-2"></i>Staging Process Options</h6>
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="skip_self_update" 
+                                       name="skip_self_update" {% if skip_self_update %}checked{% endif %}>
+                                <label class="form-check-label" for="skip_self_update">
+                                    Skip Self-Update Step
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                When enabled, skips the git pull step that updates the staging scripts themselves. 
+                                Useful for development or when you don't want to risk updating the running code.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary" id="settingsBtn">
+                            <i class="fas fa-save me-2"></i>Save Settings
+                        </button>
+                        <a href="/" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Setup Instructions</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fab fa-github me-2"></i>GitHub Token Setup</h6>
+                        <ol>
+                            <li>Go to GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens</li>
+                            <li>Generate new token</li>
+                            <li>Select "kernelci/kernelci-core" repository</li>
+                            <li>Grant "Actions" permissions (write)</li>
+                            <li>Copy token and paste above</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6><i class="fab fa-discord me-2"></i>Discord Webhook Setup</h6>
+                        <ol>
+                            <li>Go to your Discord server settings</li>
+                            <li>Navigate to "Integrations" → "Webhooks"</li>
+                            <li>Click "Create Webhook"</li>
+                            <li>Choose a channel and customize the webhook name/avatar</li>
+                            <li>Copy the webhook URL and paste above</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3" role="alert">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Integration Features:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li><strong>GitHub:</strong> Trigger workflows via REST API and monitor progress</li>
+                        <li><strong>Discord:</strong> Real-time notifications for staging run events</li>
+                        <li><strong>Self-Update:</strong> Optional git pull step to update staging scripts</li>
+                        <li><strong>Kernel Trees:</strong> Automatic rotation between next, mainline, and stable</li>
+                        <li><strong>Docker:</strong> Automated API and pipeline deployment</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const settingsForm = document.getElementById('settingsForm');
+    const settingsBtn = document.getElementById('settingsBtn');
+    
+    if (settingsForm && typeof window.AjaxLoader !== 'undefined') {
+        settingsForm.addEventListener('submit', function(e) {
+            AjaxLoader.show('Saving settings...');
+            
+            // Disable form elements
+            const formElements = settingsForm.querySelectorAll('input, button');
+            formElements.forEach(element => {
+                element.disabled = true;
+            });
+            
+            // Update button text
+            if (settingsBtn) {
+                settingsBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

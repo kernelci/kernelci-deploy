@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Login - KernelCI Staging Control{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <img src="https://kernelci.org/wp-content/uploads/sites/92/2019/10/kernelci-horizontal-color.svg" 
+                             alt="KernelCI" class="mb-3" style="max-width: 200px; height: auto;">
+                        <h3>Staging Control</h3>
+                    </div>
+                    
+                    {% if error %}
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}
+                    </div>
+                    {% endif %}
+
+                    <form method="post" id="loginForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100" id="loginButton">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Login page loaded, setting up AJAX loader');
+    
+    const loginForm = document.getElementById('loginForm');
+    const loginButton = document.getElementById('loginButton');
+    
+    console.log('loginForm:', loginForm);
+    console.log('AjaxLoader available:', typeof window.AjaxLoader !== 'undefined');
+    console.log('AjaxLoader object:', window.AjaxLoader);
+    
+    if (loginForm && typeof window.AjaxLoader !== 'undefined') {
+        console.log('Setting up form submit handler');
+        loginForm.addEventListener('submit', function(e) {
+            console.log('Form submitted, showing loading overlay');
+            
+            // Show loading with minimum 3 seconds duration
+            AjaxLoader.show('Authenticating...', 3000);
+            
+            // Disable form elements to prevent multiple submissions (but allow form submission)
+            setTimeout(() => {
+                const formElements = loginForm.querySelectorAll('input, button');
+                formElements.forEach(element => {
+                    element.disabled = true;
+                });
+            }, 100);
+            
+            // Update button text
+            if (loginButton) {
+                setTimeout(() => {
+                    loginButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Authenticating...';
+                }, 100);
+            }
+            
+            // Allow the form to submit normally - don't prevent default
+            return true;
+        });
+    } else {
+        console.log('AjaxLoader not available or loginForm not found');
+        console.log('  - loginForm exists:', !!loginForm);
+        console.log('  - AjaxLoader exists:', typeof window.AjaxLoader !== 'undefined');
+    }
+    
+});
+</script>
+{% endblock %}

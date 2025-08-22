@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}KernelCI Staging Control{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    {% if user %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-server me-2"></i>KernelCI Staging Control
+            </a>
+            <div class="navbar-nav ms-auto">
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user me-1"></i>{{ user.username }} ({{ user.role.value }})
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/profile"><i class="fas fa-user-edit me-2"></i>Profile</a></li>
+                        {% if user.role.value == 'admin' %}
+                        <li><a class="dropdown-item" href="/users"><i class="fas fa-users me-2"></i>Manage Users</a></li>
+                        <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <div class="container mt-4">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- AJAX Loading Overlay -->
+    <div id="ajaxLoadingOverlay" class="ajax-loading-overlay" style="display: none;">
+        <div class="ajax-loading-container">
+            <div class="ajax-loading-content">
+                <img src="/ajax.png" alt="Loading" class="ajax-loading-icon">
+                <div class="ajax-loading-dots">
+                    <div class="ajax-loading-dot"></div>
+                    <div class="ajax-loading-dot"></div>
+                    <div class="ajax-loading-dot"></div>
+                    <div class="ajax-loading-dot"></div>
+                    <div class="ajax-loading-dot"></div>
+                    <div class="ajax-loading-dot"></div>
+                </div>
+            </div>
+            <div class="ajax-loading-text">Loading...</div>
+        </div>
+    </div>
+
+    <style>
+        .ajax-loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(3px);
+        }
+
+        .ajax-loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .ajax-loading-content {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .ajax-loading-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            z-index: 2;
+        }
+
+        .ajax-loading-dots {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            animation: ajax-rotate 2s linear infinite;
+        }
+
+        .ajax-loading-dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: #dc3545;
+            border-radius: 50%;
+            animation: ajax-pulse 1.5s ease-in-out infinite;
+        }
+
+        .ajax-loading-dot:nth-child(1) {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            animation-delay: 0s;
+        }
+
+        .ajax-loading-dot:nth-child(2) {
+            top: 15%;
+            right: 15%;
+            animation-delay: 0.25s;
+        }
+
+        .ajax-loading-dot:nth-child(3) {
+            bottom: 15%;
+            right: 15%;
+            animation-delay: 0.5s;
+        }
+
+        .ajax-loading-dot:nth-child(4) {
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            animation-delay: 0.75s;
+        }
+
+        .ajax-loading-dot:nth-child(5) {
+            bottom: 15%;
+            left: 15%;
+            animation-delay: 1s;
+        }
+
+        .ajax-loading-dot:nth-child(6) {
+            top: 15%;
+            left: 15%;
+            animation-delay: 1.25s;
+        }
+
+        @keyframes ajax-rotate {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes ajax-pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.7;
+            }
+        }
+
+        .ajax-loading-text {
+            color: white;
+            font-size: 18px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        /* Show/hide animation */
+        .ajax-loading-overlay.show {
+            display: flex !important;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .ajax-loading-overlay.hide {
+            animation: fadeOut 0.3s ease-in-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% if user %}
+    <script>
+    // JWT Token Auto-Refresh System
+    class TokenManager {
+        constructor() {
+            this.refreshInterval = null;
+            this.proactiveRefreshTimeout = null;
+            this.warningShown = false;
+            this.tokenExpireMinutes = 30; // Should match ACCESS_TOKEN_EXPIRE_MINUTES from config
+            this.refreshBeforeMinutes = 5; // Refresh 5 minutes before expiration
+            this.lastRefreshTime = Date.now(); // Track when we last refreshed
+        }
+        
+        init() {
+            // Start checking for token refresh needs
+            this.scheduleRefresh();
+            
+            // Also refresh on user activity to prevent expiration during active use
+            this.setupActivityListeners();
+        }
+        
+        scheduleRefresh() {
+            // Check every minute if we need to refresh
+            this.refreshInterval = setInterval(() => {
+                this.checkTokenExpiration();
+            }, 60000); // Check every minute
+            
+            // Also check immediately
+            this.checkTokenExpiration();
+        }
+        
+        async checkTokenExpiration() {
+            try {
+                // Try a simple authenticated request to check if token is still valid
+                const response = await fetch('/api/staging/status', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (response.status === 401) {
+                    // Token expired or invalid
+                    this.handleTokenExpired();
+                    return;
+                }
+                
+                // Token is still valid, schedule refresh if needed
+                // Since we can't easily decode JWT in JS without libraries,
+                // we'll refresh proactively based on time
+                this.scheduleProactiveRefresh();
+                
+            } catch (error) {
+                console.log('Token check failed:', error);
+            }
+        }
+        
+        scheduleProactiveRefresh() {
+            // Clear any existing timeout
+            if (this.proactiveRefreshTimeout) {
+                clearTimeout(this.proactiveRefreshTimeout);
+                this.proactiveRefreshTimeout = null;
+            }
+            
+            // Calculate time until next refresh (25 minutes from last refresh)
+            const refreshTime = (this.tokenExpireMinutes - this.refreshBeforeMinutes) * 60 * 1000;
+            const timeSinceLastRefresh = Date.now() - this.lastRefreshTime;
+            const timeUntilRefresh = Math.max(0, refreshTime - timeSinceLastRefresh);
+            
+            this.proactiveRefreshTimeout = setTimeout(() => {
+                this.refreshToken();
+            }, timeUntilRefresh);
+        }
+        
+        async refreshToken() {
+            try {
+                const response = await fetch('/api/refresh-token', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        console.log('Token refreshed successfully');
+                        // Cookie is set by server automatically
+                        
+                        // Update last refresh time and schedule next refresh
+                        this.lastRefreshTime = Date.now();
+                        this.scheduleProactiveRefresh();
+                        return true;
+                    }
+                }
+                
+                // Refresh failed
+                this.handleTokenExpired();
+                return false;
+                
+            } catch (error) {
+                console.error('Token refresh failed:', error);
+                this.handleTokenExpired();
+                return false;
+            }
+        }
+        
+        handleTokenExpired() {
+            if (this.refreshInterval) {
+                clearInterval(this.refreshInterval);
+                this.refreshInterval = null;
+            }
+            
+            if (!this.warningShown) {
+                this.warningShown = true;
+                
+                // Show user-friendly notification
+                this.showExpirationWarning();
+                
+                // Redirect to login after 10 seconds
+                setTimeout(() => {
+                    window.location.href = '/login?message=Session expired. Please log in again.';
+                }, 10000);
+            }
+        }
+        
+        showExpirationWarning() {
+            // Create and show a dismissible alert
+            const alertHtml = `
+                <div class="alert alert-warning alert-dismissible fade show position-fixed" 
+                     style="top: 20px; right: 20px; z-index: 9999; max-width: 400px;" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Session Expiring</strong><br>
+                    Your session has expired. You will be redirected to login in 10 seconds.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', alertHtml);
+        }
+        
+        setupActivityListeners() {
+            // Refresh token on user activity (but not too frequently)
+            let lastActivityRefresh = 0;
+            const activityRefreshCooldown = 10 * 60 * 1000; // 10 minutes
+            
+            const activityEvents = ['click', 'keypress', 'scroll', 'mousemove'];
+            const handleActivity = () => {
+                const now = Date.now();
+                if (now - lastActivityRefresh > activityRefreshCooldown) {
+                    lastActivityRefresh = now;
+                    this.refreshToken();
+                }
+            };
+            
+            activityEvents.forEach(event => {
+                document.addEventListener(event, handleActivity, { passive: true });
+            });
+        }
+    }
+    
+    // Initialize token manager when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        const tokenManager = new TokenManager();
+        tokenManager.init();
+    });
+    </script>
+    {% endif %}
+
+    <!-- AJAX Loading Control Script -->
+    <script>
+    // Global AJAX Loading Manager (available on all pages)
+    window.AjaxLoader = {
+        overlay: null,
+        currentTimeout: null,
+        
+        init: function() {
+            this.overlay = document.getElementById('ajaxLoadingOverlay');
+        },
+        
+        show: function(text = 'Loading...', minDuration = 0) {
+            if (!this.overlay) this.init();
+            
+            // Update loading text if provided
+            const textElement = this.overlay.querySelector('.ajax-loading-text');
+            if (textElement) {
+                textElement.textContent = text;
+            }
+            
+            // Clear any existing timeout
+            if (this.currentTimeout) {
+                clearTimeout(this.currentTimeout);
+                this.currentTimeout = null;
+            }
+            
+            // Show overlay
+            this.overlay.classList.remove('hide');
+            this.overlay.classList.add('show');
+            this.overlay.style.display = 'flex';
+            
+            // If minimum duration specified, ensure it shows for at least that long
+            if (minDuration > 0) {
+                this.currentTimeout = setTimeout(() => {
+                    // Only hide if no other operation is ongoing
+                    if (this.overlay.classList.contains('show')) {
+                        this.hide();
+                    }
+                }, minDuration);
+            }
+        },
+        
+        hide: function() {
+            if (!this.overlay) this.init();
+            
+            // Clear any existing timeout
+            if (this.currentTimeout) {
+                clearTimeout(this.currentTimeout);
+                this.currentTimeout = null;
+            }
+            
+            this.overlay.classList.remove('show');
+            this.overlay.classList.add('hide');
+            
+            setTimeout(() => {
+                if (this.overlay.classList.contains('hide')) {
+                    this.overlay.style.display = 'none';
+                    this.overlay.classList.remove('hide');
+                }
+            }, 300);
+        },
+        
+        // Utility function for AJAX calls with automatic loading
+        fetch: async function(url, options = {}, text = 'Loading...', minDuration = 0) {
+            this.show(text, minDuration);
+            
+            try {
+                const response = await fetch(url, options);
+                return response;
+            } catch (error) {
+                throw error;
+            } finally {
+                // Only hide if no minimum duration timeout is active
+                if (!this.currentTimeout) {
+                    this.hide();
+                }
+            }
+        },
+        
+        // Utility function for form submissions with loading
+        wrapForm: function(form, text = 'Processing...', minDuration = 0) {
+            const originalSubmit = form.onsubmit;
+            form.onsubmit = (e) => {
+                this.show(text, minDuration);
+                
+                // If there's an original submit handler, call it
+                if (originalSubmit) {
+                    return originalSubmit.call(form, e);
+                }
+                
+                return true;
+            };
+        }
+    };
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        AjaxLoader.init();
+    });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

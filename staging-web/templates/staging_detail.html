@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                <li class="breadcrumb-item active">Staging Run #{{ staging_run.id }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cogs me-2"></i>Staging Run #{{ staging_run.id }}
+                    {% if staging_run.status.value == 'running' %}
+                        <span class="badge bg-primary ms-2">
+                            <i class="fas fa-spinner fa-spin me-1"></i>Running
+                        </span>
+                    {% elif staging_run.status.value == 'completed' %}
+                        <span class="badge bg-success ms-2">
+                            <i class="fas fa-check me-1"></i>Completed
+                        </span>
+                    {% elif staging_run.status.value == 'failed' %}
+                        <span class="badge bg-danger ms-2">
+                            <i class="fas fa-times me-1"></i>Failed
+                        </span>
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if error %}
+                <div class="alert alert-warning" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}
+                </div>
+                {% endif %}
+                
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <strong>Started By:</strong><br>
+                        {{ staging_run.user.username }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Kernel Tree:</strong><br>
+                        {% if staging_run.kernel_tree %}
+                            <span class="badge bg-secondary">{{ staging_run.kernel_tree }}</span>
+                        {% else %}
+                            <span class="text-muted">Auto</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Start Time:</strong><br>
+                        {{ staging_run.start_time.strftime('%Y-%m-%d %H:%M:%S') }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Duration:</strong><br>
+                        {% if staging_run.end_time %}
+                            {{ ((staging_run.end_time - staging_run.start_time).total_seconds() / 60) | round(1) }} minutes
+                        {% else %}
+                            <span class="text-muted">In progress...</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if staging_run.error_message %}
+                <div class="alert alert-danger" role="alert">
+                    <strong>Error in {{ staging_run.error_step or 'unknown step' }}:</strong><br>
+                    {{ staging_run.error_message }}
+                </div>
+                {% endif %}
+
+                <h6>Step Progress</h6>
+                <div class="step-progress">
+                    {% for step in staging_run.steps | sort(attribute='sequence_order') %}
+                    <div class="card mb-3 step-card" data-step-id="{{ step.id }}">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="step-icon me-3">
+                                    {% if step.status.value == 'completed' %}
+                                        <i class="fas fa-check-circle text-success fa-lg"></i>
+                                    {% elif step.status.value == 'partial_success' %}
+                                        <i class="fas fa-exclamation-circle text-warning fa-lg"></i>
+                                    {% elif step.status.value == 'running' %}
+                                        <i class="fas fa-spinner fa-spin text-primary fa-lg"></i>
+                                    {% elif step.status.value == 'failed' %}
+                                        <i class="fas fa-times-circle text-danger fa-lg"></i>
+                                    {% elif step.status.value == 'skipped' %}
+                                        <i class="fas fa-forward text-info fa-lg"></i>
+                                    {% elif step.status.value == 'pending' %}
+                                        <i class="fas fa-clock text-muted fa-lg"></i>
+                                    {% else %}
+                                        <i class="fas fa-circle text-muted fa-lg"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ step.step_type.value.replace('_', ' ').title() }}</h6>
+                                    <small class="text-muted">
+                                        {% if step.start_time %}
+                                            Started: {{ step.start_time.strftime('%H:%M:%S') }}
+                                            {% if step.end_time %}
+                                                | Ended: {{ step.end_time.strftime('%H:%M:%S') }}
+                                                | Duration: {{ ((step.end_time - step.start_time).total_seconds() / 60) | round(1) }}m
+                                            {% endif %}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                            <span class="badge 
+                                {% if step.status.value == 'completed' %}bg-success
+                                {% elif step.status.value == 'partial_success' %}bg-warning
+                                {% elif step.status.value == 'running' %}bg-primary
+                                {% elif step.status.value == 'failed' %}bg-danger
+                                {% elif step.status.value == 'skipped' %}bg-info
+                                {% else %}bg-secondary{% endif %}">
+                                {% if step.status.value == 'partial_success' %}Partial Success{% else %}{{ step.status.value.replace('_', ' ').title() }}{% endif %}
+                            </span>
+                        </div>
+                        
+                        {% if step.error_message or step.details or step.github_actions_id or step.git_commit_sha %}
+                        <div class="card-body">
+                            {% if step.error_message %}
+                                {% if 'Partial success' in step.error_message %}
+                                <div class="alert alert-warning mb-3">
+                                    <strong><i class="fas fa-exclamation-triangle me-2"></i>Partial Success:</strong>
+                                {% else %}
+                                <div class="alert alert-danger mb-3">
+                                    <strong>Error:</strong>
+                                {% endif %}
+                                {% if 'https://github.com' in step.error_message %}
+                                    {% set parts = step.error_message.split('View details: ') %}
+                                    {{ parts[0] | replace('Partial success: ', '') }}
+                                    {% if parts|length > 1 %}
+                                        View details: <a href="{{ parts[1] }}" target="_blank" class="alert-link text-decoration-none">
+                                            <i class="fab fa-github me-1"></i>GitHub Workflow
+                                            <i class="fas fa-external-link-alt ms-1 small"></i>
+                                        </a>
+                                    {% endif %}
+                                {% else %}
+                                    {{ step.error_message | replace('Partial success: ', '') }}
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="row">
+                                {% if step.github_actions_id %}
+                                <div class="col-md-6">
+                                    <strong>GitHub Actions ID:</strong><br>
+                                    <a href="https://github.com/kernelci/kernelci-core/actions/runs/{{ step.github_actions_id }}" 
+                                       target="_blank" class="text-decoration-none">
+                                        <i class="fab fa-github me-1"></i>{{ step.github_actions_id }}
+                                    </a>
+                                </div>
+                                {% endif %}
+                                
+                                {% if step.git_commit_sha %}
+                                <div class="col-md-6">
+                                    <strong>Git Commit SHA:</strong><br>
+                                    <code>{{ step.git_commit_sha[:12] }}...</code>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            {% if step.details %}
+                            <div class="mt-3">
+                                <strong>Details:</strong>
+                                <button class="btn btn-sm btn-outline-info ms-2" 
+                                        data-bs-toggle="collapse" 
+                                        data-bs-target="#details-{{ step.id }}">
+                                    <i class="fas fa-chevron-down"></i> Show Details
+                                </button>
+                                <div class="collapse mt-2" id="details-{{ step.id }}">
+                                    <pre class="bg-light p-3 rounded"><code>{{ step.details }}</code></pre>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Run Information</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>ID:</strong></td>
+                        <td>#{{ staging_run.id }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Status:</strong></td>
+                        <td>
+                            <span class="badge 
+                                {% if staging_run.status.value == 'completed' %}bg-success
+                                {% elif staging_run.status.value == 'running' %}bg-primary  
+                                {% elif staging_run.status.value == 'failed' %}bg-danger
+                                {% else %}bg-secondary{% endif %}">
+                                {{ staging_run.status.value.title() }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Initiated Via:</strong></td>
+                        <td>{{ staging_run.initiated_via.value.title() }}</td>
+                    </tr>
+                    {% if staging_run.current_step %}
+                    <tr>
+                        <td><strong>Current Step:</strong></td>
+                        <td><span class="badge bg-info">{{ staging_run.current_step.replace('_', ' ').title() }}</span></td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <td><strong>Total Steps:</strong></td>
+                        <td>{{ staging_run.steps | length }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Completed:</strong></td>
+                        <td>{{ staging_run.steps | selectattr("status.value", "equalto", "completed") | list | length }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        {% if staging_run.status.value == 'running' %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-sync-alt me-2"></i>Auto Refresh</h6>
+            </div>
+            <div class="card-body text-center">
+                <p class="mb-2">This page auto-refreshes every 30 seconds</p>
+                <button onclick="refreshPageWithLoader()" class="btn btn-sm btn-outline-primary" id="refreshBtn">
+                    <i class="fas fa-sync-alt me-1"></i>Refresh Now
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if staging_run.status.value == 'running' %}
+<script>
+// Auto-refresh for running staging runs
+setTimeout(function() {
+    window.location.reload();
+}, 30000); // Refresh every 30 seconds
+
+// Manual refresh with loading
+function refreshPageWithLoader() {
+    if (typeof window.AjaxLoader !== 'undefined') {
+        AjaxLoader.show('Refreshing page...', 1000);
+        
+        // Update button
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.disabled = true;
+            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Refreshing...';
+        }
+    }
+    
+    // Small delay to show the loading animation
+    setTimeout(() => {
+        window.location.reload();
+    }, 500);
+}
+
+// Optional: Use AJAX to update step status without full page reload
+async function updateStepStatus() {
+    try {
+        const response = await AjaxLoader.fetch('/api/staging/{{ staging_run.id }}/status', {}, 'Updating status...', 0);
+        const data = await response.json();
+        
+        // Update step statuses and details
+        data.steps.forEach(step => {
+            const stepCard = document.querySelector(`[data-step-id="${step.id}"]`);
+            if (stepCard) {
+                // Update step status and icon
+                const icon = stepCard.querySelector('.step-icon i');
+                const badge = stepCard.querySelector('.badge');
+                
+                // Update icon based on status
+                icon.className = 'fas fa-lg ';
+                if (step.status === 'completed') {
+                    icon.className += 'fa-check-circle text-success';
+                    badge.className = 'badge bg-success';
+                    badge.textContent = 'Completed';
+                } else if (step.status === 'partial_success') {
+                    icon.className += 'fa-exclamation-circle text-warning';
+                    badge.className = 'badge bg-warning';
+                    badge.textContent = 'Partial Success';
+                } else if (step.status === 'running') {
+                    icon.className += 'fa-spinner fa-spin text-primary';
+                    badge.className = 'badge bg-primary';
+                    badge.textContent = 'Running';
+                } else if (step.status === 'failed') {
+                    icon.className += 'fa-times-circle text-danger';
+                    badge.className = 'badge bg-danger';
+                    badge.textContent = 'Failed';
+                } else if (step.status === 'skipped') {
+                    icon.className += 'fa-forward text-info';
+                    badge.className = 'badge bg-info';
+                    badge.textContent = 'Skipped';
+                } else {
+                    icon.className += 'fa-clock text-muted';
+                    badge.className = 'badge bg-secondary';
+                    badge.textContent = step.status.charAt(0).toUpperCase() + step.status.slice(1);
+                }
+            }
+        });
+        
+        // If run is complete, reload page to show final state
+        if (data.status !== 'running') {
+            window.location.reload();
+        }
+    } catch (error) {
+        console.error('Failed to update step status:', error);
+    }
+}
+
+// Update every 15 seconds via AJAX, full refresh every 30 seconds
+setInterval(updateStepStatus, 15000);
+</script>
+{% endif %}
+
+{% endblock %}

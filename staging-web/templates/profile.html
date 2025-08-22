@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user-edit me-2"></i>User Profile</h5>
+            </div>
+            <div class="card-body">
+                {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}
+                </div>
+                {% endif %}
+                
+                {% if success %}
+                <div class="alert alert-success" role="alert">
+                    <i class="fas fa-check me-2"></i>{{ success }}
+                </div>
+                {% endif %}
+
+                <div class="mb-4">
+                    <h6>Account Information</h6>
+                    <div class="row">
+                        <div class="col-sm-4"><strong>Username:</strong></div>
+                        <div class="col-sm-8">{{ user.username }}</div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-sm-4"><strong>Role:</strong></div>
+                        <div class="col-sm-8">
+                            <span class="badge bg-secondary">{{ user.role.value.title() }}</span>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-sm-4"><strong>Email:</strong></div>
+                        <div class="col-sm-8">{{ user.email or 'Not set' }}</div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-sm-4"><strong>Created:</strong></div>
+                        <div class="col-sm-8">{{ user.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <form method="post" id="profileForm">
+                    <h6>Change Password</h6>
+                    
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" required>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary" id="profileBtn">
+                            <i class="fas fa-save me-2"></i>Update Password
+                        </button>
+                        <a href="/" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const profileForm = document.getElementById('profileForm');
+    const profileBtn = document.getElementById('profileBtn');
+    
+    if (profileForm && typeof window.AjaxLoader !== 'undefined') {
+        profileForm.addEventListener('submit', function(e) {
+            // Show loading indicator
+            AjaxLoader.show('Updating password...');
+            
+            // Update button text but don't disable form elements yet
+            // to allow form data to be submitted
+            if (profileBtn) {
+                profileBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+            }
+            
+            // Disable form elements after a short delay to ensure form submits
+            setTimeout(function() {
+                const formElements = profileForm.querySelectorAll('input, button');
+                formElements.forEach(element => {
+                    element.disabled = true;
+                });
+            }, 100);
+        });
+    }
+});
+</script>
+{% endblock %}
