@@ -1,16 +1,24 @@
-# kci-easy
-
+# kci-deploy
 Get your own KernelCI instance up and running in no time.
 
-## Getting started
+## Prerequisites
+- Docker
 
-### Prerequisites
+## Configure
+Configure and setup credentials in config files located in `config` folder.
 
-- git
-- Docker (with `compose` plugin, set up for a regular user)
-- Python environment with [KernelCI core dependencies](https://github.com/kernelci/kernelci-core/blob/main/requirements.txt) installed
-- expect
+## Run
+You can deploy your KernelCI deployment by simply executing:
+```bash
+./kci-deploy.sh deploy
+```
 
-### Running
-
-Change `ADMIN_PASSWORD` in the `main.cfg`, then run shell scripts from the root directory in their order.
+You can stop your local deployment by executing:
+```bash
+./kci-deploy.sh stop
+```
+and
+```bash
+./kci-deploy.sh start
+```
+to start it again.
