@@ -119,6 +119,7 @@ cmd_api_pipeline() {
 -f docker-compose-kcidb.yaml \
 -f docker-compose-lava.yaml \
 -f docker-compose-production.yaml \
+-f docker-compose-cron.yaml \
 "
     api_services="api db redis"
     echo "Stopping pipeline containers"
