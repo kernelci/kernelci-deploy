@@ -424,6 +424,10 @@ function deploy_pipeline {
     echo "Deploying pipeline-regression..."
     kubectl --context=${CONTEXT} apply -f kernelci-pipeline/kube/aks/regression.yaml --namespace=${NS_PIPELINE}
 
+    # Deploy cron
+    echo "Deploying cron..."
+    kubectl --context=${CONTEXT} apply -f kernelci-pipeline/kube/aks/cron.yaml --namespace=${NS_PIPELINE}
+
     sleep 5
 
     # wait until ingress is ready
