@@ -80,6 +80,7 @@ build_kci2_docker_images() {
     echo "./kci docker build ${rev_arg} --prefix=kernelci/ -v --push kernelci api" >> kernelci-core/dockerbuilds.sh
     echo "./kci docker build ${rev_arg} --prefix=kernelci/ -v --push kernelci pipeline" >> kernelci-core/dockerbuilds.sh
     echo "./kci docker build ${rev_arg} --prefix=kernelci/ -v --push kernelci lava-callback" >> kernelci-core/dockerbuilds.sh
+    echo "./kci docker build ${rev_arg} --prefix=kernelci/ -v --push kernelci pipeline-cron" >> kernelci-core/dockerbuilds.sh
     chmod +x kernelci-core/dockerbuilds.sh
     # map also host docker and docker credentials
     docker run -v $PWD/kernelci-core:/kernelci-core -w /kernelci-core --rm --privileged \
@@ -146,6 +147,8 @@ apply_manifests() {
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/tarball.yaml
     echo "[DEPLOY] Applying configmap"
     kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/pipeline-kcidb.yaml
+    echo "[DEPLOY] Applying cron"
+    kubectl --context=$CONTEXT apply --namespace kernelci-pipeline -f kernelci-pipeline/kube/aks/cron.yaml
 
     # BUG/FIXME: trigger need some delay, otherwise if other components are not ready, it will waste the job
     echo "Sleeping 10 seconds before applying trigger"
