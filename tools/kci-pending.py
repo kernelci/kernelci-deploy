@@ -39,12 +39,15 @@ def clone_repo(owner, args):
         os.chdir('..')
 
 
-def get_prs(owner, repo):
+def get_prs(owner, repo, token=None):
     url = f'https://api.github.com/repos/{owner}/{repo}/pulls'
     headers = {
         'Accept': 'application/vnd.github.v3+json',
         'Accept-Language': 'en-US,en;q=0.5',
     }
+    if token:
+        logging.debug(f'Using token for authentication')
+        headers['Authorization'] = f'Bearer {token}'
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
         logging.error(f'Failed to fetch PRs for {owner}/{repo}: {response.status_code} {response.text}')
@@ -114,7 +117,7 @@ def read_users(filename):
 
 def merge_prs(args, users, token=None):
     clone_repo(PROJECT, args)
-    prs = get_prs(PROJECT, args.repo)
+    prs = get_prs(PROJECT, args.repo, token)
     for pr in prs:
         #save_pr_info(pr)
         logging.info(f'Checking PR {pr["number"]}: `{pr["title"]}` by {pr["user"]["login"]}')
