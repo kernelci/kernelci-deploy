@@ -84,12 +84,30 @@ def apply_patch(pr, repo, push=None):
     # apply patch
     if os.system(f'cd {repo} && git apply ../pr_{pr["number"]}.patch'):
         logging.error(f'Failed to apply patch for PR {pr["number"]}')
-    else:
-        logging.info(f'Patch applied successfully')
+        return False
+    logging.info(f'Patch applied successfully')
     # Add changes
     os.system(f'cd {repo} && git add .')
     # commit
     os.system(f'cd {repo} && git commit -a -m "Staging PR {pr["number"]}"')
+    return True
+
+def pr_tree_url(pr):
+    repo_url = pr["head"]["repo"]["html_url"]
+    sha = pr["head"]["sha"]
+    return f'{repo_url}/tree/{sha}'
+
+
+def log_pr_status(pr, state, reason=None):
+    tree_url = pr_tree_url(pr)
+    payload = {
+        'pr': pr["number"],
+        'state': state,
+        'tree_url': tree_url,
+    }
+    if reason:
+        payload['reason'] = reason
+    logging.info(f'PR_STATUS {json.dumps(payload, sort_keys=True)}')
 
 
 def save_pr_info(pr):
@@ -127,20 +145,27 @@ def merge_prs(args, users, token=None):
         two_weeks_ago = time.time() - (14 * 24 * 60 * 60)
         if time.mktime(updated_at) < two_weeks_ago:
             logging.info(f'Skipping PR {pr["number"]} as it was updated more than 2 weeks ago')
+            log_pr_status(pr, 'skipped', 'updated>2w')
             continue
         if not pr["user"]["login"].lower() in users:
             logging.error(f'User {pr["user"]["login"]} not allowed to test PRs')
+            log_pr_status(pr, 'skipped', 'user-not-allowed')
             continue
         if not pr["labels"] or not 'staging-skip' in [label['name'] for label in pr["labels"]]:
             logging.info(f'Processing PR {pr["number"]}')
             pfile = fetch_patch(pr, args.repo, token)
             patch_files.append(pfile)
             if args.push:
-                apply_patch(pr, args.repo, args.branch)
+                applied = apply_patch(pr, args.repo, args.branch)
             else:
-                apply_patch(pr, args.repo)            
+                applied = apply_patch(pr, args.repo)
+            if applied:
+                log_pr_status(pr, 'applied')
+            else:
+                log_pr_status(pr, 'error', 'apply-failed')
         else:
             logging.info(f'Skipping PR {pr["number"]} due to staging-skip label')
+            log_pr_status(pr, 'skipped', 'staging-skip')
 
     if args.push:
         logging.info('Pushing changes to remote')
