@@ -97,13 +97,24 @@ def pr_tree_url(pr):
     sha = pr["head"]["sha"]
     return f'{repo_url}/tree/{sha}'
 
+def pr_apply_tree_url(pr):
+    repo_url = pr["base"]["repo"]["html_url"]
+    sha = pr["base"]["sha"]
+    return f'{repo_url}/tree/{sha}'
+
 
 def log_pr_status(pr, state, reason=None):
     tree_url = pr_tree_url(pr)
+    apply_tree_url = pr_apply_tree_url(pr)
     payload = {
         'pr': pr["number"],
         'state': state,
         'tree_url': tree_url,
+        'tree_repo': pr["head"]["repo"]["full_name"],
+        'apply_repo': pr["base"]["repo"]["full_name"],
+        'apply_branch': pr["base"]["ref"],
+        'apply_tree_url': apply_tree_url,
+        'pr_url': pr["html_url"],
     }
     if reason:
         payload['reason'] = reason
