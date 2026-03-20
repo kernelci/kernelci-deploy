@@ -1,0 +1,12 @@
+[package]
+name = "submissions_archivarius"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+chrono = "0.4"
+clap = { version = "4", features = ["derive", "env"] }
+tar = "0.4"
+tokio = { version = "1", features = ["full"] }
+xz2 = "0.1"
