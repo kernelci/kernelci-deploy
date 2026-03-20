@@ -76,7 +76,7 @@ fn get_sorted_files(dir: &Path, suffix: &str, verbose: bool) -> Result<Vec<FileI
 
 fn create_archive_name(first_file_time: SystemTime) -> String {
     let datetime: DateTime<Local> = first_file_time.into();
-    format!("submissions-{}.tar.xz", datetime.format("%Y%m%d-%H%M%S"))
+    format!("submissions-{}.tar.xz", datetime.format("%Y%m%d-%H%M%S%.3f"))
 }
 
 fn create_xz_archive(files: &[FileInfo], archive_path: &Path, compression_level: u32, verbose: bool) -> Result<()> {
@@ -95,7 +95,8 @@ fn create_xz_archive(files: &[FileInfo], archive_path: &Path, compression_level:
         tar_builder.append_path_with_name(&file_info.path, file_name)?;
     }
 
-    tar_builder.finish()?;
+    let xz_encoder = tar_builder.into_inner()?;
+    xz_encoder.finish()?;
     Ok(())
 }
 
@@ -203,9 +204,6 @@ async fn process_files(args: &Args) -> Result<()> {
             if args.verbose {
                 println!("  New scan found {} files", new_files.len());
             }
-            // clear our current list
-            files.clear();
-
             files = new_files;
         }
     }
@@ -215,6 +213,14 @@ async fn process_files(args: &Args) -> Result<()> {
 async fn main() -> Result<()> {
     let args = Args::parse();
     
+    // Validate arguments
+    if args.number == 0 {
+        return Err(anyhow::anyhow!("--number must be greater than 0"));
+    }
+    if args.compression_level > 9 {
+        return Err(anyhow::anyhow!("--compression-level must be between 0 and 9"));
+    }
+
     // Validate directories exist
     if !args.source_dir.exists() {
         return Err(anyhow::anyhow!("Source directory does not exist: {}", args.source_dir.display()));

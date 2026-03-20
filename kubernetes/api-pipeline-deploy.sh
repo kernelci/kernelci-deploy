@@ -485,6 +485,18 @@ if [ "$1" == "config" ]; then
     exit 0
 fi
 
+# deploy_secret_toml_only
+if [ "$1" == "deploy_secret_toml_only" ]; then
+    deploy_secrets_toml_only
+    exit 0
+fi
+
+# retrieve_secrets_toml
+if [ "$1" == "retrieve_secrets_toml" ]; then
+    retrieve_secrets_toml
+    exit 0
+fi
+
 if [ -z "$API_TOKEN" ]; then
     # TODO(nuclearcat): reference to documentation
     echo "API_TOKEN not set, please follow procedure to create users and issue token after deployment"
@@ -609,18 +621,6 @@ fi
 # patch nginx config
 if [ "$1" == "patch-nginx" ]; then
     patch_nginx_config
-    exit 0
-fi
-
-# deploy_secret_toml_only
-if [ "$1" == "deploy_secret_toml_only" ]; then
-    deploy_secrets_toml_only
-    exit 0
-fi
-
-# retrieve_secrets_toml
-if [ "$1" == "retrieve_secrets_toml" ]; then
-    retrieve_secrets_toml
     exit 0
 fi
 
