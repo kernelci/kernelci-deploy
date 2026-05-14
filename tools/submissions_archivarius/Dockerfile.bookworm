@@ -1,0 +1,58 @@
+# syntax=docker/dockerfile:1.7
+#
+# Build a Debian Bookworm .deb for submissions_archivarius.
+#
+# Usage:
+#   DOCKER_BUILDKIT=1 docker build -f Dockerfile.bookworm \
+#       --target=export -o ./out .
+#   # -> ./out/submissions-archivarius_<ver>_<arch>.deb
+#
+# Or build the image and copy the deb out:
+#   DOCKER_BUILDKIT=1 docker build -f Dockerfile.bookworm -t archivarius-deb .
+#   docker run --rm -v "$PWD/out:/out_host" archivarius-deb \
+#       sh -c 'cp /out/*.deb /out_host/'
+
+FROM rust:1-bookworm AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    CARGO_HOME=/usr/local/cargo \
+    CARGO_TARGET_DIR=/build/target
+
+# Build deps: liblzma-dev for xz2, dpkg-dev for dpkg-shlibdeps used by cargo-deb.
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        liblzma-dev \
+        pkg-config \
+        dpkg-dev
+
+# cargo-deb: cached via cargo registry/git, binary persists in the image layer.
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    cargo install cargo-deb --locked
+
+WORKDIR /build
+
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+COPY debian ./debian
+
+# Build release binary + .deb. target dir is a cache mount, so we copy
+# the resulting .deb out to a non-cache path within the same RUN.
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    --mount=type=cache,target=/build/target,id=archivarius-target-bookworm \
+    cargo deb && \
+    mkdir -p /out && \
+    cp /build/target/debian/*.deb /out/
+
+# --- Export-only stage: docker build --target=export -o ./out . ---
+FROM scratch AS export
+COPY --from=builder /out/ /
+
+# --- Default stage: image that holds the deb at /out and can copy it on demand ---
+FROM debian:bookworm-slim AS final
+COPY --from=builder /out/ /out/
+CMD ["sh", "-c", "ls -la /out"]

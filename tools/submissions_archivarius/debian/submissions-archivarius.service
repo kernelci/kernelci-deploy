@@ -1,0 +1,15 @@
+[Unit]
+Description=Submissions Archivarius - archive KernelCI submission files
+After=network.target
+
+[Service]
+Type=simple
+User=azureuser
+Group=azureuser
+WorkingDirectory=/home/azureuser
+ExecStart=/usr/bin/submissions_archivarius --sourcedir=/home/azureuser/kcidb-ng/spool/archive --destdir /home/azureuser/archive --failed=/home/azureuser/kcidb-ng/spool/failed -v --number=200000
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

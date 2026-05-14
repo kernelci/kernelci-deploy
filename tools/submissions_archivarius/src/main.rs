@@ -31,6 +31,12 @@ struct Args {
 
     #[arg(long = "suffix", env = "ARCHIVARIUS_SUFFIX", default_value = ".json")]
     suffix: String,
+
+    #[arg(long = "failed", env = "ARCHIVARIUS_FAILED")]
+    failed_dir: Option<PathBuf>,
+
+    #[arg(long = "failed-max", env = "ARCHIVARIUS_FAILED_MAX", default_value = "1000")]
+    failed_max: usize,
 }
 
 #[derive(Debug)]
@@ -72,6 +78,61 @@ fn get_sorted_files(dir: &Path, suffix: &str, verbose: bool) -> Result<Vec<FileI
     }
     
     Ok(files)
+}
+
+fn cleanup_failed_dir(dir: &Path, max_files: usize, verbose: bool) -> Result<()> {
+    let mut files = Vec::new();
+
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
+
+        if path.is_file() {
+            let metadata = entry.metadata()?;
+            let created = metadata.created().unwrap_or(metadata.modified()?);
+            files.push(FileInfo { path, created });
+        }
+    }
+
+    if files.len() <= max_files {
+        if verbose {
+            println!(
+                "  Failed dir {}: {} files (under threshold {})",
+                dir.display(),
+                files.len(),
+                max_files
+            );
+        }
+        return Ok(());
+    }
+
+    files.sort_by_key(|f| f.created);
+    let excess = files.len() - max_files;
+
+    println!(
+        "Failed dir cleanup: {} files exceed limit of {}, removing {} oldest from {}",
+        files.len(),
+        max_files,
+        excess,
+        dir.display()
+    );
+
+    for (i, file_info) in files.iter().take(excess).enumerate() {
+        match fs::remove_file(&file_info.path) {
+            Ok(()) => {
+                if verbose && i % 100 == 0 {
+                    println!("  Removed {} of {} excess files...", i + 1, excess);
+                }
+            }
+            Err(e) => eprintln!(
+                "  Failed to remove {}: {}",
+                file_info.path.display(),
+                e
+            ),
+        }
+    }
+
+    Ok(())
 }
 
 fn create_archive_name(first_file_time: SystemTime) -> String {
@@ -122,7 +183,13 @@ async fn process_files(args: &Args) -> Result<()> {
         println!("\n=== Initial scan of source directory ===");
     }
     let mut files = get_sorted_files(&args.source_dir, &args.suffix, args.verbose)?;
-    
+
+    if let Some(failed_dir) = &args.failed_dir {
+        if let Err(e) = cleanup_failed_dir(failed_dir, args.failed_max, args.verbose) {
+            eprintln!("Failed dir cleanup error: {}", e);
+        }
+    }
+
     loop {
         if files.len() >= args.number {
             let files_to_archive = &files[..args.number];
@@ -205,6 +272,12 @@ async fn process_files(args: &Args) -> Result<()> {
                 println!("  New scan found {} files", new_files.len());
             }
             files = new_files;
+
+            if let Some(failed_dir) = &args.failed_dir {
+                if let Err(e) = cleanup_failed_dir(failed_dir, args.failed_max, args.verbose) {
+                    eprintln!("Failed dir cleanup error: {}", e);
+                }
+            }
         }
     }
 }
@@ -242,6 +315,20 @@ async fn main() -> Result<()> {
     if let Some(upload_config) = &args.upload {
         println!("Upload configured: {}", upload_config);
     }
-    
+
+    if let Some(failed_dir) = &args.failed_dir {
+        if !failed_dir.exists() {
+            return Err(anyhow::anyhow!(
+                "Failed directory does not exist: {}",
+                failed_dir.display()
+            ));
+        }
+        println!(
+            "Failed directory: {} (max {} files)",
+            failed_dir.display(),
+            args.failed_max
+        );
+    }
+
     process_files(&args).await
 }

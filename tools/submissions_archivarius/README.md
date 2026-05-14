@@ -27,6 +27,10 @@ To build the project, you will need to have the Rust toolchain installed.
 
 The compiled binary will be located at `target/release/submissions_archivarius`.
 
+## .deb
+
+DOCKER_BUILDKIT=1 docker build -f Dockerfile.bookworm --target=export -o ./out .
+
 ## Usage
 
 The tool can be run directly from the command line.
@@ -41,6 +45,8 @@ The tool can be run directly from the command line.
 | `--suffix`            | `ARCHIVARIUS_SUFFIX`            | `.json`       | The file suffix to look for.                                                |
 | `--compression-level` | `ARCHIVARIUS_COMPRESSION_LEVEL` | `1`           | The compression level for xz (0-9).                                         |
 | `--upload`            | `ARCHIVARIUS_UPLOAD`            | (none)        | Optional upload configuration string (e.g., a URL or connection string).    |
+| `--failed`            | `ARCHIVARIUS_FAILED`            | (none)        | Optional directory containing failed submissions; oldest files are pruned when the count exceeds `--failed-max`. |
+| `--failed-max`        | `ARCHIVARIUS_FAILED_MAX`        | `1000`        | Maximum number of files to retain in the `--failed` directory.              |
 | `-v`, `--verbose`     |                                 | `false`       | Enable verbose output for detailed logging.                                 |
 
 ### Example
