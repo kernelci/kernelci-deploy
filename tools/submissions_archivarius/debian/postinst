@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    configure)
+        if ! getent passwd azureuser >/dev/null; then
+            useradd --system --create-home --home-dir /home/azureuser \
+                --shell /bin/bash --user-group azureuser
+        fi
+        install -d -o azureuser -g azureuser -m 0755 /home/azureuser/kcidb-ng/spool/archive
+        install -d -o azureuser -g azureuser -m 0755 /home/azureuser/archive
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0
