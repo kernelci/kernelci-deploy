@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-User=azureuser
+User=root
 Group=azureuser
 WorkingDirectory=/home/azureuser
 ExecStart=/usr/bin/submissions_archivarius --sourcedir=/home/azureuser/kcidb-ng/spool/archive --destdir /home/azureuser/archive --failed=/home/azureuser/kcidb-ng/spool/failed -v --number=200000
