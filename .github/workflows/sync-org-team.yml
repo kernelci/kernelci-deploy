@@ -1,0 +1,77 @@
+# Reconcile the kernelci/dashboard team membership from a username file.
+#
+# Source of truth: kernelci/dashboard:.github/developers.txt (one GitHub
+# username per line; '#' comments and blank lines ignored). The script adds /
+# invites listed users and removes "member"-role users no longer listed
+# (maintainers and the token owner are never removed).
+#
+# Credential: a fine-grained PAT stored as the secret KCIORG_TOKEN. Scope it
+# to resource owner = kernelci org with:
+#   * Organization permissions -> Members: Read and write
+#       (manages team membership and org invitations)
+#   * Repository permissions   -> Contents: Read  (on the dashboard repo)
+#       (reads the developers.txt file)
+# The default GITHUB_TOKEN cannot manage org membership, so it is NOT used here.
+#
+# By default scheduled runs are dry-run only (they post the plan to the run
+# summary); real changes require a manual run via "Run workflow" with
+# mode = apply. To let scheduled runs apply automatically, set the repository
+# variable SYNC_APPLY to "true" (the --max-removals safety rail still applies).
+
+name: Sync kernelci/dashboard team from developers.txt
+
+on:
+  schedule:
+    # Daily at 06:00 UTC.
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'dry-run (preview only) or apply (make changes)'
+        type: choice
+        options:
+          - dry-run
+          - apply
+        default: dry-run
+      team:
+        description: 'Team slug to sync'
+        type: string
+        default: dashboard
+
+# Org changes are made with KCIORG_TOKEN, not GITHUB_TOKEN, so keep the
+# default token read-only.
+permissions:
+  contents: read
+
+# Never let two reconciliations run at the same time.
+concurrency:
+  group: sync-org-team
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: '3.12'
+
+      - name: Reconcile team membership
+        env:
+          KCIORG_TOKEN: ${{ secrets.KCIORG_TOKEN }}
+          # Apply on a manual run with mode=apply, or on schedule only when the
+          # repo variable SYNC_APPLY is "true"; otherwise dry-run.
+          APPLY: ${{ ( (github.event_name == 'workflow_dispatch' && inputs.mode == 'apply') || (github.event_name == 'schedule' && vars.SYNC_APPLY == 'true') ) && '--apply' || '' }}
+          TEAM: ${{ inputs.team || 'dashboard' }}
+        run: |
+          python tools/sync_org_team.py \
+            --org kernelci --team "$TEAM" \
+            --source-repo kernelci/dashboard --source-path .github/developers.txt \
+            --max-removals 10 \
+            $APPLY
