@@ -78,8 +78,6 @@ DEPRECATED: Will be removed in 1 month if no objections.
 ### kci-k8swatch.py
 Same for kubernetes cluster, not working well, not useful.
 DEPRECATED: Will be removed in 1 month if no objections.
-### kci-rootfs.py
-Kind of wrapper around kci tool to build rootfs images more conviniently. Used in github actions workflows. Might be replaced in near future by proper rootfs build tool.
 ### legacy_watchdog.py
 This is script to monitor legacy services. Not used anymore, as we are not running legacy services.
 DEPRECATED: Will be removed in 1 month if no objections.
