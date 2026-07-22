@@ -1,6 +1,6 @@
 # Reconcile the kernelci/dashboard team membership from a username file.
 #
-# Source of truth: kernelci/dashboard:.github/developers.txt (one GitHub
+# Source of truth: kernelci/dashboard:.github/dashboard-team (one GitHub
 # username per line; '#' comments and blank lines ignored). The script adds /
 # invites listed users and removes "member"-role users no longer listed
 # (maintainers and the token owner are never removed).
@@ -10,7 +10,7 @@
 #   * Organization permissions -> Members: Read and write
 #       (manages team membership and org invitations)
 #   * Repository permissions   -> Contents: Read  (on the dashboard repo)
-#       (reads the developers.txt file)
+#       (reads the dashboard-team file)
 # The default GITHUB_TOKEN cannot manage org membership, so it is NOT used here.
 #
 # By default scheduled runs are dry-run only (they post the plan to the run
@@ -18,7 +18,7 @@
 # mode = apply. To let scheduled runs apply automatically, set the repository
 # variable SYNC_APPLY to "true" (the --max-removals safety rail still applies).
 
-name: Sync kernelci/dashboard team from developers.txt
+name: Sync kernelci/dashboard team from dashboard-team
 
 on:
   schedule:
@@ -72,6 +72,6 @@ jobs:
         run: |
           python tools/sync_org_team.py \
             --org kernelci --team "$TEAM" \
-            --source-repo kernelci/dashboard --source-path .github/developers.txt \
+            --source-repo kernelci/dashboard --source-path .github/dashboard-team \
             --max-removals 10 \
             $APPLY
