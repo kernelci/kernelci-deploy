@@ -1,0 +1,10 @@
+# Production web/storage server (vm-production-2025), serving
+# docs.kernelci.org, storage.kernelci.org, files.kernelci.org and the
+# public MCP endpoint.
+all:
+  hosts:
+    kernelci-prod:
+      ansible_host: docs.kernelci.org
+      ansible_port: 22022
+      ansible_user: kernelci
+      ansible_become: true

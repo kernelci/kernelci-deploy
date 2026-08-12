@@ -1,0 +1,29 @@
+# Public KernelCI MCP server (kci-dev mcp, streamable HTTP transport).
+#
+# Kept in group_vars rather than in roles/mcp/vars so that the webserver role,
+# which runs first and publishes the endpoint, sees the same port and limits.
+#
+# The server is reachable from the internet through nginx, and kci-dev's HTTP
+# transport has no authentication layer of its own, so the configuration
+# deliberately carries no `pipeline` URL and no `token`. kci-dev only registers
+# the job-changing tools (retry_job, trigger_checkout) when both of those are
+# set, which makes this deployment structurally read-only: dashboard queries
+# plus Maestro node lookups, nothing that can start or retry a job.
+mcp_user: kci-mcp
+mcp_home: /srv/kci-mcp
+mcp_bind: 127.0.0.1
+mcp_port: 8000
+
+# Empty installs the latest release from PyPI; pin a version to freeze it.
+mcp_kci_dev_version: ""
+# Set to true to pull a newer kci-dev on the next run.
+mcp_upgrade: false
+
+mcp_instance: production
+mcp_dashboard_api: "https://dashboard.kernelci.org/api/"
+mcp_maestro_api: "https://kernelci-api.westus3.cloudapp.azure.com/"
+
+# nginx side, consumed by the webserver role
+mcp_rate_limit: 10r/s
+mcp_rate_limit_burst: 20
+mcp_stream_timeout: 3600s

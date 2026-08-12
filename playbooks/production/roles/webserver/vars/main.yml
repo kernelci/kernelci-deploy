@@ -1,9 +1,57 @@
+# Virtual hosts served by the production web server (vm-production-2025).
+#
+# Supported per-vhost keys:
+#   vhost_name      mandatory, server_name and config file name
+#   root_path       serve files from this directory (static vhost)
+#   fancyindex      enable libnginx-mod-http-fancyindex autoindex
+#   cookie_gate     require the JS/cookie challenge before serving content
+#   decommissioned  serve HTTP 410 with this message instead of content
+#   port            reverse proxy to http://127.0.0.1:<port>
+#   max_body_size   client_max_body_size for upload-heavy proxies
+#   proxy_timeout   client_body/proxy_read timeout for slow proxies
+#   streaming       disable proxy buffering (SSE / streamable HTTP)
+#   proxy_host_header  Host header to send upstream, when the backend
+#                   validates it (default: the public $host)
+#   rate_limit      apply the named limit_req zone (see kernelci-limits.conf)
+#   mcp_endpoint    also serve the MCP server under /mcp on this vhost
+#   enabled         set to false to keep the vhost out of nginx and certbot
+#
+# All vhosts share the docs.kernelci.org certificate, which certbot expands
+# to cover every name listed here.
+nginx_cert_name: docs.kernelci.org
+certbot_email: bot@kernelci.org
+
 vhosts:
-  - vhost_name: storage.kernelci.org
-    root_path: /data/storage.kernelci.org
   - vhost_name: docs.kernelci.org
     root_path: /data/kernelci.org
+
+  - vhost_name: storage.kernelci.org
+    root_path: /data/storage.kernelci.org
+    fancyindex: true
+    cookie_gate: true
+
   - vhost_name: storage.chromeos.kernelci.org
-    root_path: /data/storage.chromeos.kernelci.org
+    # Content was retired in 2025-06, the directory is kept for archival only.
+    decommissioned: 'This storage has been decommissioned.\nPlease contact the KernelCI administrators if you need any content from here.\n'
+    # Temporary home of the public MCP server (https://storage.chromeos.kernelci.org/mcp)
+    # until mcp.kernelci.org has a DNS record. This vhost serves no content
+    # otherwise and already has its own certificate, so nothing else is at risk.
+    mcp_endpoint: true
+
   - vhost_name: files.kernelci.org
+    # kernelci-storage container, see the storage role
     port: 3000
+    max_body_size: 10000M
+    proxy_timeout: 600s
+
+  - vhost_name: mcp.kernelci.org
+    # Final home of the public read-only KernelCI MCP server, see the mcp role.
+    # Disabled until an A record mcp.kernelci.org -> 20.171.243.82 exists:
+    # certbot cannot issue a certificate for a name that does not resolve.
+    # Once the record is in place set enabled: true, drop mcp_endpoint from
+    # storage.chromeos.kernelci.org above and re-run the webserver role.
+    enabled: false
+    port: "{{ mcp_port | default(8000) }}"
+    proxy_host_header: "127.0.0.1:{{ mcp_port | default(8000) }}"
+    streaming: true
+    rate_limit: mcp

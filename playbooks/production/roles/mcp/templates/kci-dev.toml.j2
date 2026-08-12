@@ -1,0 +1,15 @@
+# Managed by ansible (kernelci-deploy playbooks/production) - do not edit by hand
+#
+# Configuration for the public MCP server. This endpoint is unauthenticated,
+# so it must stay read-only: kci-dev registers retry_job and trigger_checkout
+# only when a `pipeline` URL *and* a `token` are present. Do not add either
+# here without putting an authentication layer in front of the server first.
+default_instance = "{{ mcp_instance }}"
+dashboard_api = "{{ mcp_dashboard_api }}"
+
+[{{ mcp_instance }}]
+dashboard_api = "{{ mcp_dashboard_api }}"
+{% if mcp_maestro_api %}
+# Read-only Maestro node lookups (get_node, list_nodes)
+api = "{{ mcp_maestro_api }}"
+{% endif %}

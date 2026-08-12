@@ -1,93 +1,201 @@
-- name: Is nginx installed?
-  command: nginx -v
-  register: nginx_installed
+# nginx front end for the production server.
+#
+# Every vhost is rendered from templates/vhost.j2 out of the `vhosts` var, so
+# the file on disk is the source of truth in git, not the other way round.
+# Previous revisions of this role guarded each task with
+# `when: vhost_files.stat.exists`, which is never defined for a registered
+# loop result and therefore always evaluated false: the tasks silently never
+# ran and production drifted away from the recipe.
+- name: Install nginx and its helpers
+  ansible.builtin.apt:
+    name:
+      - nginx
+      - libnginx-mod-http-fancyindex
+      - certbot
+      - python3-certbot-nginx
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
 
-- name: Install nginx package
-  when: not nginx_installed.rc | default(false) | bool
-  apt: name=nginx state=present
+- name: Enable and start nginx
+  ansible.builtin.service:
+    name: nginx
+    enabled: yes
+    state: started
 
-- name: Enable nginx service
-  when: not nginx_installed.rc | default(false) | bool
-  service: name=nginx enabled=yes state=started
+- name: Select the vhosts that are enabled
+  ansible.builtin.set_fact:
+    web_vhosts: >-
+      {{ vhosts | rejectattr('enabled', 'defined') | list
+         + (vhosts | selectattr('enabled', 'defined') | selectattr('enabled') | list) }}
 
-- name: Start nginx service
-  when: not nginx_installed.rc | default(false) | bool
-  service: name=nginx state=started
+- name: Check whether nginx.conf already defines the storage gate maps
+  ansible.builtin.command: grep -q storage_cookie_gate /etc/nginx/nginx.conf
+  register: nginx_conf_maps
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  tags: nginx
 
-- name: Check if virtual hosts are already configured
-  stat:
-    path: /etc/nginx/sites-available/{{ item.vhost_name }}.conf
-  with_items: "{{ vhosts }}"
-  register: vhost_files
+- name: Install the storage gate maps
+  # Skipped on hosts that still carry the maps inline in nginx.conf: nginx
+  # refuses to start with a duplicate map variable.
+  ansible.builtin.template:
+    src: kernelci-maps.conf.j2
+    dest: /etc/nginx/conf.d/kernelci-maps.conf
+    owner: root
+    group: root
+    mode: '0644'
+  when: nginx_conf_maps.rc != 0
+  notify: Reload nginx
+  tags: nginx
+
+- name: Install the rate limiting zones
+  ansible.builtin.template:
+    src: kernelci-limits.conf.j2
+    dest: /etc/nginx/conf.d/kernelci-limits.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload nginx
+  tags: nginx
+
+- name: Check for the shared certificate
+  ansible.builtin.stat:
+    path: /etc/letsencrypt/live/{{ nginx_cert_name }}/fullchain.pem
+  register: nginx_cert
+  tags: nginx
 
 - name: Add virtual hosts
-  when: vhost_files.stat.exists | default(false) | bool
-  template:
-    src=templates/vhost.j2
-    dest=/etc/nginx/sites-available/{{ item.vhost_name }}.conf
-  with_items: "{{ vhosts }}"
+  ansible.builtin.template:
+    src: vhost.j2
+    dest: /etc/nginx/sites-available/{{ item.vhost_name }}.conf
+    owner: root
+    group: root
+    mode: '0644'
+  vars:
+    nginx_ssl_enabled: "{{ nginx_cert.stat.exists }}"
+  loop: "{{ web_vhosts }}"
+  loop_control:
+    label: "{{ item.vhost_name }}"
+  notify: Reload nginx
+  tags: nginx
 
 - name: Enable virtual hosts
-  when: vhost_files.stat.exists | default(false) | bool
-  file: src=/etc/nginx/sites-available/{{ item.vhost_name }}.conf dest=/etc/nginx/sites-enabled/{{ item.vhost_name }}.conf state=link
-  with_items: "{{ vhosts }}"
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/{{ item.vhost_name }}.conf
+    dest: /etc/nginx/sites-enabled/{{ item.vhost_name }}.conf
+    state: link
+  loop: "{{ web_vhosts }}"
+  loop_control:
+    label: "{{ item.vhost_name }}"
   notify: Reload nginx
+  tags: nginx
 
-- name: Install libnginx-mod-http-fancyindex
-  when: vhost_files.stat.exists | default(false) | bool
-  apt: name=libnginx-mod-http-fancyindex state=present
+- name: Disable virtual hosts that are turned off
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/{{ item.vhost_name }}.conf
+    state: absent
+  loop: "{{ vhosts | difference(web_vhosts) }}"
+  loop_control:
+    label: "{{ item.vhost_name }}"
+  notify: Reload nginx
+  tags: nginx
 
-- name: Enable fancy autoindex for storage.kernelci.org in config
-  when: vhost_files.stat.exists | default(false) | bool
-  lineinfile:
-    path: /etc/nginx/sites-available/storage.kernelci.org.conf
-    regexp: '^ *# *fancyindex on;'
-    line: '    fancyindex on;'
+- name: Apply the pending nginx configuration
+  ansible.builtin.meta: flush_handlers
 
-- name: Enable fancy autoindex for storage.chromeos.kernelci.org in config
-  lineinfile:
-    path: /etc/nginx/sites-available/storage.chromeos.kernelci.org.conf
-    regexp: '^ *# *fancyindex on;'
-    line: '    fancyindex on;'
+# Certificates. All enabled vhosts share a single certificate named after
+# nginx_cert_name, which certbot expands as names are added. A name that does
+# not resolve yet is left out, otherwise the ACME challenge fails and takes
+# the whole run with it.
+- name: Check which vhost names resolve
+  ansible.builtin.command: getent ahostsv4 {{ item.vhost_name }}
+  register: vhost_dns
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  loop: "{{ web_vhosts }}"
+  loop_control:
+    label: "{{ item.vhost_name }}"
+  tags: certbot
 
-- name: Reload nginx
-  when: vhost_files.stat.exists | default(false) | bool
-  service: name=nginx state=reloaded
+- name: Collect the certificate domains
+  ansible.builtin.set_fact:
+    cert_domains: "{{ vhost_dns.results | selectattr('rc', 'equalto', 0)
+                      | map(attribute='item.vhost_name') | list }}"
+  tags: certbot
 
-- name: Check if certbot is already installed
-  stat:
-    path: /usr/bin/certbot
-  register: certbot_installed
+- name: Warn about vhosts left without a certificate
+  ansible.builtin.debug:
+    msg: >-
+      No DNS record for {{ item }}, skipping it in the certificate request.
+      Add the record and re-run this role.
+  loop: "{{ web_vhosts | map(attribute='vhost_name') | difference(cert_domains) }}"
+  tags: certbot
 
-- name: Install certbot
-  when: not certbot_installed.stat.exists | default(false) | bool
-  apt: name=certbot state=present
+- name: Read the domains of the current certificate
+  ansible.builtin.command: certbot certificates --cert-name {{ nginx_cert_name }}
+  register: certbot_certs
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  tags: certbot
 
-- name: Install certbot nginx plugin
-  when: not certbot_installed.stat.exists | default(false) | bool
-  apt: name=python3-certbot-nginx state=present
+- name: Parse the domains of the current certificate
+  ansible.builtin.set_fact:
+    cert_existing_domains: "{{ (certbot_certs.stdout | regex_search('Domains: (.*)', '\\1')
+                               | default([''], true) | first).split() }}"
+  tags: certbot
 
-- name: Create string for certbot with domains
-  when: not certbot_installed.stat.exists | default(false) | bool
-  set_fact:
-    certbot_domains: "{{ vhosts | map(attribute='vhost_name') | join(' -d ') }}"
-
-- name: Activate certbot
-  when: not certbot_installed.stat.exists | default(false) | bool
-  command: certbot --nginx -d {{ certbot_domains }} --non-interactive --agree-tos --no-eff-email --email bot@kernelci.org --expand
+- name: Request or expand the certificate
+  ansible.builtin.command: >-
+    certbot certonly --nginx --cert-name {{ nginx_cert_name }} --expand
+    --non-interactive --agree-tos --no-eff-email --email {{ certbot_email }}
+    -d {{ cert_domains | join(' -d ') }}
+  when: cert_domains | difference(cert_existing_domains) | length > 0
   register: certbot_output
+  notify: Reload nginx
+  tags: certbot
 
-- name: Print certbot output
-  when: not certbot_installed.stat.exists | default(false) | bool
-  debug: var=certbot_output.stdout
+- name: Show the certbot output
+  ansible.builtin.debug:
+    var: certbot_output.stdout_lines
+  when: certbot_output.changed
+  tags: certbot
 
-- name: Create cron job for certbot
-  when: not certbot_installed.stat.exists | default(false) | bool
-  cron:
-    minute: "0 0 * * *"
-    user: root
-    job: "certbot renew --quiet"
+- name: Re-render the vhosts now that the certificate exists
+  # Only does anything on a fresh host, where the first pass above had to
+  # render plain HTTP vhosts for the ACME challenge to succeed.
+  ansible.builtin.template:
+    src: vhost.j2
+    dest: /etc/nginx/sites-available/{{ item.vhost_name }}.conf
+    owner: root
+    group: root
+    mode: '0644'
+  vars:
+    nginx_ssl_enabled: true
+  loop: "{{ web_vhosts }}"
+  loop_control:
+    label: "{{ item.vhost_name }}"
+  when: not nginx_cert.stat.exists
+  notify: Reload nginx
+  tags: nginx
 
-- name: Reload nginx
-  when: not certbot_installed.stat.exists | default(false) | bool
-  service: name=nginx state=reloaded
+- name: Renew certificates from the packaged systemd timer
+  # Replaces the cron job earlier revisions of this role installed; the
+  # certbot Debian package ships certbot.timer and prod runs it already.
+  ansible.builtin.systemd:
+    name: certbot.timer
+    enabled: yes
+    state: started
+  tags: certbot
+
+# Earlier revisions of this role also installed a `certbot renew` cron job.
+# It is not cleaned up here: production has no cron package at all, and the
+# packaged certbot.timer above is what actually renews the certificates.
+
+- name: Verify the nginx configuration
+  ansible.builtin.command: nginx -t
+  changed_when: false
+  tags: nginx

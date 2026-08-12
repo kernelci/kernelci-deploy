@@ -1,0 +1,16 @@
+# Managed by ansible (kernelci-deploy playbooks/production) - do not edit by hand
+# Maps used by the storage.kernelci.org cookie gate.
+#
+# Only installed when /etc/nginx/nginx.conf does not already define these
+# maps inline: nginx rejects a duplicate map variable, and the historical
+# production config carries them inside the http {} block.
+
+map $http_user_agent $storage_safari_or_android_ua {
+	default 0;
+	~*(Safari|Android) 1;
+}
+
+map "$storage_safari_or_android_ua:$cookie_kernelci_verified" $storage_cookie_gate {
+	default 0;
+	"1:" 1;
+}

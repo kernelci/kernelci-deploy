@@ -1,9 +1,20 @@
+# ansible-playbook -i inventory.yaml main.yml
+#
+# The common role is left out of the default run: it changes the ssh port and
+# mounts /data, which is not something to replay against a live server. Run it
+# explicitly when provisioning a new host.
+#
+# The mcp role runs before webserver so that the backend is already listening
+# when nginx starts proxying to it.
 - hosts: all
   gather_facts: true
   become: true
   roles:
-    #- common
-    #- webserver
-    #- storage
-    - webserver
-    #- kernelci
+    #- role: common
+    #  tags: common
+    - role: mcp
+      tags: mcp
+    - role: storage
+      tags: storage
+    - role: webserver
+      tags: webserver

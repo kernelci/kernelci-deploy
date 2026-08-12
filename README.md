@@ -59,6 +59,38 @@ This directory contains scripts and configuration files for local installation o
 ## playbooks/*
 This directory contains Ansible playbooks and roles for deploying and managing KernelCI services. Right now we have only complete playbook for production server, incomplete for monitoring server, and some roles for monitoring in `all` directory (node_exporter listening on port 2000)
 
+### playbooks/production
+Playbook for the production web/storage server (`vm-production-2025`, reachable
+as `docs.kernelci.org:22022`), run with:
+
+```sh
+cd playbooks/production
+ansible-playbook -i inventory.yaml main.yml
+```
+
+Roles:
+- `webserver`: nginx vhosts for docs, storage, chromeos storage (decommissioned,
+  serves HTTP 410), files and the MCP endpoint, plus the shared Let's Encrypt
+  certificate. Every vhost is rendered from `templates/vhost.j2` out of the
+  `vhosts` variable, so the recipe is the source of truth. Names that do not
+  resolve yet are left out of the certificate request instead of failing the run.
+- `storage`: the `kernelci-storage` container behind files.kernelci.org. The
+  config file is created only if missing, since the live one holds credentials.
+- `mcp`: public read-only KernelCI MCP server (`kci-dev mcp`, streamable HTTP)
+  in a virtualenv under /srv/kci-mcp, running as the `kci-mcp` system user and
+  bound to 127.0.0.1:8000. It is published by nginx. kci-dev's HTTP transport
+  has no authentication, so the config deliberately carries no pipeline URL and
+  no token: without them kci-dev never registers `retry_job` or
+  `trigger_checkout`, and the public endpoint can only read.
+- `common`: host bootstrap (packages, /data mount, ssh port). Excluded from the
+  default run, it is only meant for provisioning a new host.
+
+The MCP endpoint is temporarily served at
+`https://storage.chromeos.kernelci.org/mcp`, reusing a decommissioned vhost that
+already has a certificate. Once an A record for `mcp.kernelci.org` exists, set
+`enabled: true` on that vhost in `roles/webserver/vars/main.yml`, drop
+`mcp_endpoint` from the chromeos vhost and re-run the `webserver` role.
+
 ## tools/*
 This directory contains various tools and scripts used in the KernelCI project.
 ### azure_blob_cleanup.py

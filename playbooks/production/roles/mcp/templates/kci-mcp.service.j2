@@ -1,0 +1,38 @@
+# Managed by ansible (kernelci-deploy playbooks/production) - do not edit by hand
+[Unit]
+Description=KernelCI MCP server (kci-dev)
+Documentation=https://kci.dev/docs/mcp/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ mcp_user }}
+Group={{ mcp_user }}
+WorkingDirectory={{ mcp_home }}
+Environment=HOME={{ mcp_home }}
+ExecStart={{ mcp_home }}/venv/bin/kci-dev \
+    --settings {{ mcp_home }}/kci-dev.toml \
+    --instance {{ mcp_instance }} \
+    mcp --transport http --host {{ mcp_bind }} --port {{ mcp_port }}
+Restart=always
+RestartSec=5s
+
+# The server is exposed to the internet through nginx, keep it boxed in.
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ReadWritePaths={{ mcp_home }}
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryMax=1G
+TasksMax=256
+
+[Install]
+WantedBy=multi-user.target

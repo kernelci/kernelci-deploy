@@ -1,50 +1,172 @@
-# nginx virtual host for {{ vhost_name }}
+# nginx virtual host for {{ item.vhost_name }}
+# Managed by ansible (kernelci-deploy playbooks/production) - do not edit by hand
 server {
-    server_name {{ vhost_name }};
-{% if root_path is defined %}
-    root {{ root_path }};
+    server_name {{ item.vhost_name }};
+{% if item.root_path is defined %}
+    root {{ item.root_path }};
     index index.html;
-    location / {
-        try_files $uri $uri/ =404;
-#        fancyindex on;
-#        fancyindex_exact_size off;
+{% endif %}
+{% if item.cookie_gate | default(false) %}
+
+    # Run a JavaScript and cookie challenge, then send the browser back to the
+    # exact path, query string, and fragment it originally requested.
+    location = /__storage_cookie_check {
+        default_type text/html;
+        add_header Cache-Control "no-store" always;
+        add_header Content-Security-Policy "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'" always;
+        return 200 '<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Redirecting&hellip;</title>
+<style>body{font:16px sans-serif;margin:3rem;color:#222}</style>
+</head>
+<body>
+<p>Redirecting&hellip;</p>
+<script>
+(function () {
+    var ua = navigator.userAgent;
+    var uaData = navigator.userAgentData;
+    var claimsAndroid = /Android/i.test(ua);
+    var claimsSafari = /Safari/i.test(ua);
+    var platformLooksValid = false;
+
+    document.cookie =
+        "kernelci_verified=1; Max-Age=31536000; Path=/; Secure; SameSite=Lax";
+
+    if (("; " + document.cookie).indexOf("; kernelci_verified=1") === -1) {
+        document.body.textContent = "Cookies must be enabled to access this storage.";
+        return;
+    }
+
+    var marker = "?return=";
+    var target = location.search.slice(marker.length) + location.hash;
+    if (location.search.slice(0, marker.length) !== marker ||
+        target.charAt(0) !== "/" || target.slice(0, 2) === "//") {
+        target = "/";
+    }
+    location.replace(target);
+}());
+</script>
+<noscript>JavaScript and cookies are required to access this storage.</noscript>
+</body>
+</html>';
     }
 {% endif %}
-{% if port is defined %}
-    # Act as a forward proxy for the given port
-    location / {
-        proxy_set_header Host $host;
+{% if item.mcp_endpoint | default(false) %}
+
+    # Public read-only KernelCI MCP server (streamable HTTP transport).
+    # More specific than the location / below, so it wins for /mcp requests.
+    location /mcp {
+        limit_req zone=mcp burst={{ mcp_rate_limit_burst | default(20) }} nodelay;
+        proxy_pass http://127.0.0.1:{{ mcp_port | default(8000) }};
+        # The MCP server rejects any Host but the one it is bound to, as
+        # protection against DNS rebinding, so pass the backend address and
+        # keep the public name in X-Forwarded-Host.
+        proxy_set_header Host 127.0.0.1:{{ mcp_port | default(8000) }};
+        proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_pass http://localhost:{{ port }};
+        # Streamable HTTP / SSE responses must not be buffered
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout {{ mcp_stream_timeout | default('3600s') }};
+        proxy_send_timeout {{ mcp_stream_timeout | default('3600s') }};
     }
 {% endif %}
-# increase maximum upload size
-    client_max_body_size 10000M;
-    client_body_buffer_size 10000M;
-    client_body_timeout 120s;
-    client_header_timeout 120s;
-    send_timeout 120s;
-    access_log /var/log/nginx/{{ vhost_name }}.access.log;
-    error_log /var/log/nginx/{{ vhost_name }}.error.log;
+{% if item.decommissioned is defined %}
 
+    # Decommissioned content configuration.
+    # To re-enable storage, remove the decommissioning location below and
+    # set root_path (and fancyindex) for this vhost in the webserver vars.
+    location / {
+        default_type text/plain;
+        return 410 "{{ item.decommissioned }}";
+    }
+{% elif item.root_path is defined %}
+
+    location / {
+{% if item.cookie_gate | default(false) %}
+        if ($storage_cookie_gate) {
+            add_header Cache-Control "no-store" always;
+            return 302 /__storage_cookie_check?return=$request_uri;
+        }
+{% endif %}
+        try_files $uri $uri/ =404;
+{% if item.fancyindex | default(false) %}
+        fancyindex on;
+#        fancyindex_exact_size off;
+{% else %}
+#        fancyindex on;
+#        fancyindex_exact_size off;
+{% endif %}
+    }
+{% endif %}
+{% if item.port is defined %}
+
+{% if item.max_body_size is defined %}
+    client_max_body_size {{ item.max_body_size }};
+{% endif %}
+{% if item.proxy_timeout is defined %}
+    client_body_timeout {{ item.proxy_timeout }};
+    proxy_read_timeout {{ item.proxy_timeout }};
+{% endif %}
+    # 127.0.0.1:{{ item.port }} forward proxy
+    location / {
+{% if item.rate_limit is defined %}
+        limit_req zone={{ item.rate_limit }} burst={{ item.rate_limit_burst | default(20) }} nodelay;
+{% endif %}
+        proxy_pass http://127.0.0.1:{{ item.port }};
+{% if item.proxy_host_header is defined %}
+        # Backend validates the Host header, pass what it expects
+        proxy_set_header Host {{ item.proxy_host_header }};
+        proxy_set_header X-Forwarded-Host $host;
+{% else %}
+        proxy_set_header Host $host;
+{% endif %}
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+{% if item.streaming | default(false) %}
+        # Streamable HTTP / SSE responses must not be buffered
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout {{ item.stream_timeout | default('3600s') }};
+        proxy_send_timeout {{ item.stream_timeout | default('3600s') }};
+{% endif %}
+    }
+{% endif %}
+
+    access_log /var/log/nginx/{{ item.vhost_name }}.access.log;
+    error_log /var/log/nginx/{{ item.vhost_name }}.error.log;
+
+{% if nginx_ssl_enabled | default(true) %}
     listen 443 ssl; # managed by Certbot
-    ssl_certificate /etc/letsencrypt/live/docs.kernelci.org/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/docs.kernelci.org/privkey.pem; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/{{ nginx_cert_name }}/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/{{ nginx_cert_name }}/privkey.pem; # managed by Certbot
     include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
-
 }
 
 server {
-    if ($host = {{ vhost_name }}) {
+    if ($host = {{ item.vhost_name }}) {
         return 301 https://$host$request_uri;
     } # managed by Certbot
 
-
     listen 80;
-    server_name {{ vhost_name }};
+    server_name {{ item.vhost_name }};
     return 404; # managed by Certbot
 }
-
+{% else %}
+    # Bootstrap only: no certificate for {{ nginx_cert_name }} yet, serving
+    # plain HTTP so certbot can complete the ACME challenge. The role
+    # re-renders this file with TLS once the certificate exists.
+    listen 80;
+}
+{% endif %}

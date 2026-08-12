@@ -1,9 +1,8 @@
 # kci-storage docker compose yaml
-version: '3.7'
+# Managed by ansible (kernelci-deploy playbooks/production)
 
 services:
   storage:
-# This is temporary repository, it will be moved to kernelci org
     image: ghcr.io/kernelci/kernelci-storage:latest
     container_name: kernelci-storage
     restart: always

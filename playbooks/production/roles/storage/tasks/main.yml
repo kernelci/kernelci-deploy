@@ -1,25 +1,51 @@
+# kernelci-storage, the upload service behind files.kernelci.org.
 - name: Create kernelci-storage /srv/kernelci-storage directory
   ansible.builtin.file:
     path: /srv/kernelci-storage
     state: directory
 
 - name: Verify kernelci-storage config file
-  stat:
+  ansible.builtin.stat:
     path: /srv/kernelci-storage/kernelci-storage.toml
   register: kernelci_storage_config_file
 
 - name: Create kernelci-storage config from template
-  when: not kernelci_storage_config_file.stat.exists | default(false) | bool
-  template:
+  # Only ever created, never overwritten: the live file carries the JWT and
+  # Azure credentials plus the accumulated block list, none of which belong
+  # in git. The template is an empty skeleton for a fresh host.
+  when: not kernelci_storage_config_file.stat.exists
+  ansible.builtin.template:
     src: kernelci-storage.toml.j2
     dest: /srv/kernelci-storage/kernelci-storage.toml
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Link the kernelci-storage work directory to /data
+  ansible.builtin.file:
+    src: /data/workdir
+    dest: /srv/kernelci-storage/workdir
+    state: link
+    force: yes
 
 - name: Create kernelci-storage docker-compose.yml from template
-  template:
+  ansible.builtin.template:
     src: storage-docker-compose.yaml.j2
     dest: /srv/kernelci-storage/docker-compose.yml
+    owner: root
+    group: root
+    mode: '0644'
 
 - name: Start kernelci-storage docker container
-  command: docker-compose -f /srv/kernelci-storage/docker-compose.yml up -d
-  args:
+  # docker compose (v2 plugin), the standalone docker-compose binary is gone.
+  ansible.builtin.command:
+    cmd: docker compose up -d
     chdir: /srv/kernelci-storage
+  register: storage_compose
+  changed_when: "'Started' in storage_compose.stderr or 'Created' in storage_compose.stderr"
+
+- name: Wait for kernelci-storage to listen
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: 3000
+    timeout: 60

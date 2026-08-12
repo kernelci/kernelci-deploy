@@ -2,11 +2,15 @@
   apt: update_cache=yes cache_valid_time=3600
 
 - name: Install packages
+  # Production runs docker-ce from download.docker.com with the compose
+  # plugin (docker compose), not the Debian docker.io/docker-compose pair.
   apt: name={{ item }}
   with_items:
     - git
-    - docker.io
-    - docker-compose
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    - docker-compose-plugin
     - python3-pip
     - python3-venv
     - curl
@@ -39,8 +43,12 @@
 
 
 - name: Create data directories if they don't exist
-  ansible.builtin.file: path={{ item.data_dir }} state=directory
-  with_items: "{{ vhosts }}"
+  ansible.builtin.file:
+    path: "{{ item.root_path }}"
+    state: directory
+  loop: "{{ vhosts | selectattr('root_path', 'defined') | list }}"
+  loop_control:
+    label: "{{ item.vhost_name }}"
 
 - name: Create data directory for storage
   ansible.builtin.file: path=/data/storage state=directory
