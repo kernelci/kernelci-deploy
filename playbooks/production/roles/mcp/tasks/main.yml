@@ -48,8 +48,9 @@
     state: "{{ 'latest' if (mcp_upgrade and not mcp_kci_dev_version) else 'present' }}"
   when: >-
     kci_dev_installed.rc != 0
-    or mcp_upgrade
-    or (mcp_kci_dev_version and mcp_kci_dev_version not in kci_dev_installed.stdout)
+    or (mcp_upgrade | bool)
+    or (mcp_kci_dev_version | length > 0
+        and mcp_kci_dev_version not in kci_dev_installed.stdout)
   notify: Restart kci-mcp
 
 - name: Configure kci-dev for the public read-only instance
@@ -76,6 +77,45 @@
     enabled: yes
     state: started
     daemon_reload: yes
+
+# Scheduled upgrades. Skipped when a version is pinned: a pin is a decision
+# to stay put, and a timer that undoes it would be a trap.
+- name: Install the kci-dev update script
+  ansible.builtin.template:
+    src: kci-mcp-update.sh.j2
+    dest: "{{ mcp_home }}/update.sh"
+    owner: root
+    group: root
+    mode: '0755'
+  when: mcp_auto_update | bool and mcp_kci_dev_version | length == 0
+
+- name: Install the kci-dev update units
+  ansible.builtin.template:
+    src: "kci-mcp-update.{{ item }}.j2"
+    dest: "/etc/systemd/system/kci-mcp-update.{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - service
+    - timer
+  when: mcp_auto_update | bool and mcp_kci_dev_version | length == 0
+
+- name: Enable the kci-dev update timer
+  ansible.builtin.systemd:
+    name: kci-mcp-update.timer
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  when: mcp_auto_update | bool and mcp_kci_dev_version | length == 0
+
+- name: Disable the kci-dev update timer when updates are pinned or turned off
+  ansible.builtin.systemd:
+    name: kci-mcp-update.timer
+    enabled: no
+    state: stopped
+  failed_when: false
+  when: not (mcp_auto_update | bool and mcp_kci_dev_version | length == 0)
 
 - name: Apply any pending restart before checking the server
   ansible.builtin.meta: flush_handlers

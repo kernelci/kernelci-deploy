@@ -1,0 +1,11 @@
+# Managed by ansible (kernelci-deploy playbooks/production) - do not edit by hand
+[Unit]
+Description=Update the KernelCI MCP server (kci-dev) on a schedule
+
+[Timer]
+OnCalendar={{ mcp_update_schedule }}
+RandomizedDelaySec={{ mcp_update_splay | default('30m') }}
+Persistent=true
+
+[Install]
+WantedBy=timers.target

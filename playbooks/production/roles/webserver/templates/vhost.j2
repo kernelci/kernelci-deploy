@@ -60,6 +60,7 @@ server {
     # More specific than the location / below, so it wins for /mcp requests.
     location /mcp {
         limit_req zone=mcp burst={{ mcp_rate_limit_burst | default(20) }} nodelay;
+        limit_conn mcp_conn {{ mcp_conn_limit | default(8) }};
         proxy_pass http://127.0.0.1:{{ mcp_port | default(8000) }};
         # The MCP server rejects any Host but the one it is bound to, as
         # protection against DNS rebinding, so pass the backend address and
@@ -119,6 +120,7 @@ server {
     location / {
 {% if item.rate_limit is defined %}
         limit_req zone={{ item.rate_limit }} burst={{ item.rate_limit_burst | default(20) }} nodelay;
+        limit_conn {{ item.rate_limit }}_conn {{ item.conn_limit | default(8) }};
 {% endif %}
         proxy_pass http://127.0.0.1:{{ item.port }};
 {% if item.proxy_host_header is defined %}

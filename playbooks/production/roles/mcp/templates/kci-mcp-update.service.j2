@@ -1,0 +1,14 @@
+# Managed by ansible (kernelci-deploy playbooks/production) - do not edit by hand
+[Unit]
+Description=Update the KernelCI MCP server (kci-dev)
+Documentation=https://kci.dev/docs/mcp/
+After=network-online.target kci-mcp.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# Type=oneshot defaults to no start timeout at all. A failed upgrade needs
+# up to two 60s health checks plus a rollback install, so allow well beyond
+# that but still bound it, or a stalled pip would hang the unit forever.
+TimeoutStartSec={{ mcp_update_timeout | default('900') }}
+ExecStart={{ mcp_home }}/update.sh

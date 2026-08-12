@@ -19,6 +19,13 @@ mcp_kci_dev_version: ""
 # Set to true to pull a newer kci-dev on the next run.
 mcp_upgrade: false
 
+# Weekly self-verifying upgrade: pip upgrade, restart, check the server still
+# answers, roll back to the previous version if it does not. Disabled
+# automatically when mcp_kci_dev_version pins a release.
+mcp_auto_update: true
+mcp_update_schedule: "Sun 04:00"
+mcp_update_splay: 30m
+
 mcp_instance: production
 mcp_dashboard_api: "https://dashboard.kernelci.org/api/"
 mcp_maestro_api: "https://kernelci-api.westus3.cloudapp.azure.com/"
@@ -26,4 +33,8 @@ mcp_maestro_api: "https://kernelci-api.westus3.cloudapp.azure.com/"
 # nginx side, consumed by the webserver role
 mcp_rate_limit: 10r/s
 mcp_rate_limit_burst: 20
+# Concurrent streams per client. MCP responses are long-lived, so this is
+# what stops one client from pinning the single backend process.
+mcp_conn_limit: 8
+mcp_limit_status: 429
 mcp_stream_timeout: 3600s

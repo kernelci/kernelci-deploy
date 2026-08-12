@@ -1,5 +1,15 @@
 # Managed by ansible (kernelci-deploy playbooks/production) - do not edit by hand
-# Request rate limiting zones referenced by vhosts via `rate_limit`.
+# Rate and connection limiting zones referenced by vhosts via `rate_limit`.
 
 # Public MCP endpoint: unauthenticated by design, so cap per-client rate.
 limit_req_zone $binary_remote_addr zone=mcp:10m rate={{ mcp_rate_limit | default('10r/s') }};
+
+# MCP holds long-lived streamable HTTP / SSE responses open, so cap how many
+# a single client can pin at once. Without this one client can hold streams
+# until the proxy timeout and starve the single backend process.
+limit_conn_zone $binary_remote_addr zone=mcp_conn:10m;
+
+# Tell clients they were throttled rather than that the service is down:
+# 429 is what MCP clients back off on, nginx defaults to 503.
+limit_req_status {{ mcp_limit_status | default(429) }};
+limit_conn_status {{ mcp_limit_status | default(429) }};

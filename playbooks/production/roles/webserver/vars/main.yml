@@ -12,7 +12,9 @@
 #   streaming       disable proxy buffering (SSE / streamable HTTP)
 #   proxy_host_header  Host header to send upstream, when the backend
 #                   validates it (default: the public $host)
-#   rate_limit      apply the named limit_req zone (see kernelci-limits.conf)
+#   rate_limit      apply the named limit_req zone, plus its <name>_conn
+#                   limit_conn zone (see kernelci-limits.conf)
+#   conn_limit      concurrent connections per client for that zone
 #   mcp_endpoint    also serve the MCP server under /mcp on this vhost
 #   enabled         set to false to keep the vhost out of nginx and certbot
 #

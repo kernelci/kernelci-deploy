@@ -1,0 +1,68 @@
+#!/bin/bash
+# Managed by ansible (kernelci-deploy playbooks/production) - do not edit by hand
+#
+# Upgrade kci-dev in the MCP virtualenv, restart the server and verify it
+# still answers. If the new version does not come up, reinstall the version
+# that was running and restart again, so a broken release cannot leave the
+# public endpoint down.
+#
+# kci-dev's MCP tools are upstream-flagged as experimental and change between
+# releases, which is exactly why this runs on a timer instead of being left
+# to whatever pip resolved on the day the host was provisioned.
+set -u
+
+VENV={{ mcp_home }}/venv
+PIP="$VENV/bin/pip"
+KCI_DEV="$VENV/bin/kci-dev"
+URL="http://{{ mcp_bind }}:{{ mcp_port }}/mcp"
+
+version() {
+    "$KCI_DEV" --version 2>/dev/null | awk '{print $NF}'
+}
+
+healthy() {
+    local i code
+    for i in $(seq 1 30); do
+        code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$URL" \
+            -H 'Content-Type: application/json' \
+            -H 'Accept: application/json, text/event-stream' \
+            -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"kci-mcp-update","version":"1"}}}')
+        [ "$code" = "200" ] && return 0
+        sleep 2
+    done
+    return 1
+}
+
+before=$(version)
+if [ -z "$before" ]; then
+    echo "kci-dev is not installed in $VENV, nothing to update"
+    exit 1
+fi
+
+if ! "$PIP" install --quiet --upgrade 'kci-dev[mcp]'; then
+    echo "pip upgrade failed, staying on $before"
+    exit 1
+fi
+
+after=$(version)
+if [ "$before" = "$after" ]; then
+    echo "kci-dev $before is already current"
+    exit 0
+fi
+
+echo "kci-dev $before -> $after, restarting"
+systemctl restart kci-mcp
+if healthy; then
+    echo "kci-dev $after is serving"
+    exit 0
+fi
+
+echo "kci-dev $after failed its health check, rolling back to $before"
+"$PIP" install --quiet "kci-dev[mcp]==$before"
+systemctl restart kci-mcp
+if healthy; then
+    echo "rolled back to $before"
+else
+    echo "rollback to $before is not serving either, needs attention"
+fi
+exit 1
