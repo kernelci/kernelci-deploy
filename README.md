@@ -136,6 +136,38 @@ Roles:
 - `dozzle`: the container log viewer, bound to loopback and reached over an
   ssh tunnel.
 
+### playbooks/monitoring
+Grafana on the monitoring host (mon.kernelci.org):
+
+```sh
+cd playbooks/monitoring
+ansible-playbook -i inventory.yaml main.yml
+```
+
+The host runs a compose stack of seven services (Grafana, VictoriaMetrics,
+vmagent, vmalert, alertmanager, a Kubernetes exporter and a Kubernetes web
+view) plus a second uptime-kuma, behind caddy and nginx. This playbook covers
+Grafana only, which is where the irreplaceable state was: thirteen dashboards
+that existed nowhere but the SQLite database on that one VM.
+
+Those dashboards are now in `roles/grafana/files/dashboards`, extracted from
+the live database. Re-extract them after editing in the UI with:
+
+```sh
+ssh kernelci@mon.kernelci.org 'sudo python3' < tools/grafana_export.py > dashboards.json
+```
+
+By default the role only stages the files on the host and configures
+provisioning, changing nothing about the running Grafana; the compose file
+does not mount them, so they are a backup on disk. Set
+`-e grafana_provision_dashboards=true` to have Grafana actually load them,
+which is what a rebuilt host wants. Grafana then owns those UIDs as
+provisioned dashboards, so the provider also sets `allowUiUpdates` to keep
+them editable in the UI.
+
+Out of scope on purpose: the compose stack itself, the alerting rules, and the
+Kubernetes credentials in `/srv/monitoring/config` and `/srv/monitoring/k8suser`.
+
 ### playbooks/status
 Playbook for the status page host (status.kernelci.org):
 

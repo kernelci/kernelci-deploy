@@ -1,0 +1,16 @@
+# ansible-playbook -i inventory.yaml main.yml
+#
+# Grafana on the monitoring host. The dashboards in
+# roles/grafana/files/dashboards were extracted from the live SQLite database,
+# where they were the only copy; keeping them in git is the point of this
+# playbook.
+#
+# By default this only stages the backup on the host and changes nothing about
+# the running Grafana. Provisioning them for real is opt-in, see
+# grafana_provision_dashboards in group_vars.
+- hosts: all
+  gather_facts: true
+  become: true
+  roles:
+    - role: grafana
+      tags: grafana

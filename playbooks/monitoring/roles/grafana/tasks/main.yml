@@ -1,0 +1,106 @@
+# Grafana dashboards and provisioning.
+#
+# The thirteen dashboards under files/dashboards were extracted from the live
+# grafana.db, where they existed in one copy on one VM. This role keeps the
+# host in step with the repository copy.
+#
+# It deliberately does not manage the compose stack, the Kubernetes
+# credentials in /srv/monitoring/config and /srv/monitoring/k8suser, or the
+# alerting rules. Those are either secrets or hand-maintained operational
+# configuration.
+- name: Check the monitoring stack is deployed
+  ansible.builtin.stat:
+    path: "{{ monitoring_dir }}/docker-compose.yml"
+  register: monitoring_compose
+
+- name: Require the monitoring stack
+  ansible.builtin.fail:
+    msg: >-
+      {{ monitoring_dir }}/docker-compose.yml is missing. This role manages
+      Grafana's dashboards on an existing monitoring host; it does not deploy
+      the stack itself.
+  when: not monitoring_compose.stat.exists
+
+- name: Ensure the provisioning directories exist
+  ansible.builtin.file:
+    path: "{{ grafana_provisioning_dir }}/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - dashboards
+    - datasources
+
+- name: Configure the Grafana datasource
+  ansible.builtin.template:
+    src: datasource.yml.j2
+    dest: "{{ grafana_provisioning_dir }}/datasources/datasource.yml"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart grafana
+
+- name: Configure the dashboard provider
+  ansible.builtin.template:
+    src: dashboard-provider.yml.j2
+    dest: "{{ grafana_provisioning_dir }}/dashboards/dashboard.yml"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart grafana
+
+- name: Stage the dashboards on the host
+  # Always done, and always harmless: nothing mounts this directory into the
+  # container unless provisioning is turned on, so this is a backup on disk.
+  ansible.builtin.copy:
+    src: dashboards/
+    dest: "{{ grafana_dashboards_dir }}/"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Find where Grafana keeps its data
+  # The compose file uses a named volume for /var/lib/grafana, so the file
+  # provider reads from inside that volume rather than from a bind mount.
+  ansible.builtin.command: docker volume inspect monitoring_grafanadata --format {{ '{{' }}.Mountpoint{{ '}}' }}
+  register: grafana_volume
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: grafana_provision_dashboards | bool
+
+- name: Provision the dashboards into Grafana
+  # Grafana takes ownership of these UIDs once they are provisioned. That is
+  # the point on a rebuilt host, and the reason this is opt-in on a live one.
+  ansible.builtin.copy:
+    src: dashboards/
+    dest: "{{ grafana_volume.stdout }}/dashboards/"
+    owner: '472'
+    group: root
+    mode: '0644'
+  when:
+    - grafana_provision_dashboards | bool
+    - grafana_volume.rc == 0
+    - grafana_volume.stdout | length > 0
+  notify: Restart grafana
+
+- name: Apply any pending restart
+  ansible.builtin.meta: flush_handlers
+
+- name: Check Grafana answers
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ grafana_port }}/api/health"
+    method: GET
+    status_code: 200
+  register: grafana_health
+  changed_when: false
+  retries: 5
+  delay: 5
+  until: grafana_health.status == 200
+  when: not ansible_check_mode
+
+- name: Report the Grafana version
+  ansible.builtin.debug:
+    msg: "grafana {{ grafana_health.json.version | default('?') }}, database {{ grafana_health.json.database | default('?') }}"
+  when: not ansible_check_mode

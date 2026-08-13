@@ -1,0 +1,4 @@
+- name: Restart grafana
+  # Grafana reads its provisioning tree at startup, so configuration changes
+  # only take effect on restart.
+  ansible.builtin.command: docker restart {{ grafana_container }}

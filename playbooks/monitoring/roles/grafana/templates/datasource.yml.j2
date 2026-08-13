@@ -1,0 +1,9 @@
+# Managed by ansible (kernelci-deploy playbooks/monitoring) - do not edit by hand
+apiVersion: 1
+
+datasources:
+    - name: {{ grafana_datasource_name }}
+      type: prometheus
+      access: proxy
+      url: {{ grafana_datasource_url }}
+      isDefault: true

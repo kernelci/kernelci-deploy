@@ -1,0 +1,37 @@
+# The monitoring host (mon.kernelci.org). It runs a compose stack of seven
+# services - Grafana, VictoriaMetrics, vmagent, vmalert, alertmanager, a
+# Kubernetes exporter and a Kubernetes web view - plus a second uptime-kuma,
+# behind caddy and nginx.
+#
+# This playbook covers Grafana only, which is where the irreplaceable state
+# is: thirteen dashboards that existed nowhere but the SQLite database on this
+# one VM. The rest of the stack is still deployed by hand; its configuration
+# (prometheus.yml, alerts.yml, alertmanager.yml) and its Kubernetes
+# credentials are untouched here.
+monitoring_dir: /srv/monitoring
+grafana_container: grafana
+grafana_port: 3002
+
+# Where the compose file bind-mounts Grafana's provisioning tree.
+grafana_provisioning_dir: "{{ monitoring_dir }}/provisioning"
+# Dashboards checked into this repository are copied here.
+grafana_dashboards_dir: "{{ monitoring_dir }}/dashboards"
+
+# The datasource every dashboard queries.
+grafana_datasource_name: VictoriaMetrics
+grafana_datasource_url: http://victoriametrics:8428
+
+# Provisioning the dashboards is opt-in.
+#
+# Off (the default) the repository copy is only a backup: the files are put on
+# the host but Grafana does not read them, because the compose file does not
+# mount them into /var/lib/grafana/dashboards. Nothing about the running
+# instance changes.
+#
+# On, the files are also placed where the existing file provider reads them,
+# so a rebuilt host comes up with its dashboards. Grafana then owns those UIDs
+# as provisioned dashboards, which is why allow_ui_updates matters below.
+grafana_provision_dashboards: false
+# Keep the UI editable even for provisioned dashboards. With this false,
+# Grafana refuses to save UI edits to a provisioned dashboard.
+grafana_allow_ui_updates: true

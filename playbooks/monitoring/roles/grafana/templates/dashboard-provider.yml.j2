@@ -1,0 +1,14 @@
+# Managed by ansible (kernelci-deploy playbooks/monitoring) - do not edit by hand
+apiVersion: 1
+
+providers:
+- name: Prometheus
+  orgId: 1
+  folder: ''
+  type: file
+{% if grafana_provision_dashboards and grafana_allow_ui_updates %}
+  # Without this Grafana refuses to save UI edits to a provisioned dashboard.
+  allowUiUpdates: true
+{% endif %}
+  options:
+    path: /var/lib/grafana/dashboards
