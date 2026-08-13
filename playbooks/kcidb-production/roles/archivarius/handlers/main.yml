@@ -1,0 +1,5 @@
+- name: Restart archivarius
+  ansible.builtin.systemd:
+    name: submissions-archivarius
+    state: restarted
+    daemon_reload: yes

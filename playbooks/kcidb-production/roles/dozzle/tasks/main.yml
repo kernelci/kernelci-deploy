@@ -1,0 +1,48 @@
+# dozzle was started by hand with docker run, so it carries no compose
+# labels. Adopting it means replacing that container with a compose managed
+# one, which is safe: dozzle holds no state, it only reads the docker socket.
+- name: Check how dozzle is currently running
+  ansible.builtin.command: docker inspect dozzle
+  register: dozzle_inspect
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Remove the hand-started dozzle container
+  ansible.builtin.command: docker rm -f dozzle
+  when:
+    - dozzle_inspect.rc == 0
+    - "'com.docker.compose.project' not in dozzle_inspect.stdout"
+
+- name: Ensure the dozzle directory exists
+  ansible.builtin.file:
+    path: "{{ dozzle_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  register: dozzle_dir_created
+
+- name: Deploy the dozzle compose file
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: "{{ dozzle_dir }}/docker-compose.yaml"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Bring dozzle up
+  community.docker.docker_compose_v2:
+    project_src: "{{ dozzle_dir }}"
+    state: present
+    pull: missing
+  # A check run cannot simulate this before the directory it reads exists,
+  # so skip it there rather than fail the dry run on the first deployment.
+  when: not (ansible_check_mode and dozzle_dir_created is changed)
+
+- name: Check dozzle is listening on loopback only
+  ansible.builtin.wait_for:
+    host: "{{ dozzle_bind }}"
+    port: "{{ dozzle_port }}"
+    timeout: 30
+  when: not ansible_check_mode

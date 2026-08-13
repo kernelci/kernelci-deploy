@@ -1,0 +1,117 @@
+# The kcidb-ng stack: the public submission endpoint plus the workers that
+# ingest what it spools.
+#
+# Unlike kcidb-staging this role does not clone the kcidb-ng repository. The
+# deployed directory is not a checkout, it is a compose file next to ~19G of
+# spool and archive data, and the images are prebuilt, so there is nothing
+# for a checkout to contribute.
+- name: Ensure the deployment directory exists
+  ansible.builtin.file:
+    path: "{{ kcidb_dir }}"
+    state: directory
+    owner: "{{ kcidb_owner }}"
+    group: "{{ kcidb_group }}"
+    mode: '0755'
+
+- name: Ensure the data directories exist
+  # Listed explicitly so a fresh host comes up without hand holding.
+  # Ownership is deliberately not enforced: these hold ~19G of live spool and
+  # archive data, and the deployed tree mixes root-owned and azureuser-owned
+  # directories. Creating them is useful, rewriting them is not.
+  ansible.builtin.file:
+    path: "{{ kcidb_dir }}/{{ item }}"
+    state: directory
+  loop:
+    - spool
+    - spool/archive
+    - spool/failed
+    - spool/pending_retry
+    - state
+    - cache
+    - config
+    - backend-data
+
+- name: Ensure the certificate directory exists
+  # kcidb-rest writes its own Let's Encrypt material here.
+  ansible.builtin.file:
+    path: "{{ kcidb_dir }}/certs"
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Install the environment skeleton if the host has none
+  # force: no leaves the live file alone. Note it also leaves the file's mode
+  # alone, which is why the next task exists.
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ kcidb_dir }}/.env"
+    owner: "{{ kcidb_owner }}"
+    group: "{{ kcidb_group }}"
+    mode: '0600'
+    force: no
+
+- name: Keep the environment file private
+  # It carries the JWT secret, the storage token and the database password,
+  # and was left world readable. Content is untouched, only the mode.
+  ansible.builtin.file:
+    path: "{{ kcidb_dir }}/.env"
+    owner: "{{ kcidb_owner }}"
+    group: "{{ kcidb_group }}"
+    mode: '0600'
+
+- name: Fail early when the environment file is still a skeleton
+  ansible.builtin.command: grep -q '^JWT_SECRET=.\+' {{ kcidb_dir }}/.env
+  register: kcidb_env_filled
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Report an unconfigured environment file
+  ansible.builtin.fail:
+    msg: >-
+      {{ kcidb_dir }}/.env has no JWT_SECRET. It was just created from the
+      skeleton and needs the database, storage and ACME settings filled in
+      before the stack can start.
+  when: kcidb_env_filled.rc != 0
+
+- name: Deploy the compose file
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: "{{ kcidb_dir }}/docker-compose.yaml"
+    owner: "{{ kcidb_owner }}"
+    group: "{{ kcidb_group }}"
+    mode: '0644'
+
+- name: Bring the stack up
+  # Only the default services: db, dbinit and certbot-standalone sit behind
+  # profiles and are not touched.
+  community.docker.docker_compose_v2:
+    project_src: "{{ kcidb_dir }}"
+    state: present
+    pull: "{{ kcidb_pull }}"
+  register: kcidb_compose
+
+- name: Show what compose changed
+  ansible.builtin.debug:
+    var: kcidb_compose.actions
+  when: kcidb_compose.changed
+
+- name: Wait for the submission endpoint to listen
+  ansible.builtin.wait_for:
+    port: "{{ item }}"
+    timeout: 60
+  loop:
+    - "{{ kcidb_rest_http_port }}"
+    - "{{ kcidb_rest_https_port }}"
+
+- name: Check the public endpoint answers over TLS
+  ansible.builtin.uri:
+    url: "{{ kcidb_public_url }}"
+    method: GET
+    status_code: 200
+  register: kcidb_public
+  changed_when: false
+  retries: 5
+  delay: 5
+  until: kcidb_public.status == 200

@@ -59,6 +59,40 @@ This directory contains scripts and configuration files for local installation o
 ## playbooks/*
 This directory contains Ansible playbooks and roles for deploying and managing KernelCI services. Right now we have only complete playbook for production server, incomplete for monitoring server, and some roles for monitoring in `all` directory (node_exporter listening on port 2000)
 
+### playbooks/kcidb-production
+Playbook for the production KCIDB submission endpoint (db.kernelci.org), run
+with:
+
+```sh
+cd playbooks/kcidb-production
+ansible-playbook -i inventory.yaml main.yml
+```
+
+It is not a copy of kcidb-staging, because the host is not built the same way:
+there is no caddy in front (kcidb-rest binds 80/443 itself and renews its own
+certificate through its built-in ACME client), no dashboard (that runs on a
+different host), the images are prebuilt from ghcr.io rather than built
+locally, and the database is Azure managed Postgres, so the self-hosted
+`db`/`dbinit` compose services stay behind their profile. The stack also keeps
+its deployed location in `/home/azureuser/kcidb-ng`, next to ~19G of spool and
+archive data, rather than the `/srv` path staging uses.
+
+Unlike the kcidb-staging common role, this playbook does not move sshd to port
+22022 and does not rewrite root's `authorized_keys`. This host answers on 22,
+which is what the Azure network security group publishes.
+
+Roles:
+- `common`: base packages, and Docker only when the host does not already
+  have it.
+- `kcidb-ng`: data directories, the compose file, and the stack itself. The
+  `.env` file is only ever created, never rewritten: it holds the JWT secret,
+  the storage token and the database password. Images are not refreshed by
+  default; deploy current builds with `-e kcidb_pull=always`.
+- `archivarius`: the submissions archiver built from `tools/submissions_archivarius`.
+  Install or upgrade it with `-e archivarius_deb=/path/to/*.deb`.
+- `dozzle`: the container log viewer, bound to loopback and reached over an
+  ssh tunnel.
+
 ### playbooks/production
 Playbook for the production web/storage server (`vm-production-2025`, reachable
 as `docs.kernelci.org:22022`), run with:
@@ -118,3 +152,33 @@ Script to manage Azure AD identities for KernelCI VM. So basically you can contr
 ### monitor-containers.py
 One more legacy docker monitoring script, not used anymore.
 DEPRECATED: Will be removed in 1 month if no objections.
+### postgres_team_sync.py
+Synchronizes read-only Postgres logins with the dashboard team file
+(`kernelci/dashboard:.github/dashboard-team`). Users in the list get a role with
+a generated password and read-only access to the public schema; managed roles no
+longer listed are dropped. Reserved accounts (`kcidb*`, superusers, `pg_*`, the
+connecting role) are never touched. Defaults to a dry run, `--apply` commits.
+
+Connection settings come from the environment, loaded from a `.env` file so it
+can share the one the kcidb-ng stack uses:
+
+```sh
+./tools/postgres_team_sync.py --env-file /home/azureuser/kcidb-ng/.env
+```
+
+It reads `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, optionally `DB_PORT`,
+`GITHUB_TOKEN` and `TEAM_SYNC_EMAIL_TO`. Real environment variables override the
+file. A legacy `.dbauth` file is still honoured when no `DB_*` values are set.
+Previously ran only on the production KCIDB host, outside version control.
+### ssh_key_sync.py
+Rebuilds one local user's `authorized_keys` from the GitHub public keys of every
+user in the same dashboard team file, plus a static key list. Fully manages the
+file: it backs up the old content and replaces it atomically, and refuses to
+write when it produced suspiciously few keys. Defaults to a dry run, `--apply`
+writes, `--install` sets up a systemd service and hourly timer. It can also
+rotate Postgres role passwords, which is off by default.
+
+Settings come from the environment or a `.env` file: `GITHUB_TOKEN`,
+`DISCORD_WEBHOOK_URL`, `POSTGRES_HOST`/`PORT`/`USER`/`DATABASE`/`PASSWORD`,
+`POSTGRES_EMAIL_TO` and `SMTP_PASSWORD`. Nothing secret lives in the script.
+Previously ran only on the production KCIDB host, outside version control.

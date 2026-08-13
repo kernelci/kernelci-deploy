@@ -1,0 +1,59 @@
+# Deployment layout.
+#
+# The stack lives in the deploying user's home rather than /srv, which is
+# where kcidb-staging puts it. That is where it was installed, and the spool
+# and archive underneath it hold ~19G, so moving it would mean downtime on
+# the submission endpoint for no functional gain.
+kcidb_dir: /home/azureuser/kcidb-ng
+kcidb_owner: azureuser
+kcidb_group: azureuser
+
+# Images. All prebuilt, no local builds on this host.
+kcidb_rest_image: ghcr.io/kernelci/kcidb-ng/kcidb-rest:latest
+kcidb_logspec_image: ghcr.io/kernelci/kcidb-ng/logspec-worker:latest
+# The ingester and the aggregations processor both run the dashboard backend
+# image, composed from these parts so a tag can be pinned without editing the
+# compose file.
+dashboard_image_registry: ghcr.io
+dashboard_image_owner: kernelci
+dashboard_image_repository: dashboard
+dashboard_image_tag: latest
+
+# Published ports. 80/443 are the public submission endpoint; the metrics
+# ports are only reachable inside the VNet, the network security group does
+# not publish them.
+kcidb_rest_http_port: 80
+kcidb_rest_https_port: 443
+ingester_metrics_port: 2003
+aggregations_metrics_port: 2004
+
+# Image pull policy for the stack:
+#   missing  only fetch images that are absent (default, no surprise upgrades)
+#   always   refresh :latest, i.e. deploy the current builds
+# Run an upgrade with: ansible-playbook ... -e kcidb_pull=always
+kcidb_pull: missing
+
+# Public endpoint used for the post-deploy health check.
+kcidb_public_url: https://db.kernelci.org/
+
+# Names kcidb-rest puts in the certificate it obtains and renews itself.
+# Only used when writing a fresh .env skeleton, never applied to the live
+# file, so changing it here does not reissue anything.
+kcidb_acme_domains: "kcidb-rest.westus2.cloudapp.azure.com,db.kernelci.org"
+
+# submissions-archivarius: moves processed submissions out of the spool.
+# Built from tools/submissions_archivarius in this repository and installed
+# as a .deb. Set archivarius_deb to a local .deb path to install or upgrade
+# it; left empty the role only asserts that the package is present.
+archivarius_deb: ""
+archivarius_sourcedir: "{{ kcidb_dir }}/spool/archive"
+archivarius_destdir: /home/azureuser/archive
+archivarius_faileddir: "{{ kcidb_dir }}/spool/failed"
+archivarius_number: 200000
+
+# dozzle: container log viewer, bound to loopback and reached over an ssh
+# tunnel. It is not published by anything.
+dozzle_dir: /srv/dozzle
+dozzle_image: amir20/dozzle:latest
+dozzle_bind: 127.0.0.1
+dozzle_port: 8080

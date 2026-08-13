@@ -1,0 +1,68 @@
+# submissions-archivarius moves processed submissions out of the kcidb-ng
+# spool into the archive, and quarantines the ones that failed. It is built
+# from tools/submissions_archivarius in this repository and shipped as a
+# .deb; this role installs it when given one and owns its configuration.
+- name: Check whether submissions-archivarius is installed
+  ansible.builtin.command: dpkg-query -W -f=${Version} submissions-archivarius
+  register: archivarius_installed
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Copy the archivarius package
+  ansible.builtin.copy:
+    src: "{{ archivarius_deb }}"
+    dest: /tmp/{{ archivarius_deb | basename }}
+    mode: '0644'
+  when: archivarius_deb | length > 0
+
+- name: Install the archivarius package
+  ansible.builtin.apt:
+    deb: /tmp/{{ archivarius_deb | basename }}
+  when: archivarius_deb | length > 0
+  notify: Restart archivarius
+
+- name: Require the archivarius package to be present
+  ansible.builtin.fail:
+    msg: >-
+      submissions-archivarius is not installed and archivarius_deb is not
+      set. Build it from tools/submissions_archivarius and pass the package
+      with -e archivarius_deb=/path/to/submissions-archivarius_*.deb
+  when:
+    - archivarius_installed.rc != 0
+    - archivarius_deb | length == 0
+
+- name: Ensure the archive destination exists
+  ansible.builtin.file:
+    path: "{{ archivarius_destdir }}"
+    state: directory
+    owner: "{{ kcidb_owner }}"
+    group: "{{ kcidb_group }}"
+    mode: '0755'
+
+- name: Ensure the archivarius drop-in directory exists
+  ansible.builtin.file:
+    path: /etc/systemd/system/submissions-archivarius.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Configure the archivarius service
+  # The packaged unit carries its paths in ExecStart, so a drop-in that
+  # clears and redefines it is what makes this recipe the source of truth
+  # rather than whatever the package happened to ship.
+  ansible.builtin.template:
+    src: override.conf.j2
+    dest: /etc/systemd/system/submissions-archivarius.service.d/10-kernelci.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart archivarius
+
+- name: Enable and start archivarius
+  ansible.builtin.systemd:
+    name: submissions-archivarius
+    enabled: yes
+    state: started
+    daemon_reload: yes

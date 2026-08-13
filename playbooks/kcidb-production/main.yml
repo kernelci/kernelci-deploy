@@ -1,0 +1,28 @@
+# ansible-playbook -i inventory.yaml main.yml
+#
+# The production KCIDB host (db.kernelci.org). It is deliberately NOT the same
+# shape as playbooks/kcidb-staging:
+#
+#   - no caddy: kcidb-rest binds 80/443 itself and obtains its own Let's
+#     Encrypt certificate through its built-in ACME client (KCIDB_DOMAINS)
+#   - no dashboard: the web dashboard runs on a different host entirely
+#   - prebuilt ghcr.io images rather than local builds
+#   - the database is Azure managed Postgres, so the self-hosted db/dbinit
+#     compose services stay behind their profile and are never started
+#
+# This playbook also does not touch sshd or root's authorized_keys, which the
+# kcidb-staging common role does. Doing so here would move the host off port
+# 22 (which the network security group publishes) and hand out root logins
+# that production does not currently have.
+- hosts: all
+  gather_facts: true
+  become: true
+  roles:
+    - role: common
+      tags: common
+    - role: kcidb-ng
+      tags: kcidb-ng
+    - role: archivarius
+      tags: archivarius
+    - role: dozzle
+      tags: dozzle

@@ -1,0 +1,165 @@
+# kcidb-rest interface workers
+# Managed by ansible (kernelci-deploy playbooks/kcidb-production)
+services:
+  kcidb-rest:
+    image: {{ kcidb_rest_image }}
+    env_file:
+      - .env
+    # Built-in ACME: set KCIDB_DOMAINS in .env and kcidb-rest obtains and
+    # auto-renews its own Let's Encrypt certificate into the ./certs volume.
+    # Both port 80 (HTTP-01 challenge) and 443 must be published for this.
+    ports:
+      - "{{ kcidb_rest_https_port }}:443"
+      - "{{ kcidb_rest_http_port }}:80"
+    volumes:
+      - ./spool:/app/spool
+      - ./certs:/etc/letsencrypt
+      # Deprecated: only needed for external certbot in webroot mode.
+      # Uncomment to enable ACME challenge for certbot (also set ACME_WEBROOT in .env)
+      # - ./acme-challenge:/var/www/acme-challenge
+    restart: unless-stopped
+    networks:
+      - kcidb
+# To disable JWT auth
+#    command: ["/usr/local/bin/kcidb-restd-rs","-j",""]
+  ingester:
+      image: ${IMAGE_REGISTRY:-{{ dashboard_image_registry }}}/${IMAGE_OWNER:-{{ dashboard_image_owner }}}/${IMAGE_REPOSITORY:-{{ dashboard_image_repository }}}/dashboard-backend:${IMAGE_TAG:-{{ dashboard_image_tag }}}
+      command:
+          - poetry
+          - run
+          - python3
+          - manage.py
+          - monitor_submissions
+          - --spool-dir
+          - /app/spool
+      env_file: .env
+      environment:
+          SKIP_CRONJOBS: "True"
+      volumes:
+          - ./backend-data:${BACKEND_VOLUME_DIR:-/volume_data}
+          - ${INGESTER_SPOOL_DIR:-./spool}:/app/spool
+          - ./state:/app/state
+          - ./cache:/app/cache
+      restart: always
+      ports:
+        - "{{ ingester_metrics_port }}:8002"
+      networks:
+        - kcidb
+
+#      depends_on:
+#          - redis
+#      profiles: ["with_commands"]
+
+  pending_aggregations_processor:
+      image: ${IMAGE_REGISTRY:-{{ dashboard_image_registry }}}/${IMAGE_OWNER:-{{ dashboard_image_owner }}}/${IMAGE_REPOSITORY:-{{ dashboard_image_repository }}}/dashboard-backend:${IMAGE_TAG:-{{ dashboard_image_tag }}}
+      command:
+          - poetry
+          - run
+          - python3
+          - manage.py
+          - process_pending_aggregations
+          - --loop
+          - --interval
+          - "5"
+      env_file: .env
+      environment:
+          SKIP_CRONJOBS: "True"
+      restart: always
+      ports:
+        - "{{ aggregations_metrics_port }}:8001"
+      networks:
+        - kcidb
+
+#      depends_on:
+#          - redis
+#      profiles: ["with_commands"]
+
+  logspec-worker:
+    image: {{ kcidb_logspec_image }}
+    env_file:
+      - .env
+    volumes:
+      - ./spool:/app/spool
+      - ./cache:/cache
+      - ./state:/app/state
+      - ./config:/app/config
+    command: ["python", "/app/logspec_worker.py", "--spool-dir", "/app/spool", "--config-file", "/app/logspec_worker.yaml"]
+    restart: unless-stopped
+    networks:
+      - kcidb
+
+  # Self-hosted database, kept behind a profile and never started here:
+  # production points at Azure managed Postgres through the .env DB_* and
+  # PG_DSN settings. Only useful when standing up a throwaway instance.
+  db:
+    image: postgres:17
+    container_name: 'postgres'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s        # run every 10 s
+      timeout: 5s          # fail if probe > 5 s
+      retries: 5           # mark unhealthy after 5 failures
+      start_period: 5s     # give Postgres a moment to boot
+    env_file:
+      - .env
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    profiles: ["self-hosted"]
+    networks:
+      - kcidb
+  dbinit:
+    build:
+      context: .
+      dockerfile: Dockerfile.dbinit
+    container_name: 'dbinit'
+    env_file:
+      - .env
+    restart: "no"
+    profiles: ["self-hosted"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - kcidb
+  # Certbot standalone mode - runs its own webserver on port 80
+  # Use this when kcidb-rest is NOT running (e.g., initial cert setup or standalone renewal)
+  # To use:
+  #   1. Stop kcidb-rest: docker compose stop kcidb-rest
+  #   2. Issue cert: docker compose --profile=certbot-standalone run --rm certbot-standalone
+  #   3. Renew cert: docker compose --profile=certbot-standalone run --rm certbot-standalone renew
+  #   4. Restart kcidb-rest: docker compose up -d kcidb-rest
+  certbot-standalone:
+    image: certbot/certbot
+    profiles: ["certbot-standalone"]
+    ports:
+      - "80:80"
+    volumes:
+      - ./certs:/etc/letsencrypt
+      - ./certs-data:/var/lib/letsencrypt
+    env_file:
+      - .env
+    command: certonly --standalone -d ${CERTBOT_DOMAIN} --email ${CERTBOT_EMAIL} --agree-tos --non-interactive --no-eff-email
+
+networks:
+  kcidb:
+    name: kcidb
+    driver: bridge
+
+# Certbot with webroot mode (alternative) - uses ACME challenge served by kcidb-rest
+# To use:
+#   1. Uncomment the acme-challenge volume in kcidb-rest service
+#   2. Set ACME_WEBROOT=/var/www/acme-challenge in .env
+#   3. Run: docker compose run --rm certbot
+#  certbot:
+#    image: certbot/certbot
+#    volumes:
+#      - ./certs:/etc/letsencrypt
+#      - ./certs-data:/var/lib/letsencrypt
+#      - ./acme-challenge:/var/www/acme-challenge
+#    env_file:
+#      - .env
+#    command: certonly --webroot -w /var/www/acme-challenge -d ${CERTBOT_DOMAIN} --email ${CERTBOT_EMAIL} --agree-tos --non-interactive --no-eff-email
+#    # For renewal, use: docker compose run --rm certbot renew

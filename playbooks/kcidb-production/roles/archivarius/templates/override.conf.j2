@@ -1,0 +1,5 @@
+# Managed by ansible (kernelci-deploy playbooks/kcidb-production)
+[Service]
+# Clear the packaged ExecStart before redefining it, systemd appends otherwise.
+ExecStart=
+ExecStart=/usr/bin/submissions_archivarius --sourcedir={{ archivarius_sourcedir }} --destdir {{ archivarius_destdir }} --failed={{ archivarius_faileddir }} -v --number={{ archivarius_number }}

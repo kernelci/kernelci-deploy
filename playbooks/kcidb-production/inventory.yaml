@@ -1,0 +1,13 @@
+# Production KCIDB submission endpoint (db.kernelci.org).
+#
+# Note the ssh port: this host listens on 22, unlike the staging host the
+# kcidb-staging playbook provisions on 22022. Azure network security groups
+# are the only perimeter here (no local firewall), and they publish 22, 80
+# and 443 only.
+all:
+  hosts:
+    kcidb-production:
+      ansible_host: db.kernelci.org
+      ansible_port: 22
+      ansible_user: azureuser
+      ansible_become: true

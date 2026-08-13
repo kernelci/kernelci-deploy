@@ -1,0 +1,14 @@
+# Managed by ansible (kernelci-deploy playbooks/kcidb-production)
+# Container log viewer. Bound to loopback, reached over an ssh tunnel:
+#   ssh -L {{ dozzle_port }}:{{ dozzle_bind }}:{{ dozzle_port }} kcidb
+services:
+  dozzle:
+    image: {{ dozzle_image }}
+    container_name: dozzle
+    restart: unless-stopped
+    ports:
+      - "{{ dozzle_bind }}:{{ dozzle_port }}:8080"
+    volumes:
+      # Read-only: dozzle only reads container logs, and this socket is root
+      # on the host.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
