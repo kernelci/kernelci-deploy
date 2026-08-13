@@ -1,0 +1,12 @@
+# Managed by ansible (kernelci-deploy playbooks/dashboard) - do not edit by hand
+[Unit]
+Description=Run certbot renewal twice a day
+
+[Timer]
+# Twice daily is what Let's Encrypt recommends.
+OnCalendar={{ certbot_renew_schedule }}
+RandomizedDelaySec={{ certbot_renew_splay }}
+Persistent=true
+
+[Install]
+WantedBy=timers.target

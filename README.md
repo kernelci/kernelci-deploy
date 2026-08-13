@@ -59,6 +59,49 @@ This directory contains scripts and configuration files for local installation o
 ## playbooks/*
 This directory contains Ansible playbooks and roles for deploying and managing KernelCI services. Right now we have only complete playbook for production server, incomplete for monitoring server, and some roles for monitoring in `all` directory (node_exporter listening on port 2000)
 
+### playbooks/dashboard
+Playbook for the web dashboard host, which runs the production dashboard
+(dashboard.kernelci.org, d.kernelci.org) and the staging one
+(staging.dashboard.kernelci.org) side by side:
+
+```sh
+cd playbooks/dashboard
+ansible-playbook -i inventory.yaml main.yml
+```
+
+The compose files here are not templated: both stacks run the compose file that
+ships in the `kernelci/dashboard` checkout, so the playbook owns the checkouts,
+the environment files, the nginx front end and certificate renewal instead.
+
+Roles:
+- `common`: base packages, and Docker only when the host does not have it.
+- `nginx`: the TLS front end and the anti-abuse rules (robots.txt, the
+  user-agent blocklist and the `fake_macos_blocked` geo check). The blocklist
+  file itself is treated as data: created if missing, never rewritten, so a run
+  cannot wipe entries added by hand.
+- `dashboard-production`: prebuilt ghcr.io images. Refresh them with
+  `-e dashboard_production_pull=true`.
+- `dashboard-staging`: builds its images on the host. Rebuild with
+  `-e dashboard_staging_build=true`.
+- `uptime-kuma`: the status page, bound to loopback.
+- `certbot`: the renewal timer. Run once with `-e certbot_verify_renewal=true`
+  to have the play prove renewal still works.
+
+Both checkouts sit on a detached HEAD at a reviewed commit, and the playbook
+leaves them there. Set `dashboard_production_version` or
+`dashboard_staging_version` to move one deliberately; nothing fast-forwards a
+running dashboard as a side effect.
+
+The `.env` files are never written from this repository: they hold the Django
+secret key, the database password, the Discord webhook and SMTP credentials.
+The play fails with instructions if one is missing rather than inventing it.
+
+Note on certificates: this host renews with the pip certbot in `/usr/local/bin`,
+not the Debian package. The package ships only `/etc/cron.d/certbot`, which can
+never run here (cron is not installed, `/usr/bin/certbot` does not exist, and
+the entry skips itself under systemd), so the `certbot` role installs its own
+`certbot-renew` service and timer.
+
 ### playbooks/kcidb-production
 Playbook for the production KCIDB submission endpoint (db.kernelci.org), run
 with:

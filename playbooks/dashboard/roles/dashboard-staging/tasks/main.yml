@@ -1,0 +1,53 @@
+# The staging dashboard, on the same host as production.
+#
+# Unlike production this stack builds its images on the box and tags them
+# ghcr.io/local/*, so bringing it up can mean a rebuild. Building is opt-in:
+# it is slow and it changes what staging runs.
+- name: Clone the dashboard repository for staging
+  ansible.builtin.git:
+    repo: "{{ dashboard_repo }}"
+    dest: "{{ dashboard_staging_dir }}"
+    version: "{{ dashboard_staging_version | default('HEAD', true) }}"
+    update: "{{ dashboard_staging_version | length > 0 }}"
+  become_user: "{{ dashboard_user }}"
+
+- name: Check the staging environment file exists
+  ansible.builtin.stat:
+    path: "{{ dashboard_staging_dir }}/.env"
+  register: staging_env
+
+- name: Require a staging environment file
+  ansible.builtin.fail:
+    msg: >-
+      {{ dashboard_staging_dir }}/.env is missing. Copy it from the operator's
+      ~/.env-staging and re-run; it carries secrets that do not belong in git.
+  when: not staging_env.stat.exists
+
+- name: Keep the staging environment file private
+  ansible.builtin.file:
+    path: "{{ dashboard_staging_dir }}/.env"
+    owner: "{{ dashboard_user }}"
+    group: "{{ dashboard_group }}"
+    mode: '0600'
+
+- name: Bring the staging stack up
+  community.docker.docker_compose_v2:
+    project_src: "{{ dashboard_staging_dir }}"
+    files:
+      - "{{ dashboard_staging_compose }}"
+    state: present
+    build: "{{ 'always' if dashboard_staging_build | bool else 'never' }}"
+    pull: missing
+  register: staging_compose
+
+- name: Show what compose changed
+  ansible.builtin.debug:
+    var: staging_compose.actions
+  when: staging_compose.changed
+
+- name: Wait for the staging backend to answer
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: "{{ dashboard_staging_backend_port }}"
+    timeout: 120
+  when: not ansible_check_mode

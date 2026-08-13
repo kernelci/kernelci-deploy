@@ -1,0 +1,59 @@
+# The production dashboard: prebuilt ghcr.io/kernelci images, fronted by the
+# system nginx on 127.0.0.1:{{ dashboard_production_http_port }}.
+#
+# The compose file is not templated here. It ships in the kernelci/dashboard
+# checkout, and taking a copy into this repository would mean maintaining a
+# fork of it.
+- name: Clone the dashboard repository
+  # Only ever creates the checkout. Updating a running dashboard is a decision,
+  # not a side effect of running the playbook, so an existing checkout is left
+  # exactly where it is unless dashboard_production_version says otherwise.
+  ansible.builtin.git:
+    repo: "{{ dashboard_repo }}"
+    dest: "{{ dashboard_production_dir }}"
+    version: "{{ dashboard_production_version | default('HEAD', true) }}"
+    update: "{{ dashboard_production_version | length > 0 }}"
+  become_user: "{{ dashboard_user }}"
+
+- name: Check the environment file exists
+  ansible.builtin.stat:
+    path: "{{ dashboard_production_dir }}/.env"
+  register: production_env
+
+- name: Require an environment file
+  # Never written from the repository: it holds the Django secret key, the
+  # database password, the Discord webhook and the SMTP credentials.
+  ansible.builtin.fail:
+    msg: >-
+      {{ dashboard_production_dir }}/.env is missing. Copy it from the
+      operator's ~/.env-production and re-run; it carries secrets that do not
+      belong in git.
+  when: not production_env.stat.exists
+
+- name: Keep the environment file private
+  ansible.builtin.file:
+    path: "{{ dashboard_production_dir }}/.env"
+    owner: "{{ dashboard_user }}"
+    group: "{{ dashboard_group }}"
+    mode: '0600'
+
+- name: Bring the production stack up
+  community.docker.docker_compose_v2:
+    project_src: "{{ dashboard_production_dir }}"
+    files:
+      - "{{ dashboard_production_compose }}"
+    state: present
+    pull: "{{ 'always' if dashboard_production_pull | bool else 'missing' }}"
+  register: production_compose
+
+- name: Show what compose changed
+  ansible.builtin.debug:
+    var: production_compose.actions
+  when: production_compose.changed
+
+- name: Wait for the production dashboard to answer
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: "{{ dashboard_production_http_port }}"
+    timeout: 120
+  when: not ansible_check_mode

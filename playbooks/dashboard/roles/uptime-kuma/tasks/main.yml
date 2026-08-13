@@ -1,0 +1,26 @@
+# Status page. Small, but it is the only thing watching the dashboards, so it
+# belongs in the recipe rather than in one person's shell history.
+- name: Ensure the uptime-kuma directory exists
+  ansible.builtin.file:
+    path: "{{ uptime_kuma_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  register: uptime_kuma_dir_created
+
+- name: Deploy the uptime-kuma compose file
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: "{{ uptime_kuma_dir }}/docker-compose.yaml"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Bring uptime-kuma up
+  community.docker.docker_compose_v2:
+    project_src: "{{ uptime_kuma_dir }}"
+    state: present
+    pull: missing
+  # A check run cannot simulate this before the directory it reads exists.
+  when: not (ansible_check_mode and uptime_kuma_dir_created is changed)

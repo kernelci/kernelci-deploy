@@ -1,0 +1,12 @@
+# Managed by ansible (kernelci-deploy playbooks/dashboard) - do not edit by hand
+# Status page, bound to loopback and reached over an ssh tunnel:
+#   ssh -L {{ uptime_kuma_port }}:{{ uptime_kuma_bind }}:{{ uptime_kuma_port }} dashboard
+services:
+  uptime-kuma:
+    image: {{ uptime_kuma_image }}
+    container_name: uptime-kuma
+    restart: always
+    ports:
+      - "{{ uptime_kuma_bind }}:{{ uptime_kuma_port }}:3001"
+    volumes:
+      - ./uptime-kuma:/app/data

@@ -1,0 +1,87 @@
+# Host bootstrap: base packages, and Docker only when the host does not
+# already have it. It deliberately does not touch sshd or root's
+# authorized_keys, which is not this playbook's business.
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - git
+      - curl
+      - ca-certificates
+      - gnupg
+    state: present
+
+- name: Check whether Docker is already installed
+  ansible.builtin.command: dpkg-query -W -f=${Version} docker-ce
+  register: docker_installed
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+# Everything below only provisions a host that does not have Docker yet. The
+# live host is already on docker-ce from download.docker.com, and rewriting
+# its apt configuration would only swap the keyring path it already trusts.
+- name: Set up the Docker apt repository
+  when: docker_installed.rc != 0
+  block:
+    - name: Look for an existing Docker apt keyring
+      ansible.builtin.stat:
+        path: "/etc/apt/keyrings/docker.{{ item }}"
+      register: docker_keyrings
+      loop:
+        - asc
+        - gpg
+
+    - name: Choose the Docker keyring to trust
+      ansible.builtin.set_fact:
+        docker_keyring: >-
+          {{ (docker_keyrings.results | selectattr('stat.exists') | map(attribute='stat.path') | list
+              + ['/etc/apt/keyrings/docker.asc']) | first }}
+
+    - name: Ensure the apt keyring directory exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Fetch the Docker GPG key
+      ansible.builtin.get_url:
+        url: "https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}/gpg"
+        dest: "{{ docker_keyring }}"
+        mode: '0644'
+        force: no
+
+    - name: Configure the Docker apt repository
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [arch={{ ansible_facts['architecture'] }} signed-by={{ docker_keyring }}]
+          https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }}
+          {{ ansible_facts['distribution_release'] }} stable
+        filename: docker
+        state: present
+
+    - name: Install Docker Engine and the compose plugin
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+        update_cache: yes
+
+- name: Enable and start Docker
+  ansible.builtin.service:
+    name: docker
+    enabled: yes
+    state: started
+
+- name: Allow the deploying user to run docker
+  ansible.builtin.user:
+    name: "{{ dashboard_user }}"
+    groups: docker
+    append: yes

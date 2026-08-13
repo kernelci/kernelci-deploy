@@ -1,0 +1,46 @@
+# Two dashboard stacks share this host. Production runs prebuilt images from
+# ghcr.io/kernelci; staging builds its images locally and tags them
+# ghcr.io/local. Both compose files come from the git checkout, so this
+# playbook manages the checkouts, the environment files and the compose
+# invocation, not the compose files themselves.
+dashboard_user: azureuser
+dashboard_group: azureuser
+
+# Production stack
+dashboard_production_dir: /home/azureuser/dashboard-production
+dashboard_production_compose: docker-compose-next.yml
+dashboard_production_http_port: 8011
+# Refresh prebuilt images on the next run. Off by default so a routine run
+# does not roll production forward by surprise.
+dashboard_production_pull: false
+
+# Staging stack. Its images are built on the host from the checkout.
+dashboard_staging_dir: /home/azureuser/dashboard-staging
+dashboard_staging_compose: docker-compose.yml
+dashboard_staging_backend_port: 8000
+dashboard_staging_build: false
+
+# Both checkouts sit on a detached HEAD at a reviewed commit. Leave these
+# empty to keep whatever is deployed; set one to a ref to move that stack.
+# Nothing here silently fast-forwards a running dashboard.
+dashboard_production_version: ""
+dashboard_staging_version: ""
+dashboard_repo: https://github.com/kernelci/dashboard.git
+
+# nginx front end
+nginx_cert_name: staging.dashboard.kernelci.org
+# Hand-curated blocklist of networks sending fake macOS user agents. Treated
+# as data: created if missing, never rewritten from the repository.
+nginx_geo_ban_file: /etc/nginx/fake-macos-banned.geo
+
+# certbot. The renewal client here is the pip install, not the Debian package;
+# see the certbot role for why that matters.
+certbot_bin: /usr/local/bin/certbot
+certbot_renew_schedule: "*-*-* 00,12:00:00"
+certbot_renew_splay: 3600
+
+# uptime-kuma, bound to loopback and reached over an ssh tunnel
+uptime_kuma_dir: /srv
+uptime_kuma_image: louislam/uptime-kuma:1
+uptime_kuma_bind: 127.0.0.1
+uptime_kuma_port: 3001

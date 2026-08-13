@@ -1,0 +1,25 @@
+# ansible-playbook -i inventory.yaml main.yml
+#
+# The dashboard host. Unlike the other playbooks in this repository the compose
+# files here are not templated: both stacks run the compose file that ships in
+# the kernelci/dashboard checkout, so what this playbook owns is the checkouts,
+# the environment files, the nginx front end and the certificate renewal.
+#
+# nginx runs before the stacks so a fresh host has a front end to answer with,
+# and certbot runs last because its renewal uses the nginx authenticator.
+- hosts: all
+  gather_facts: true
+  become: true
+  roles:
+    - role: common
+      tags: common
+    - role: nginx
+      tags: nginx
+    - role: dashboard-production
+      tags: [dashboard, production]
+    - role: dashboard-staging
+      tags: [dashboard, staging]
+    - role: uptime-kuma
+      tags: uptime-kuma
+    - role: certbot
+      tags: certbot

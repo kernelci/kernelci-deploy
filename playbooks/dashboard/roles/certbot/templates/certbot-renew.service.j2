@@ -1,0 +1,20 @@
+# Managed by ansible (kernelci-deploy playbooks/dashboard) - do not edit by hand
+#
+# The Debian certbot package ships only /etc/cron.d/certbot, which can never
+# run on this host: cron is not installed, /usr/bin/certbot does not exist, and
+# that entry skips itself under systemd anyway. The client in use is the pip
+# install at {{ certbot_bin }}, which ships no automation of its own.
+[Unit]
+Description=Renew Let's Encrypt certificates
+Documentation=https://certbot.eff.org/docs/using.html
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# Renewal is a no-op until a certificate is inside its 30 day window, so this
+# is safe to run twice a day. The timer carries the randomisation, so the
+# renewal itself must not sleep.
+ExecStart={{ certbot_bin }} renew --quiet --no-random-sleep-on-renew
+# A renewal does ACME round trips and reloads nginx, so give it room.
+TimeoutStartSec=600

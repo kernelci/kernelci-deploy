@@ -1,0 +1,10 @@
+# Web dashboard host. Runs the production dashboard (dashboard.kernelci.org,
+# d.kernelci.org) and the staging one (staging.dashboard.kernelci.org) side by
+# side, behind a system nginx that terminates TLS for all of them.
+all:
+  hosts:
+    dashboard:
+      ansible_host: dashboard.kernelci.org
+      ansible_port: 22
+      ansible_user: azureuser
+      ansible_become: true

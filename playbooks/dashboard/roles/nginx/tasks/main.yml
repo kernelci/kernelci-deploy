@@ -1,0 +1,74 @@
+# The system nginx that terminates TLS for both dashboards and applies the
+# anti-abuse rules in front of them.
+- name: Install nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Enable and start nginx
+  ansible.builtin.service:
+    name: nginx
+    enabled: yes
+    state: started
+
+- name: Check whether nginx.conf already defines the abuse geo block
+  ansible.builtin.command: grep -q fake_macos_blocked /etc/nginx/nginx.conf
+  register: nginx_geo_block
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Add the abuse geo block to nginx.conf
+  # Only when it is missing: nginx rejects a duplicate variable definition, and
+  # the live host already carries this block inside its http {} section.
+  ansible.builtin.blockinfile:
+    path: /etc/nginx/nginx.conf
+    insertafter: '^\s*default_type application/octet-stream;'
+    marker: "# {mark} ANSIBLE MANAGED: dashboard abuse geo"
+    block: |
+      geo $fake_macos_blocked {
+          default 0;
+          include {{ nginx_geo_ban_file }};
+      }
+  when: nginx_geo_block.rc != 0
+  notify: Reload nginx
+
+- name: Ensure the abuse blocklist exists
+  # Operational data, not configuration: a hand-curated list of networks that
+  # sent fake macOS user agents. Created empty on a new host and never
+  # rewritten, so a play cannot wipe the entries built up in production.
+  ansible.builtin.copy:
+    dest: "{{ nginx_geo_ban_file }}"
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      # Networks blocked for abusive traffic, one "<cidr> 1;" per line.
+      # Maintained by hand on the host; ansible only creates this file.
+    force: no
+  notify: Reload nginx
+
+- name: Configure the dashboard vhosts
+  ansible.builtin.template:
+    src: default.j2
+    dest: /etc/nginx/sites-available/default
+    owner: root
+    group: root
+    mode: '0644'
+  # No validate: here. It needs a %s placeholder and would check the fragment
+  # on its own, which cannot parse outside an http {} context. The handler
+  # runs nginx -t before reloading, and the last task checks it again.
+  notify: Reload nginx
+
+- name: Enable the dashboard vhosts
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/default
+    dest: /etc/nginx/sites-enabled/default
+    state: link
+  notify: Reload nginx
+
+- name: Verify the nginx configuration
+  ansible.builtin.command: nginx -t
+  changed_when: false

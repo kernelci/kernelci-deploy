@@ -1,0 +1,155 @@
+# nginx front end for the dashboard host.
+# Managed by ansible (kernelci-deploy playbooks/dashboard) - do not edit by hand.
+server {
+
+    if ($host = dashboard.kernelci.org) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    if ($host = d.kernelci.org) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    listen 80;
+    server_name dashboard.kernelci.org d.kernelci.org;
+    location / {
+        proxy_pass http://127.0.0.1:{{ dashboard_production_http_port }};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Additional useful headers
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
+        
+        # WebSocket support (if needed)
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+
+
+
+}
+
+server {
+    listen 443 ssl;
+    server_name d.kernelci.org dashboard.kernelci.org;
+    ssl_certificate /etc/letsencrypt/live/{{ nginx_cert_name }}/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/{{ nginx_cert_name }}/privkey.pem; # managed by Certbot
+
+    location = /robots.txt {
+	add_header Content-Type text/plain;
+        return 200 "User-agent: *\nDisallow: /\n";
+    }
+    if ($http_user_agent ~* (bot|crawler|spider|slurp|baidu|yandex|wget|curl)) {
+	return 403;
+    }
+  if ($fake_macos_blocked) {
+      return 403 "Access denied: this network was blocked because of automated abusive traffic.\n";
+  }
+
+    location / {
+        proxy_pass http://127.0.0.1:{{ dashboard_production_http_port }}/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Additional useful headers
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
+        
+        # WebSocket support (if needed)
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+
+}
+
+server {
+    if ($host = staging.dashboard.kernelci.org) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    listen 80;
+    server_name staging.dashboard.kernelci.org;
+    location / {
+        proxy_pass http://localhost:{{ dashboard_staging_backend_port }};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Additional useful headers
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
+        
+        # WebSocket support (if needed)
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+
+}
+
+server {
+    listen 443 ssl;
+    server_name staging.dashboard.kernelci.org;
+    ssl_certificate /etc/letsencrypt/live/{{ nginx_cert_name }}/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/{{ nginx_cert_name }}/privkey.pem; # managed by Certbot
+
+    location = /robots.txt {
+	add_header Content-Type text/plain;
+        return 200 "User-agent: *\nDisallow: /\n";
+    }
+    if ($http_user_agent ~* (bot|crawler|spider|slurp|baidu|yandex|wget|curl)) {
+	return 403;
+    }
+    location / {
+        proxy_pass http://localhost:9000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Additional useful headers
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
+        
+        # WebSocket support (if needed)
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+}
+

@@ -1,0 +1,85 @@
+# Certificate renewal.
+#
+# This host had no working renewal at all and its certificate came within two
+# weeks of expiring. The cause was a split install: the Debian certbot package
+# provides only /etc/cron.d/certbot, which cannot run here because cron is not
+# installed, /usr/bin/certbot does not exist, and the entry skips itself under
+# systemd anyway. The certbot actually in use is a pip install in /usr/local,
+# which ships no timer of its own. So the renewal units below are ours.
+- name: Check that a certbot client is present
+  ansible.builtin.stat:
+    path: "{{ certbot_bin }}"
+  register: certbot_present
+
+- name: Require certbot
+  ansible.builtin.fail:
+    msg: >-
+      No certbot at {{ certbot_bin }}. Install it (pip install certbot
+      certbot-nginx) or point certbot_bin at the client this host uses.
+  when: not certbot_present.stat.exists
+
+- name: Install the renewal service
+  ansible.builtin.template:
+    src: certbot-renew.service.j2
+    dest: /etc/systemd/system/certbot-renew.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload systemd for certbot
+
+- name: Install the renewal timer
+  ansible.builtin.template:
+    src: certbot-renew.timer.j2
+    dest: /etc/systemd/system/certbot-renew.timer
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload systemd for certbot
+
+- name: Ensure the deploy hook directory exists
+  ansible.builtin.file:
+    path: /etc/letsencrypt/renewal-hooks/deploy
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Install the nginx reload deploy hook
+  # Runs only when a certificate was actually renewed. certbot's nginx
+  # installer normally reloads by itself; the hook also covers renewals that
+  # run without the installer.
+  ansible.builtin.copy:
+    dest: /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+    owner: root
+    group: root
+    mode: '0755'
+    content: |
+      #!/bin/sh
+      # Managed by ansible (kernelci-deploy playbooks/dashboard)
+      set -e
+      systemctl reload nginx
+
+- name: Apply pending systemd changes
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable and start the renewal timer
+  ansible.builtin.systemd:
+    name: certbot-renew.timer
+    enabled: yes
+    state: started
+
+- name: Check the renewal configuration is usable
+  # A renewal is a no-op until a certificate is inside its 30 day window, so
+  # this is safe to run on every play. It fails loudly if a lineage cannot be
+  # renewed, which is exactly the condition that went unnoticed here: a stale
+  # lineage configured for the standalone authenticator can never succeed while
+  # nginx holds port 80.
+  ansible.builtin.command: "{{ certbot_bin }} renew --dry-run --no-random-sleep-on-renew"
+  register: certbot_dry_run
+  changed_when: false
+  when: certbot_verify_renewal | default(false) | bool
+
+- name: Report the renewal check
+  ansible.builtin.debug:
+    msg: "{{ certbot_dry_run.stdout_lines | select('search', 'succeeded|failed') | list }}"
+  when: certbot_dry_run is not skipped
