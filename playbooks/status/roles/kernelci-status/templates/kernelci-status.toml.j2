@@ -1,0 +1,38 @@
+# Managed by ansible (kernelci-deploy playbooks/status)
+#
+# THIS FILE IS ONLY EVER CREATED, NEVER REWRITTEN. It is written once, on a
+# host that does not have it, and then belongs to the operator. It carries the
+# bootstrap administrator password, which upstream tells you to remove once the
+# first real user exists.
+#
+# Based on kernelci-status.toml.example from
+# https://github.com/nuclearcat/kernelci-status
+
+[server]
+port = {{ kernelci_status_port }}
+
+[database]
+# Parent directory will be created automatically if it does not exist.
+path = "{{ kernelci_status_state_dir }}/status.db"
+
+[credentials]
+# Default user created on first startup when no users exist in the database.
+# Set a real password here before the first start, then delete this section
+# once the account exists.
+username = "admin"
+password = "CHANGE-ME-BEFORE-FIRST-START"
+{% if kernelci_status_acme_enabled %}
+
+# ACME (Let's Encrypt) TLS with automatic renewal. With this enabled the
+# [server] port above is ignored: the daemon listens on http_port, redirects
+# to HTTPS, and serves https_port.
+[acme]
+enabled = true
+domains = [{% for d in kernelci_status_acme_domains %}"{{ d }}"{% if not loop.last %}, {% endif %}{% endfor %}]
+contact = "{{ kernelci_status_acme_contact }}"
+cache_dir = "{{ kernelci_status_state_dir }}/acme"
+# staging = true issues untrusted certificates. Production wants false.
+staging = {{ kernelci_status_acme_staging | lower }}
+http_port = {{ kernelci_status_http_port }}
+https_port = {{ kernelci_status_https_port }}
+{% endif %}

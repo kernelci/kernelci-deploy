@@ -1,0 +1,16 @@
+# ansible-playbook -i inventory.yaml main.yml
+#
+# The status page host. It runs a single packaged daemon and nothing else: no
+# Docker, no web server, no reverse proxy. Keeping it that way is the point,
+# so this playbook has no common role installing container runtimes.
+#
+# What the daemon checks (endpoints, incidents, maintenance windows,
+# notification channels) lives in its SQLite database and is edited through
+# the admin UI. That is state, not configuration, so this playbook manages the
+# daemon and leaves the checks alone.
+- hosts: all
+  gather_facts: true
+  become: true
+  roles:
+    - role: kernelci-status
+      tags: kernelci-status

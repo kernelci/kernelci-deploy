@@ -1,0 +1,107 @@
+# kernelci-status: status page and infrastructure health checks.
+#
+# The package ships its own systemd unit and runs as its own user, so this
+# role installs the package, looks after the configuration and the state
+# directory, and confirms the public page answers.
+- name: Check whether kernelci-status is installed
+  ansible.builtin.command: dpkg-query -W -f=${Version} kernelci-status
+  register: kernelci_status_installed
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Copy the kernelci-status package
+  ansible.builtin.copy:
+    src: "{{ kernelci_status_deb }}"
+    dest: /tmp/{{ kernelci_status_deb | basename }}
+    mode: '0644'
+  when: kernelci_status_deb | length > 0
+
+- name: Install the kernelci-status package
+  ansible.builtin.apt:
+    deb: /tmp/{{ kernelci_status_deb | basename }}
+  when: kernelci_status_deb | length > 0
+  notify: Restart kernelci-status
+
+- name: Require the kernelci-status package to be present
+  # It is not published anywhere, so there is nothing sensible to fall back
+  # to: build it with build_deb.sh and pass the result in.
+  ansible.builtin.fail:
+    msg: >-
+      kernelci-status is not installed and kernelci_status_deb is not set.
+      Build it from https://github.com/nuclearcat/kernelci-status with
+      ./build_deb.sh and pass the package with
+      -e kernelci_status_deb=./output/kernelci-status_*.deb
+  when:
+    - kernelci_status_installed.rc != 0
+    - kernelci_status_deb | length == 0
+
+- name: Ensure the state directory exists
+  ansible.builtin.file:
+    path: "{{ kernelci_status_state_dir }}"
+    state: directory
+    owner: "{{ kernelci_status_user }}"
+    group: "{{ kernelci_status_user }}"
+    mode: '0750'
+
+- name: Install the configuration if the host has none
+  ansible.builtin.template:
+    src: kernelci-status.toml.j2
+    dest: "{{ kernelci_status_config }}"
+    owner: root
+    group: "{{ kernelci_status_user }}"
+    mode: '0640'
+    force: no
+  notify: Restart kernelci-status
+
+- name: Keep the configuration readable only by the daemon
+  # force: no above leaves an existing file's mode alone, and this one holds
+  # the bootstrap administrator password.
+  ansible.builtin.file:
+    path: "{{ kernelci_status_config }}"
+    owner: root
+    group: "{{ kernelci_status_user }}"
+    mode: '0640'
+
+- name: Warn if the configuration still has the placeholder password
+  ansible.builtin.command: grep -q 'CHANGE-ME-BEFORE-FIRST-START' {{ kernelci_status_config }}
+  register: kernelci_status_placeholder
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Report an unconfigured bootstrap password
+  ansible.builtin.fail:
+    msg: >-
+      {{ kernelci_status_config }} was just created from the template and still
+      has the placeholder bootstrap password. Set a real one before starting
+      the daemon, and remove the [credentials] section once the account exists.
+  when: kernelci_status_placeholder.rc == 0
+
+- name: Enable and start kernelci-status
+  ansible.builtin.systemd:
+    name: kernelci-status
+    enabled: yes
+    state: started
+    daemon_reload: yes
+
+- name: Apply any pending restart before checking the page
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait for the status page to listen
+  ansible.builtin.wait_for:
+    port: "{{ kernelci_status_https_port if kernelci_status_acme_enabled else kernelci_status_port }}"
+    timeout: 60
+  when: not ansible_check_mode
+
+- name: Check the public status page answers
+  ansible.builtin.uri:
+    url: "{{ kernelci_status_url }}"
+    method: GET
+    status_code: 200
+  register: kernelci_status_page
+  changed_when: false
+  retries: 5
+  delay: 5
+  until: kernelci_status_page.status == 200
+  when: not ansible_check_mode

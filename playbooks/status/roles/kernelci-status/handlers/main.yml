@@ -1,0 +1,5 @@
+- name: Restart kernelci-status
+  ansible.builtin.systemd:
+    name: kernelci-status
+    state: restarted
+    daemon_reload: yes

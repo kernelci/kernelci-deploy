@@ -1,0 +1,9 @@
+# Status page host. Runs one daemon, kernelci-status, which serves
+# status.kernelci.org and runs the infrastructure health checks.
+all:
+  hosts:
+    status:
+      ansible_host: status.kernelci.org
+      ansible_port: 22
+      ansible_user: azureuser
+      ansible_become: true

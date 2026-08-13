@@ -136,6 +136,37 @@ Roles:
 - `dozzle`: the container log viewer, bound to loopback and reached over an
   ssh tunnel.
 
+### playbooks/status
+Playbook for the status page host (status.kernelci.org):
+
+```sh
+cd playbooks/status
+ansible-playbook -i inventory.yaml main.yml
+```
+
+The host runs a single packaged daemon, `kernelci-status`
+(https://github.com/nuclearcat/kernelci-status), and nothing else. It binds 80
+and 443 itself and obtains its own Let's Encrypt certificate, the same way
+kcidb-rest does, so there is no web server, no reverse proxy and no Docker on
+this machine. The playbook keeps it that way: there is no common role
+installing a container runtime.
+
+The package is not published anywhere. Build it with `./build_deb.sh` from the
+source repository (which needs Docker, so not on this host) and install it
+with `-e kernelci_status_deb=./output/kernelci-status_*.deb`; without that the
+role only checks that the package is already installed.
+
+`/etc/kernelci-status.toml` is only ever created, never rewritten: it carries
+the bootstrap administrator password, which upstream tells you to remove once a
+real account exists. Note that the upstream example sets `staging = true` for
+ACME, which issues untrusted certificates; the template here defaults it to
+false.
+
+What the daemon actually checks - endpoints, incidents, maintenance windows,
+notification channels - lives in its SQLite database and is edited through the
+admin UI. That is state, not configuration, so this playbook manages the daemon
+and leaves the checks alone.
+
 ### playbooks/production
 Playbook for the production web/storage server (`vm-production-2025`, reachable
 as `docs.kernelci.org:22022`), run with:

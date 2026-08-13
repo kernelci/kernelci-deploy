@@ -1,0 +1,33 @@
+# kernelci-status: the Rust status page and health check daemon that serves
+# status.kernelci.org. Source: https://github.com/nuclearcat/kernelci-status
+#
+# The daemon binds 80 and 443 itself and obtains its own Let's Encrypt
+# certificate, the same way kcidb-rest does, so this host runs no web server
+# and no Docker at all.
+kernelci_status_user: kernelci-status
+kernelci_status_config: /etc/kernelci-status.toml
+kernelci_status_state_dir: /var/lib/kernelci-status
+
+# The package is not published anywhere: it is built with build_deb.sh from
+# the source repository, inside a Trixie container. This host has neither
+# Docker nor a Rust toolchain, so it cannot be built here. Point this at a
+# locally built package to install or upgrade:
+#   ansible-playbook ... -e kernelci_status_deb=./output/kernelci-status_*.deb
+# Left empty, the role only checks that the package is already present.
+kernelci_status_deb: ""
+
+# Only used when writing a configuration file on a host that has none. The
+# live file is never rewritten: it carries the bootstrap admin password.
+kernelci_status_port: 2001
+kernelci_status_acme_enabled: true
+kernelci_status_acme_domains:
+  - status.kernelci.org
+kernelci_status_acme_contact: bot@kernelci.org
+# The upstream example ships staging = true, which issues untrusted
+# certificates. Production wants the real thing.
+kernelci_status_acme_staging: false
+kernelci_status_http_port: 80
+kernelci_status_https_port: 443
+
+# Public URL used for the post-deploy check.
+kernelci_status_url: https://status.kernelci.org/
