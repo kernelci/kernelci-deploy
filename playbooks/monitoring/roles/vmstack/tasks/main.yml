@@ -1,0 +1,87 @@
+# Scrape configuration and alerting rules for the VictoriaMetrics stack.
+#
+# prometheus.yml is the map of what the whole project monitors: node exporters
+# on the KCIDB, dashboard, staging and docs hosts, the API and pipeline
+# metrics endpoints, the ingester and Django workers, the Kubernetes exporter
+# and the blackbox probes. It existed only on this host.
+#
+# These are configuration, not accumulated state, so unlike the Grafana
+# dashboards they are managed outright: the repository is the source of truth
+# and the files are copied verbatim.
+- name: Check the monitoring stack is deployed
+  ansible.builtin.stat:
+    path: "{{ monitoring_dir }}/docker-compose.yml"
+  register: vmstack_compose
+
+- name: Require the monitoring stack
+  ansible.builtin.fail:
+    msg: >-
+      {{ monitoring_dir }}/docker-compose.yml is missing. This role manages the
+      configuration of an existing stack; it does not deploy the stack itself.
+  when: not vmstack_compose.stat.exists
+
+- name: Deploy the vmagent scrape configuration
+  ansible.builtin.copy:
+    src: prometheus.yml
+    dest: "{{ monitoring_dir }}/prometheus.yml"
+    owner: "{{ vmstack_scrape_owner }}"
+    group: "{{ vmstack_scrape_owner }}"
+    mode: '0644'
+  notify: Reload vmagent
+
+- name: Deploy the alerting rules
+  ansible.builtin.copy:
+    src: alerts.yml
+    dest: "{{ monitoring_dir }}/alerts.yml"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload vmalert
+
+- name: Deploy the alertmanager routing
+  ansible.builtin.copy:
+    src: alertmanager.yml
+    dest: "{{ monitoring_dir }}/alertmanager.yml"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload alertmanager
+
+- name: Ensure the blackbox exporter directory exists
+  ansible.builtin.file:
+    path: "{{ monitoring_dir }}/blackbox-exporter"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Deploy the blackbox exporter modules
+  ansible.builtin.copy:
+    src: blackbox-exporter/blackbox.yml
+    dest: "{{ monitoring_dir }}/blackbox-exporter/blackbox.yml"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Apply any pending reloads
+  ansible.builtin.meta: flush_handlers
+
+- name: Check which stack services are not running
+  # The blackbox exporter has been down for months without anyone noticing,
+  # which is precisely the sort of thing a run of this playbook should say out
+  # loud rather than leave to a dashboard nobody opens.
+  ansible.builtin.command:
+    cmd: docker compose ps -a --format {{ '{{' }}.Service{{ '}}' }}/{{ '{{' }}.State{{ '}}' }}
+    chdir: "{{ monitoring_dir }}"
+  register: vmstack_ps
+  changed_when: false
+  check_mode: false
+
+- name: Report stopped services
+  ansible.builtin.debug:
+    msg: >-
+      Not running: {{ stopped | join(', ') }}. Scrape targets pointed at these
+      collect nothing.
+  vars:
+    stopped: "{{ vmstack_ps.stdout_lines | reject('search', '/running') | list }}"
+  when: stopped | length > 0

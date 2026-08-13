@@ -1,0 +1,132 @@
+global:
+  scrape_interval: 10s
+
+scrape_configs:
+  - job_name: 'vmagent'
+    static_configs:
+      - targets: ['vmagent:8429']
+  - job_name: 'vmalert'
+    static_configs:
+      - targets: ['vmalert:8880']
+  - job_name: 'victoriametrics'
+    static_configs:
+      - targets: ['victoriametrics:8428']
+  - job_name: 'blackboxexporter'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]  # Look for a HTTP 200 response.
+    static_configs:
+      - targets:
+        - https://collabora.com
+        - https://kernelci.org
+        - https://staging.kernelci.org:9000/viewer
+        - https://kernelci-api.westus3.cloudapp.azure.com/viewer
+        - https://staging.kernelci.org:9100
+        - https://kernelci-pipeline.westus3.cloudapp.azure.com
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackboxexporter:9115  # The blackbox exporter's real hostname:port.
+#  - job_name: 'collectd'
+#    static_configs:
+#      - targets: ['collectd:9103']
+  - job_name: 'k8sexporter'
+    scrape_interval: 2m
+    scrape_timeout: 30s
+    static_configs:
+      - targets: ['k8sexporter:8080']
+
+  - job_name: 'stagingpipemetrics'
+    scheme: https
+    scrape_interval: 1m
+    metrics_path: '/api/metrics'
+    static_configs:
+      - targets: ['staging.kernelci.org:9100']
+
+  - job_name: 'stagingapimetrics'
+    scheme: https
+    scrape_interval: 1m
+    metrics_path: '/latest/metrics'
+    static_configs:
+      - targets: ['staging.kernelci.org:9000']
+
+  - job_name: 'prodapimetrics'
+    scheme: https
+    scrape_interval: 1m
+    metrics_path: '/latest/metrics'
+    static_configs:
+      - targets: ['kernelci-api.westus3.cloudapp.azure.com']
+
+  - job_name: 'prodpipemetrics'
+    scheme: https
+    scrape_interval: 1m
+    metrics_path: '/api/metrics'
+    static_configs:
+      - targets: ['kernelci-pipeline.westus3.cloudapp.azure.com']
+
+  - job_name: 'rest_db_kernelci_org'
+    scrape_interval: 5m
+    scheme: https
+    static_configs:
+      - targets: ['db.kernelci.org']
+
+  - job_name: 'node_db_kernelci_org'
+    scrape_interval: 5m
+    static_configs:
+      - targets: ['db.kernelci.org:2000']
+
+  - job_name: 'node_staging_db_kernelci_org'
+    scrape_interval: 5m
+    static_configs:
+      - targets: ['staging.db.kernelci.org:2000']
+
+  - job_name: 'node_dashboard_kernelci_org'
+    scrape_interval: 5m
+    static_configs:
+      - targets: ['dashboard.kernelci.org:2000']
+
+  - job_name: 'kci_dashboard'
+    scrape_interval: 5m
+    static_configs:
+      - targets: ['dashboard.kernelci.org:2002']
+
+  - job_name: 'node_staging_kernelci_org'
+    scrape_interval: 5m
+    static_configs:
+      - targets: ['staging.kernelci.org:2000']
+
+  - job_name: 'node_docs_kernelci_org'
+    scrape_interval: 5m
+    static_configs:
+      - targets: ['docs.kernelci.org:2000']
+
+  - job_name: 'rslinux'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['docs.kernelci.org:2001']
+
+  - job_name: 'dashboard_metrics'
+    scrape_interval: 5m
+    static_configs:
+      - targets: ['dashboard.kernelci.org:2001']
+
+  - job_name: 'ingester'
+    scrape_interval: 5m
+    scrape_timeout: 30s
+    static_configs:
+      - targets: ['db.kernelci.org:2002']
+
+  - job_name: 'ingesterdjango'
+    scrape_interval: 5m
+    scrape_timeout: 30s
+    static_configs:
+      - targets: ['db.kernelci.org:2003']
+
+  - job_name: 'process_pending_django'
+    scrape_interval: 5m
+    scrape_timeout: 30s
+    static_configs:
+      - targets: ['db.kernelci.org:2004']

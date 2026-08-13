@@ -35,3 +35,11 @@ grafana_provision_dashboards: false
 # Keep the UI editable even for provisioned dashboards. With this false,
 # Grafana refuses to save UI edits to a provisioned dashboard.
 grafana_allow_ui_updates: true
+
+# VictoriaMetrics stack. Scrape config and alerting rules are managed outright
+# by the vmstack role: they are configuration, not accumulated state.
+# prometheus.yml is owned by the deploying user on the live host.
+vmstack_scrape_owner: kernelci
+vmagent_port: 8429
+vmalert_port: 8880
+alertmanager_port: 9093

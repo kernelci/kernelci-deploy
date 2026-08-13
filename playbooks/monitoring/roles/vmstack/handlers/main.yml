@@ -1,0 +1,19 @@
+# All three components reload their configuration over HTTP, so none of them
+# has to be restarted for a configuration change.
+- name: Reload vmagent
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ vmagent_port }}/-/reload"
+    method: POST
+    status_code: [200, 204]
+
+- name: Reload vmalert
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ vmalert_port }}/-/reload"
+    method: POST
+    status_code: [200, 204]
+
+- name: Reload alertmanager
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ alertmanager_port }}/-/reload"
+    method: POST
+    status_code: [200, 204]

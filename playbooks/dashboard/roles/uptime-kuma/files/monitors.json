@@ -1,0 +1,32 @@
+[
+  {
+    "_secrets_set_on_host": [
+      "database_connection_string"
+    ],
+    "accepted_statuscodes_json": "[\"200-299\"]",
+    "active": 1,
+    "description": null,
+    "dns_resolve_server": "1.1.1.1",
+    "dns_resolve_type": "A",
+    "docker_container": "",
+    "docker_host": null,
+    "expiry_notification": 0,
+    "hostname": null,
+    "ignore_tls": 0,
+    "interval": 60,
+    "maxredirects": 10,
+    "maxretries": 0,
+    "method": "GET",
+    "name": "Azure DB",
+    "packet_size": 56,
+    "parent": null,
+    "port": null,
+    "resend_interval": 0,
+    "retry_interval": 60,
+    "timeout": 48.0,
+    "type": "postgres",
+    "upside_down": 0,
+    "url": "https://",
+    "weight": 2000
+  }
+]

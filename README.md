@@ -165,8 +165,23 @@ which is what a rebuilt host wants. Grafana then owns those UIDs as
 provisioned dashboards, so the provider also sets `allowUiUpdates` to keep
 them editable in the UI.
 
-Out of scope on purpose: the compose stack itself, the alerting rules, and the
-Kubernetes credentials in `/srv/monitoring/config` and `/srv/monitoring/k8suser`.
+The `vmstack` role manages the scrape and alerting configuration:
+`prometheus.yml` (the map of everything the project monitors: node exporters on
+the KCIDB, dashboard, staging and docs hosts, API and pipeline metrics, the
+ingester and Django workers, the Kubernetes exporter and the blackbox probes),
+`alerts.yml`, `alertmanager.yml` and the blackbox modules. These are
+configuration rather than accumulated state, so the repository is the source of
+truth and the files are copied verbatim; each component reloads over HTTP, so
+nothing is restarted. The role also reports any stack service that is not
+running, which is how a dead exporter gets noticed.
+
+`roles/uptime-kuma/files/monitors.json` is a sanitised export of the Uptime
+Kuma monitors on this host, produced by `tools/uptime_kuma_export.py`. Uptime
+Kuma has no file provisioning, so it is a record of what is watched rather than
+something the playbook restores.
+
+Out of scope on purpose: the compose stack itself and the Kubernetes
+credentials in `/srv/monitoring/config` and `/srv/monitoring/k8suser`.
 
 ### playbooks/status
 Playbook for the status page host (status.kernelci.org):
@@ -258,6 +273,19 @@ Script to manage Azure AD identities for KernelCI VM. So basically you can contr
 ### monitor-containers.py
 One more legacy docker monitoring script, not used anymore.
 DEPRECATED: Will be removed in 1 month if no objections.
+### grafana_export.py
+Exports Grafana dashboards from a Grafana SQLite database, read-only, so they
+can be kept in git. Dashboards built in the UI live only in `grafana.db`; on the
+monitoring host that is inside a Docker volume on a single VM. Writes one file
+per dashboard with `-o`, or a single JSON document to stdout.
+### uptime_kuma_export.py
+Exports Uptime Kuma monitors from its SQLite database without secrets. Fields
+are chosen by allowlist rather than denylist: the monitor table has 77 columns
+and several carry credentials in names that do not say so, notably
+`database_connection_string`, which holds a full `postgres://` URI including the
+password. Credential fields that are set are reported by name only, so a restore
+knows what still has to be filled in by hand. The notification and user tables,
+which hold webhook URLs and password hashes, are never read.
 ### postgres_team_sync.py
 Synchronizes read-only Postgres logins with the dashboard team file
 (`kernelci/dashboard:.github/dashboard-team`). Users in the list get a role with
