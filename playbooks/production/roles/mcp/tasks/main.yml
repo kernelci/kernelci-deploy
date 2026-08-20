@@ -1,10 +1,25 @@
 # kci-dev MCP server, running under systemd in its own virtualenv and bound to
 # the loopback interface. nginx (webserver role) publishes it.
+#
+# kci-dev comes either from PyPI (mcp_source: pypi, the default) or from a git
+# repository (mcp_source: git), so an unreleased MCP change can be put on the
+# server without waiting for a release. A git ref is always resolved to a
+# commit before it is installed: the branch is what you ask for, the commit is
+# what gets deployed and recorded.
+- name: Check the kci-dev source selection
+  ansible.builtin.assert:
+    that:
+      - mcp_source in ['pypi', 'git']
+      - mcp_source != 'git' or (mcp_git_repo | length > 0 and mcp_git_ref | length > 0)
+    fail_msg: >-
+      mcp_source must be 'pypi' or 'git', and a git source needs both
+      mcp_git_repo and mcp_git_ref set.
+
 - name: Install the python tooling for the MCP virtualenv
   ansible.builtin.apt:
-    name:
-      - python3
-      - python3-venv
+    # git is only needed to fetch and resolve a git source, but pip cannot
+    # install from one without it.
+    name: "{{ ['python3', 'python3-venv'] + (['git'] if mcp_source == 'git' else []) }}"
     state: present
     update_cache: yes
     cache_valid_time: 3600
@@ -32,6 +47,38 @@
   args:
     creates: "{{ mcp_home }}/venv/bin/python"
 
+- name: Resolve the requested git ref to a commit
+  ansible.builtin.command:
+    argv:
+      - git
+      - ls-remote
+      - "{{ mcp_git_repo }}"
+      - "{{ mcp_git_ref }}"
+  register: mcp_ls_remote
+  changed_when: false
+  check_mode: false
+  when: mcp_source == 'git'
+
+- name: Work out the requirement to install
+  ansible.builtin.set_fact:
+    # A ref that ls-remote does not know is taken to be a commit id and passed
+    # through as it is, so a commit can be deployed as directly as a branch.
+    mcp_requirement: >-
+      {{
+        ('kci-dev[mcp] @ git+' ~ mcp_git_repo ~ '@' ~
+         (mcp_ls_remote.stdout_lines[0].split()[0]
+          if (mcp_ls_remote.stdout_lines | default([]) | length > 0)
+          else mcp_git_ref))
+        if mcp_source == 'git'
+        else ('kci-dev[mcp]' ~ (('==' ~ mcp_kci_dev_version) if mcp_kci_dev_version else ''))
+      }}
+
+- name: Read the source that is installed
+  ansible.builtin.slurp:
+    src: "{{ mcp_source_stamp }}"
+  register: mcp_stamp
+  failed_when: false
+
 - name: Read the installed kci-dev version
   ansible.builtin.command: "{{ mcp_home }}/venv/bin/kci-dev --version"
   register: kci_dev_installed
@@ -43,15 +90,29 @@
   # Debian 13 marks the system interpreter externally managed, so kci-dev
   # lives in the virtualenv above rather than in /usr/lib/python3.
   ansible.builtin.pip:
-    name: "kci-dev[mcp]{{ ('==' + mcp_kci_dev_version) if mcp_kci_dev_version else '' }}"
+    name:
+      - "{{ mcp_requirement }}"
     virtualenv: "{{ mcp_home }}/venv"
-    state: "{{ 'latest' if (mcp_upgrade and not mcp_kci_dev_version) else 'present' }}"
+    state: "{{ 'latest' if (mcp_source == 'pypi' and mcp_upgrade | bool and not mcp_kci_dev_version) else 'present' }}"
+    # pip treats a direct git reference it has already seen as satisfied, and
+    # the recorded commit is what tells us it has changed, so ask for the
+    # upgrade explicitly rather than trusting that check.
+    extra_args: "{{ '--upgrade' if mcp_source == 'git' else omit }}"
   when: >-
     kci_dev_installed.rc != 0
     or (mcp_upgrade | bool)
-    or (mcp_kci_dev_version | length > 0
-        and mcp_kci_dev_version not in kci_dev_installed.stdout)
+    or ((mcp_stamp.content | default('') | b64decode | trim) != mcp_requirement)
   notify: Restart kci-mcp
+
+- name: Record the installed source
+  # Written after the install, so a failed one leaves the previous record in
+  # place for the update script to roll back to.
+  ansible.builtin.copy:
+    content: "{{ mcp_requirement }}\n"
+    dest: "{{ mcp_source_stamp }}"
+    owner: root
+    group: root
+    mode: '0644'
 
 - name: Configure kci-dev for the public read-only instance
   ansible.builtin.template:
@@ -78,8 +139,16 @@
     state: started
     daemon_reload: yes
 
-# Scheduled upgrades. Skipped when a version is pinned: a pin is a decision
-# to stay put, and a timer that undoes it would be a trap.
+# Scheduled upgrades. Skipped when the source names one exact thing: a pinned
+# release or a commit is a decision to stay put, and a timer that undoes it
+# would be a trap.
+- name: Decide whether scheduled updates apply
+  ansible.builtin.set_fact:
+    mcp_updates_enabled: >-
+      {{ (mcp_auto_update | bool) and
+         ((mcp_kci_dev_version | length == 0) if mcp_source == 'pypi'
+          else (mcp_git_ref | regex_search('^[0-9a-f]{7,40}$') is none)) }}
+
 - name: Install the kci-dev update script
   ansible.builtin.template:
     src: kci-mcp-update.sh.j2
@@ -87,7 +156,7 @@
     owner: root
     group: root
     mode: '0755'
-  when: mcp_auto_update | bool and mcp_kci_dev_version | length == 0
+  when: mcp_updates_enabled | bool
 
 - name: Install the kci-dev update units
   ansible.builtin.template:
@@ -99,7 +168,7 @@
   loop:
     - service
     - timer
-  when: mcp_auto_update | bool and mcp_kci_dev_version | length == 0
+  when: mcp_updates_enabled | bool
 
 - name: Enable the kci-dev update timer
   ansible.builtin.systemd:
@@ -107,7 +176,7 @@
     enabled: yes
     state: started
     daemon_reload: yes
-  when: mcp_auto_update | bool and mcp_kci_dev_version | length == 0
+  when: mcp_updates_enabled | bool
 
 - name: Disable the kci-dev update timer when updates are pinned or turned off
   ansible.builtin.systemd:
@@ -115,7 +184,7 @@
     enabled: no
     state: stopped
   failed_when: false
-  when: not (mcp_auto_update | bool and mcp_kci_dev_version | length == 0)
+  when: not (mcp_updates_enabled | bool)
 
 - name: Apply any pending restart before checking the server
   ansible.builtin.meta: flush_handlers
@@ -149,6 +218,8 @@
   register: mcp_initialize
   changed_when: false
 
-- name: Show the MCP server identity
+- name: Show what is serving
   ansible.builtin.debug:
-    msg: "{{ mcp_initialize.content | regex_search('\"serverInfo\":\\{[^}]*\\}') }}"
+    msg:
+      - "source: {{ mcp_requirement }}"
+      - "{{ mcp_initialize.content | regex_search('\"serverInfo\":\\{[^}]*\\}') }}"

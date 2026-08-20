@@ -1,20 +1,27 @@
 #!/bin/bash
 # Managed by ansible (kernelci-deploy playbooks/production) - do not edit by hand
 #
-# Upgrade kci-dev in the MCP virtualenv, restart the server and verify it
-# still answers. If the new version does not come up, reinstall the version
-# that was running and restart again, so a broken release cannot leave the
-# public endpoint down.
+# Refresh kci-dev in the MCP virtualenv from whichever source the host is
+# configured with, restart the server and verify it still answers. If the new
+# build does not come up, reinstall what was running and restart again, so a
+# broken release - or a broken branch - cannot leave the public endpoint down.
 #
 # kci-dev's MCP tools are upstream-flagged as experimental and change between
-# releases, which is exactly why this runs on a timer instead of being left
-# to whatever pip resolved on the day the host was provisioned.
+# releases, which is exactly why this runs on a timer instead of being left to
+# whatever pip resolved on the day the host was provisioned. With a git source
+# that goes further: the deployed commit follows the branch.
 set -u
 
 VENV={{ mcp_home }}/venv
 PIP="$VENV/bin/pip"
 KCI_DEV="$VENV/bin/kci-dev"
 URL="http://{{ mcp_bind }}:{{ mcp_port }}/mcp"
+STAMP={{ mcp_source_stamp }}
+SOURCE={{ mcp_source }}
+{% if mcp_source == 'git' %}
+REPO={{ mcp_git_repo }}
+REF={{ mcp_git_ref }}
+{% endif %}
 
 version() {
     "$KCI_DEV" --version 2>/dev/null | awk '{print $NF}'
@@ -39,26 +46,52 @@ if [ -z "$before" ]; then
     exit 1
 fi
 
-if ! "$PIP" install --quiet --upgrade 'kci-dev[mcp]'; then
+# What ansible last installed. Empty on a host provisioned before this file
+# existed, which only costs one extra reinstall.
+installed=$(cat "$STAMP" 2>/dev/null)
+
+if [ "$SOURCE" = git ]; then
+    sha=$(git ls-remote "$REPO" "$REF" | awk 'NR==1 {print $1}')
+    # An unknown ref is a commit id, and a commit does not move.
+    [ -z "$sha" ] && sha="$REF"
+    target="kci-dev[mcp] @ git+$REPO@$sha"
+    if [ "$target" = "$installed" ]; then
+        echo "kci-dev is already at $REF ($sha)"
+        exit 0
+    fi
+else
+    target='kci-dev[mcp]'
+fi
+
+if ! "$PIP" install --quiet --upgrade "$target"; then
     echo "pip upgrade failed, staying on $before"
     exit 1
 fi
 
 after=$(version)
-if [ "$before" = "$after" ]; then
+# A git build carries the same version string across commits, so only the
+# PyPI source can decide it is current from the version alone.
+if [ "$SOURCE" = pypi ] && [ "$before" = "$after" ]; then
     echo "kci-dev $before is already current"
     exit 0
 fi
 
-echo "kci-dev $before -> $after, restarting"
+echo "kci-dev $before -> $after ($target), restarting"
 systemctl restart kci-mcp
 if healthy; then
+    printf '%s\n' "$target" > "$STAMP"
     echo "kci-dev $after is serving"
     exit 0
 fi
 
-echo "kci-dev $after failed its health check, rolling back to $before"
-"$PIP" install --quiet "kci-dev[mcp]==$before"
+echo "kci-dev $after failed its health check, rolling back"
+if [ -n "$installed" ]; then
+    # The recorded requirement pins an exact commit or release, so this puts
+    # back what was serving rather than whatever is current.
+    "$PIP" install --quiet --force-reinstall "$installed"
+else
+    "$PIP" install --quiet --force-reinstall "kci-dev[mcp]==$before"
+fi
 systemctl restart kci-mcp
 if healthy; then
     echo "rolled back to $before"

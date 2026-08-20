@@ -240,6 +240,34 @@ Roles:
 - `common`: host bootstrap (packages, /data mount, ssh port). Excluded from the
   default run, it is only meant for provisioning a new host.
 
+Where kci-dev comes from is configurable, in `playbooks/production/group_vars/all.yml`
+or on the command line. The default is the released package from PyPI:
+
+```yaml
+mcp_source: pypi
+mcp_kci_dev_version: ""   # a version here pins the release
+```
+
+To run an MCP change that has not been released, point it at a repository and a
+ref instead - a fork and a work branch are as valid as upstream:
+
+```
+ansible-playbook -i inventory.yaml main.yml --tags mcp \
+  -e mcp_source=git \
+  -e mcp_git_repo=https://github.com/nuclearcat/kci-dev.git \
+  -e mcp_git_ref=mcp-improvements
+```
+
+The ref is resolved to a commit with `git ls-remote` before anything is
+installed, and the resulting requirement is written to
+`/srv/kci-mcp/.installed-source`. That record is what makes the role idempotent
+against a moving branch: a run reinstalls when the resolved commit differs from
+the recorded one, and does nothing when it does not. It is also what the weekly
+update timer rolls back to when a new commit fails its health check, since a
+git build carries the same version string across commits and the version alone
+cannot tell you what was serving. A ref that is a commit id is treated as a pin
+and turns the update timer off, exactly as `mcp_kci_dev_version` does for PyPI.
+
 The MCP endpoint is temporarily served at
 `https://storage.chromeos.kernelci.org/mcp`, reusing a decommissioned vhost that
 already has a certificate. Once an A record for `mcp.kernelci.org` exists, set

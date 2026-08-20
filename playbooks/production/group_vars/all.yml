@@ -14,14 +14,29 @@ mcp_home: /srv/kci-mcp
 mcp_bind: 127.0.0.1
 mcp_port: 8000
 
+# Where kci-dev comes from.
+#   pypi  the released package, pinned with mcp_kci_dev_version
+#   git   a repository and ref, for running an MCP change that has not been
+#         released yet - a fork and a work branch are as valid here as upstream
+# A ref is resolved to a commit before it is installed, and the commit is
+# recorded in mcp_source_stamp, so "the branch moved" is something the role
+# and the update timer can both see. Switching source or ref reinstalls on the
+# next run; nothing else does, so a routine run is still a no-op.
+mcp_source: pypi
+mcp_git_repo: https://github.com/kernelci/kci-dev.git
+mcp_git_ref: main
+mcp_source_stamp: "{{ mcp_home }}/.installed-source"
+
 # Empty installs the latest release from PyPI; pin a version to freeze it.
+# Only consulted when mcp_source is pypi - a git source is pinned by its ref.
 mcp_kci_dev_version: ""
-# Set to true to pull a newer kci-dev on the next run.
+# Set to true to reinstall kci-dev on the next run even if nothing changed.
 mcp_upgrade: false
 
-# Weekly self-verifying upgrade: pip upgrade, restart, check the server still
-# answers, roll back to the previous version if it does not. Disabled
-# automatically when mcp_kci_dev_version pins a release.
+# Weekly self-verifying upgrade: reinstall from the configured source, restart,
+# check the server still answers, roll back to what was running if it does not.
+# Disabled automatically when the source names one exact thing: a pinned
+# release, or a commit id in mcp_git_ref.
 mcp_auto_update: true
 mcp_update_schedule: "Sun 04:00"
 mcp_update_splay: 30m
