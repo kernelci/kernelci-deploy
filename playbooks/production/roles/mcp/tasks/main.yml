@@ -5,7 +5,12 @@
 # repository (mcp_source: git), so an unreleased MCP change can be put on the
 # server without waiting for a release. A git ref is always resolved to a
 # commit before it is installed: the branch is what you ask for, the commit is
-# what gets deployed and recorded.
+# what gets deployed.
+#
+# What is already installed is read back out of the virtualenv rather than
+# tracked in a file beside it. pip records the commit it installed from in
+# direct_url.json, and that is the only account of the deployed code that
+# cannot drift away from the code itself.
 - name: Check the kci-dev source selection
   ansible.builtin.assert:
     that:
@@ -17,7 +22,7 @@
 
 - name: Install the python tooling for the MCP virtualenv
   ansible.builtin.apt:
-    # git is only needed to fetch and resolve a git source, but pip cannot
+    # git is only needed to resolve and fetch a git source, but pip cannot
     # install from one without it.
     name: "{{ ['python3', 'python3-venv'] + (['git'] if mcp_source == 'git' else []) }}"
     state: present
@@ -59,29 +64,56 @@
   check_mode: false
   when: mcp_source == 'git'
 
-- name: Work out the requirement to install
+- name: Note the commit the git source resolves to
   ansible.builtin.set_fact:
     # A ref that ls-remote does not know is taken to be a commit id and passed
     # through as it is, so a commit can be deployed as directly as a branch.
-    mcp_requirement: >-
-      {{
-        ('kci-dev[mcp] @ git+' ~ mcp_git_repo ~ '@' ~
-         (mcp_ls_remote.stdout_lines[0].split()[0]
-          if (mcp_ls_remote.stdout_lines | default([]) | length > 0)
-          else mcp_git_ref))
-        if mcp_source == 'git'
-        else ('kci-dev[mcp]' ~ (('==' ~ mcp_kci_dev_version) if mcp_kci_dev_version else ''))
-      }}
+    mcp_git_commit: >-
+      {{ mcp_ls_remote.stdout_lines[0].split()[0]
+         if (mcp_ls_remote.stdout_lines | default([]) | length > 0)
+         else mcp_git_ref }}
+  when: mcp_source == 'git'
 
-- name: Read the source that is installed
-  ansible.builtin.slurp:
-    src: "{{ mcp_source_stamp }}"
-  register: mcp_stamp
-  failed_when: false
+- name: Work out the requirement to install
+  ansible.builtin.set_fact:
+    mcp_requirement: >-
+      {{ ('kci-dev[mcp] @ git+' ~ mcp_git_repo ~ '@' ~ mcp_git_commit)
+         if mcp_source == 'git'
+         else ('kci-dev[mcp]' ~ (('==' ~ mcp_kci_dev_version) if mcp_kci_dev_version else '')) }}
+    # Written in the same shape as what the probe below reads back, so the
+    # requested and the installed source compare directly. Empty means a
+    # release build, which is what a PyPI install leaves behind.
+    mcp_direct_ref: >-
+      {{ ('git+' ~ mcp_git_repo ~ '@' ~ mcp_git_commit) if mcp_source == 'git' else '' }}
+    # Prints where the installed kci-dev came from, out of the direct_url.json
+    # pip writes next to it. Used both to decide whether to install and to
+    # check afterwards that the install did what it said it did.
+    mcp_provenance_probe: |
+      import json, sys
+      from importlib.metadata import distribution, PackageNotFoundError
+      try:
+          raw = distribution('kci-dev').read_text('direct_url.json') or ''
+      except PackageNotFoundError:
+          raw = ''
+      info = json.loads(raw) if raw else {}
+      vcs = info.get('vcs_info', {})
+      if vcs.get('commit_id'):
+          sys.stdout.write('%s+%s@%s' % (vcs.get('vcs', 'git'), info['url'], vcs['commit_id']))
 
 - name: Read the installed kci-dev version
   ansible.builtin.command: "{{ mcp_home }}/venv/bin/kci-dev --version"
   register: kci_dev_installed
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Read the commit the installed kci-dev came from
+  ansible.builtin.command:
+    argv:
+      - "{{ mcp_home }}/venv/bin/python"
+      - -c
+      - "{{ mcp_provenance_probe }}"
+  register: mcp_installed_source
   changed_when: false
   failed_when: false
   check_mode: false
@@ -94,25 +126,41 @@
       - "{{ mcp_requirement }}"
     virtualenv: "{{ mcp_home }}/venv"
     state: "{{ 'latest' if (mcp_source == 'pypi' and mcp_upgrade | bool and not mcp_kci_dev_version) else 'present' }}"
-    # pip treats a direct git reference it has already seen as satisfied, and
-    # the recorded commit is what tells us it has changed, so ask for the
-    # upgrade explicitly rather than trusting that check.
-    extra_args: "{{ '--upgrade' if mcp_source == 'git' else omit }}"
+    # pip counts an installed distribution as satisfying a requirement whose
+    # version it matches, and kci-dev carries the same version across commits
+    # and between a release and a branch built from it. Left to itself pip
+    # clones the repository, resolves the commit, decides nothing needs doing
+    # and reports success, which is how you end up serving code you did not
+    # deploy. Nothing but --force-reinstall replaces a same-version build.
+    extra_args: "{{ '--force-reinstall' if kci_dev_installed.rc == 0 else omit }}"
   when: >-
     kci_dev_installed.rc != 0
     or (mcp_upgrade | bool)
-    or ((mcp_stamp.content | default('') | b64decode | trim) != mcp_requirement)
+    or (mcp_installed_source.stdout | default('') | trim) != mcp_direct_ref
+    or (mcp_source == 'pypi' and mcp_kci_dev_version | length > 0
+        and mcp_kci_dev_version not in kci_dev_installed.stdout)
   notify: Restart kci-mcp
 
-- name: Record the installed source
-  # Written after the install, so a failed one leaves the previous record in
-  # place for the update script to roll back to.
-  ansible.builtin.copy:
-    content: "{{ mcp_requirement }}\n"
-    dest: "{{ mcp_source_stamp }}"
-    owner: root
-    group: root
-    mode: '0644'
+- name: Read back what is installed
+  ansible.builtin.command:
+    argv:
+      - "{{ mcp_home }}/venv/bin/python"
+      - -c
+      - "{{ mcp_provenance_probe }}"
+  register: mcp_installed_now
+  changed_when: false
+  check_mode: false
+
+- name: Check that the installed kci-dev is the one that was asked for
+  # A pip run that exits 0 is not on its own evidence that the virtualenv
+  # changed, so ask the virtualenv.
+  ansible.builtin.assert:
+    that:
+      - (mcp_installed_now.stdout | trim) == mcp_direct_ref
+    fail_msg: >-
+      {{ mcp_home }}/venv holds
+      {{ (mcp_installed_now.stdout | trim) | default('a release build', true) }},
+      not {{ mcp_direct_ref | default('a release build', true) }}.
 
 - name: Configure kci-dev for the public read-only instance
   ansible.builtin.template:

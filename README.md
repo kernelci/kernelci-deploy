@@ -259,14 +259,24 @@ ansible-playbook -i inventory.yaml main.yml --tags mcp \
 ```
 
 The ref is resolved to a commit with `git ls-remote` before anything is
-installed, and the resulting requirement is written to
-`/srv/kci-mcp/.installed-source`. That record is what makes the role idempotent
-against a moving branch: a run reinstalls when the resolved commit differs from
-the recorded one, and does nothing when it does not. It is also what the weekly
-update timer rolls back to when a new commit fails its health check, since a
-git build carries the same version string across commits and the version alone
-cannot tell you what was serving. A ref that is a commit id is treated as a pin
-and turns the update timer off, exactly as `mcp_kci_dev_version` does for PyPI.
+installed, and what is already installed is read back out of the virtualenv -
+pip records the commit it installed from in the package's `direct_url.json`,
+and that is the only account of the deployed code that cannot drift away from
+the code itself. A run reinstalls when the two differ and does nothing when
+they do not, so a routine run against a branch that has not moved is a no-op.
+The same record is what the weekly update timer rolls back to when a new commit
+fails its health check. A ref that is a commit id is treated as a pin and turns
+the update timer off, exactly as `mcp_kci_dev_version` does for PyPI.
+
+One pip behaviour is worth knowing about, because both the role and the update
+script are built around it: pip treats an installed distribution as satisfying
+a requirement whose version it matches, even when the requirement names a
+different commit. kci-dev carries the same version across commits and between a
+release and a branch built from it, so `pip install --upgrade` will clone the
+repository, resolve the commit, install nothing and exit 0. Only
+`--force-reinstall` replaces a same-version build, and both the role and the
+update script check afterwards that the virtualenv really holds the commit that
+was asked for rather than trusting the exit status.
 
 The MCP endpoint is temporarily served at
 `https://storage.chromeos.kernelci.org/mcp`, reusing a decommissioned vhost that

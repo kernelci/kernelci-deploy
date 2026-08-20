@@ -4,27 +4,42 @@
 # Refresh kci-dev in the MCP virtualenv from whichever source the host is
 # configured with, restart the server and verify it still answers. If the new
 # build does not come up, reinstall what was running and restart again, so a
-# broken release - or a broken branch - cannot leave the public endpoint down.
+# broken release - or a broken commit - cannot leave the public endpoint down.
 #
 # kci-dev's MCP tools are upstream-flagged as experimental and change between
 # releases, which is exactly why this runs on a timer instead of being left to
 # whatever pip resolved on the day the host was provisioned. With a git source
-# that goes further: the deployed commit follows the branch.
+# it goes further: the deployed commit follows the branch.
 set -u
 
 VENV={{ mcp_home }}/venv
 PIP="$VENV/bin/pip"
+PY="$VENV/bin/python"
 KCI_DEV="$VENV/bin/kci-dev"
 URL="http://{{ mcp_bind }}:{{ mcp_port }}/mcp"
-STAMP={{ mcp_source_stamp }}
 SOURCE={{ mcp_source }}
-{% if mcp_source == 'git' %}
 REPO={{ mcp_git_repo }}
 REF={{ mcp_git_ref }}
-{% endif %}
 
 version() {
     "$KCI_DEV" --version 2>/dev/null | awk '{print $NF}'
+}
+
+# Where the installed kci-dev came from, as pip recorded it: git+URL@COMMIT,
+# or nothing at all for a release build.
+origin() {
+    "$PY" - <<'PY'
+import json, sys
+from importlib.metadata import distribution, PackageNotFoundError
+try:
+    raw = distribution('kci-dev').read_text('direct_url.json') or ''
+except PackageNotFoundError:
+    raw = ''
+info = json.loads(raw) if raw else {}
+vcs = info.get('vcs_info', {})
+if vcs.get('commit_id'):
+    sys.stdout.write('%s+%s@%s' % (vcs.get('vcs', 'git'), info['url'], vcs['commit_id']))
+PY
 }
 
 healthy() {
@@ -45,57 +60,67 @@ if [ -z "$before" ]; then
     echo "kci-dev is not installed in $VENV, nothing to update"
     exit 1
 fi
-
-# What ansible last installed. Empty on a host provisioned before this file
-# existed, which only costs one extra reinstall.
-installed=$(cat "$STAMP" 2>/dev/null)
+was=$(origin)
 
 if [ "$SOURCE" = git ]; then
     sha=$(git ls-remote "$REPO" "$REF" | awk 'NR==1 {print $1}')
     # An unknown ref is a commit id, and a commit does not move.
     [ -z "$sha" ] && sha="$REF"
-    target="kci-dev[mcp] @ git+$REPO@$sha"
-    if [ "$target" = "$installed" ]; then
+    want="git+$REPO@$sha"
+    if [ "$want" = "$was" ]; then
         echo "kci-dev is already at $REF ($sha)"
         exit 0
     fi
+    target="kci-dev[mcp] @ $want"
+    # pip counts an installed distribution as satisfying a requirement whose
+    # version it matches, and every commit of a branch carries the same
+    # version. Without this pip clones, resolves, installs nothing and exits 0.
+    flags="--upgrade --force-reinstall"
 else
+    want=""
     target='kci-dev[mcp]'
+    # Coming back from a git build to a release is the same same-version trap.
+    flags="--upgrade"
+    [ -n "$was" ] && flags="--upgrade --force-reinstall"
 fi
 
-if ! "$PIP" install --quiet --upgrade "$target"; then
-    echo "pip upgrade failed, staying on $before"
+if ! $PIP install --quiet $flags "$target"; then
+    echo "pip install failed, staying on $before"
     exit 1
 fi
 
 after=$(version)
-# A git build carries the same version string across commits, so only the
-# PyPI source can decide it is current from the version alone.
-if [ "$SOURCE" = pypi ] && [ "$before" = "$after" ]; then
+now=$(origin)
+
+if [ "$now" != "$want" ]; then
+    echo "pip did not install ${want:-a release build}, the venv holds ${now:-a release build}"
+    exit 1
+fi
+
+if [ "$SOURCE" = pypi ] && [ "$before" = "$after" ] && [ -z "$was" ]; then
     echo "kci-dev $before is already current"
     exit 0
 fi
 
-echo "kci-dev $before -> $after ($target), restarting"
+echo "kci-dev $before -> $after (${want:-release}), restarting"
 systemctl restart kci-mcp
 if healthy; then
-    printf '%s\n' "$target" > "$STAMP"
     echo "kci-dev $after is serving"
     exit 0
 fi
 
 echo "kci-dev $after failed its health check, rolling back"
-if [ -n "$installed" ]; then
-    # The recorded requirement pins an exact commit or release, so this puts
-    # back what was serving rather than whatever is current.
-    "$PIP" install --quiet --force-reinstall "$installed"
+if [ -n "$was" ]; then
+    # pip recorded the exact commit that was serving, so put that back rather
+    # than whatever the branch or PyPI happens to hold now.
+    "$PIP" install --quiet --upgrade --force-reinstall "kci-dev[mcp] @ $was"
 else
-    "$PIP" install --quiet --force-reinstall "kci-dev[mcp]==$before"
+    "$PIP" install --quiet --upgrade --force-reinstall "kci-dev[mcp]==$before"
 fi
 systemctl restart kci-mcp
 if healthy; then
-    echo "rolled back to $before"
+    echo "rolled back to ${was:-$before}"
 else
-    echo "rollback to $before is not serving either, needs attention"
+    echo "rollback to ${was:-$before} is not serving either, needs attention"
 fi
 exit 1

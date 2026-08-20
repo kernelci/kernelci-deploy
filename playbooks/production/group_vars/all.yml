@@ -18,14 +18,14 @@ mcp_port: 8000
 #   pypi  the released package, pinned with mcp_kci_dev_version
 #   git   a repository and ref, for running an MCP change that has not been
 #         released yet - a fork and a work branch are as valid here as upstream
-# A ref is resolved to a commit before it is installed, and the commit is
-# recorded in mcp_source_stamp, so "the branch moved" is something the role
-# and the update timer can both see. Switching source or ref reinstalls on the
-# next run; nothing else does, so a routine run is still a no-op.
+# A ref is resolved to a commit before it is installed, and what is already
+# installed is read back out of the virtualenv, so "the branch moved" is
+# something the role and the update timer can both see. Switching source or
+# ref reinstalls on the next run; nothing else does, so a routine run is still
+# a no-op.
 mcp_source: pypi
 mcp_git_repo: https://github.com/kernelci/kci-dev.git
 mcp_git_ref: main
-mcp_source_stamp: "{{ mcp_home }}/.installed-source"
 
 # Empty installs the latest release from PyPI; pin a version to freeze it.
 # Only consulted when mcp_source is pypi - a git source is pinned by its ref.
