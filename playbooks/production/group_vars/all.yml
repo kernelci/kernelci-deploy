@@ -25,7 +25,7 @@ mcp_port: 8000
 # a no-op.
 mcp_source: git
 mcp_git_repo: https://github.com/bhcopeland/kci-dev.git
-mcp_git_ref: mcp-lab-queries
+mcp_git_ref: dev-all-mcp
 
 # Empty installs the latest release from PyPI; pin a version to freeze it.
 # Only consulted when mcp_source is pypi - a git source is pinned by its ref.
