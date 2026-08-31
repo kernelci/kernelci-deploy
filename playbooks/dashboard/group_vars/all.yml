@@ -44,3 +44,16 @@ uptime_kuma_dir: /srv
 uptime_kuma_image: louislam/uptime-kuma:1
 uptime_kuma_bind: 127.0.0.1
 uptime_kuma_port: 3001
+
+# Dozzle container logs, bound to loopback and reached over an ssh tunnel. It
+# talks to Docker through a read-only API proxy instead of mounting the Docker
+# socket directly. Images are pinned so a routine playbook run is reproducible.
+dozzle_dir: /srv/dashboard-monitoring
+dozzle_compose_path: /srv/dashboard-monitoring/docker-compose.yaml
+dozzle_service_name: dashboard-monitoring.service
+dozzle_bind: 127.0.0.1
+dozzle_port: 8080
+dozzle_image: >-
+  amir20/dozzle:v10.8.0@sha256:243666b0593ff33ed1373901575236f0d6bed8a2d6b451cdae4345969a7b6d5c
+dozzle_socket_proxy_image: >-
+  ghcr.io/tecnativa/docker-socket-proxy:v0.5.0@sha256:1f5038b54f06c3e18422902cf00ba21803d1c97805aae032e5e6673d532d3459

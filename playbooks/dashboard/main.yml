@@ -21,5 +21,7 @@
       tags: [dashboard, staging]
     - role: uptime-kuma
       tags: uptime-kuma
+    - role: dozzle
+      tags: dozzle
     - role: certbot
       tags: certbot

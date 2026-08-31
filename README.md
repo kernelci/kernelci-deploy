@@ -84,8 +84,21 @@ Roles:
 - `dashboard-staging`: builds its images on the host. Rebuild with
   `-e dashboard_staging_build=true`.
 - `uptime-kuma`: the status page, bound to loopback.
+- `dozzle`: container logs through a read-only Docker API proxy. Dozzle binds
+  only to loopback, its images are pinned, both containers have health checks
+  and restart policies, and an enabled systemd unit reconciles them at boot.
 - `certbot`: the renewal timer. Run once with `-e certbot_verify_renewal=true`
   to have the play prove renewal still works.
+
+Dozzle deliberately has no public listener or application login. Reach it
+through the Dashboard host's SSH key and a local tunnel:
+
+```sh
+ssh -L 8080:127.0.0.1:8080 dashboard
+```
+
+Then open `http://127.0.0.1:8080`. The play waits for both containers and the
+Dozzle health endpoint before it reports a successful deployment.
 
 Both checkouts sit on a detached HEAD at a reviewed commit, and the playbook
 leaves them there. Set `dashboard_production_version` or

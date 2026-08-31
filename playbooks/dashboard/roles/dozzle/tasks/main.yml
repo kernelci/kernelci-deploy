@@ -1,0 +1,112 @@
+# Localhost-only container logs. Dozzle never receives the host Docker socket:
+# a tightly allowlisted proxy exposes only the read endpoints its UI needs.
+- name: Ensure the Dashboard monitoring directory exists
+  ansible.builtin.file:
+    path: "{{ dozzle_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Ensure the persistent Dozzle data directory exists
+  ansible.builtin.file:
+    path: "{{ dozzle_dir }}/dozzle-data"
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Deploy the Dashboard monitoring compose file
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: "{{ dozzle_compose_path }}"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Validate the Dashboard monitoring compose file
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -f
+      - "{{ dozzle_compose_path }}"
+      - config
+      - --quiet
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Install the Dashboard monitoring boot service
+  ansible.builtin.template:
+    src: dashboard-monitoring.service.j2
+    dest: "/etc/systemd/system/{{ dozzle_service_name }}"
+    owner: root
+    group: root
+    mode: '0644'
+  register: dozzle_systemd_unit
+
+- name: Enable and start Dashboard monitoring at boot
+  ansible.builtin.systemd:
+    name: "{{ dozzle_service_name }}"
+    daemon_reload: "{{ dozzle_systemd_unit.changed }}"
+    enabled: true
+    state: started
+  when: not ansible_check_mode
+
+# Run compose explicitly even when systemd was already active, so a changed
+# template or image pin is reconciled during this playbook run.
+- name: Reconcile Dashboard monitoring and wait for health checks
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -f
+      - "{{ dozzle_compose_path }}"
+      - up
+      - -d
+      - --remove-orphans
+      - --wait
+      - --wait-timeout
+      - '120'
+  register: dozzle_compose_up
+  changed_when: >-
+    'Created' in (dozzle_compose_up.stdout + dozzle_compose_up.stderr)
+    or 'Recreated' in (dozzle_compose_up.stdout + dozzle_compose_up.stderr)
+    or 'Started' in (dozzle_compose_up.stdout + dozzle_compose_up.stderr)
+    or 'Pulled' in (dozzle_compose_up.stdout + dozzle_compose_up.stderr)
+  when: not ansible_check_mode
+
+- name: Wait for the localhost Dozzle health endpoint
+  ansible.builtin.uri:
+    url: "http://{{ dozzle_bind }}:{{ dozzle_port }}/healthcheck"
+    method: GET
+    status_code: 200
+    return_content: false
+  register: dozzle_health
+  retries: 12
+  delay: 5
+  until: dozzle_health.status == 200
+  when: not ansible_check_mode
+
+- name: List running Dashboard monitoring services
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -f
+      - "{{ dozzle_compose_path }}"
+      - ps
+      - --services
+      - --status
+      - running
+  register: dozzle_running_services
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Require both Dashboard monitoring services to be running
+  ansible.builtin.assert:
+    that:
+      - "'docker-socket-proxy' in dozzle_running_services.stdout_lines"
+      - "'dozzle' in dozzle_running_services.stdout_lines"
+    fail_msg: Dozzle or its read-only Docker socket proxy is not running.
+  when: not ansible_check_mode

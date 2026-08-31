@@ -1,0 +1,90 @@
+# Managed by ansible (kernelci-deploy playbooks/dashboard) - do not edit by hand
+name: dashboard-monitoring
+
+services:
+  docker-socket-proxy:
+    image: "{{ dozzle_socket_proxy_image }}"
+    restart: always
+    environment:
+      ALLOW_RESTARTS: "0"
+      ALLOW_START: "0"
+      ALLOW_STOP: "0"
+      AUTH: "0"
+      BUILD: "0"
+      COMMIT: "0"
+      CONFIGS: "0"
+      CONTAINERS: "1"
+      DISTRIBUTION: "0"
+      EVENTS: "1"
+      EXEC: "0"
+      GRPC: "0"
+      IMAGES: "0"
+      INFO: "1"
+      NETWORKS: "0"
+      NODES: "0"
+      PING: "1"
+      PLUGINS: "0"
+      POST: "0"
+      SECRETS: "0"
+      SERVICES: "0"
+      SESSION: "0"
+      SWARM: "0"
+      SYSTEM: "0"
+      TASKS: "0"
+      VERSION: "1"
+      VOLUMES: "0"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - docker-api
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2375/_ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 64m
+    cpus: 0.25
+    pids_limit: 128
+    stop_grace_period: 20s
+
+  dozzle:
+    image: "{{ dozzle_image }}"
+    restart: always
+    init: true
+    depends_on:
+      docker-socket-proxy:
+        condition: service_healthy
+    environment:
+      DOZZLE_AUTH_PROVIDER: none
+      DOZZLE_ENABLE_ACTIONS: "false"
+      DOZZLE_ENABLE_MCP: "false"
+      DOZZLE_ENABLE_SHELL: "false"
+      DOZZLE_NO_ANALYTICS: "true"
+      DOZZLE_REMOTE_HOST: tcp://docker-socket-proxy:2375|dashboard
+    ports:
+      - "{{ dozzle_bind }}:{{ dozzle_port }}:8080"
+    volumes:
+      - "{{ dozzle_dir }}/dozzle-data:/data"
+    networks:
+      - docker-api
+      - ui
+    healthcheck:
+      test: ["CMD", "/dozzle", "healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    cpus: 0.50
+    pids_limit: 256
+    stop_grace_period: 30s
+
+networks:
+  docker-api:
+    internal: true
+  ui: {}

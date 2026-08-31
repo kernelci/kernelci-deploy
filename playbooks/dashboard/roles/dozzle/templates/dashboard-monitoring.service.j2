@@ -1,0 +1,19 @@
+[Unit]
+Description=Dashboard localhost container monitoring
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+ConditionPathExists={{ dozzle_compose_path }}
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+WorkingDirectory={{ dozzle_dir }}
+ExecStart=/usr/bin/docker compose -f {{ dozzle_compose_path }} up -d --remove-orphans --wait --wait-timeout 120
+ExecReload=/usr/bin/docker compose -f {{ dozzle_compose_path }} up -d --remove-orphans --wait --wait-timeout 120
+ExecStop=/usr/bin/docker compose -f {{ dozzle_compose_path }} stop --timeout 30
+TimeoutStartSec=180
+TimeoutStopSec=60
+
+[Install]
+WantedBy=multi-user.target
