@@ -1,0 +1,28 @@
+---
+# Copy to group_vars/vault.yml and encrypt:
+#
+#   ansible-vault encrypt group_vars/vault.yml
+#
+# group_vars/vault.yml is gitignored. Never commit these in the clear — the
+# values currently deployed were pasted straight into prod-amd64.sh /
+# prod-arm64.sh on the host and should be treated as exposed.
+
+# JWT used for both the KernelCI API and KCIDB submission. Minted by
+# tools/unified-token-generator.py for the lab's bot account, with origin
+# pull_labs_aws_ec2.
+pullab_unified_token: "eyJ..."
+
+# Credentials written to /root/.aws/credentials on the poller host.
+#
+# WARNING: the keys deployed today are the account's ROOT access keys
+# (sts:GetCallerIdentity returns arn:aws:iam::<account-id>:root). Replace them
+# with a dedicated IAM user — or better, attach an instance profile to the
+# poller host and set pullab_manage_aws_credentials: false so no static keys
+# exist at all.
+pullab_aws_access_key_id: "AKIA..."
+pullab_aws_secret_access_key: "..."
+
+# Checked by aws-infra.yml before it touches anything, so a stray AWS_PROFILE
+# cannot point the run at the wrong account. Kept out of group_vars/all.yml
+# because this repo is public.
+pullab_aws_account_id: "123456789012"

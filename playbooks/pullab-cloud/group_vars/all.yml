@@ -1,0 +1,74 @@
+---
+# Non-secret description of the running pullab_cloud deployment.
+# Captured from the kci-aws poller host on 2026-08-31.
+
+# --- AWS account / regions ------------------------------------------------
+# The poller host runs in us-east-1; every resource it drives lives in
+# eu-west-2. Nothing relies on the host's default region, because the pipeline
+# config carries an explicit "region" key.
+#
+# pullab_aws_account_id is deliberately not here - it lives in the gitignored
+# vault, since this repo is public. aws-infra.yml asserts against it.
+pullab_aws_region: eu-west-2
+pullab_host_region: us-east-1
+
+# --- Resource names (must match the deployed pipeline) --------------------
+pullab_results_bucket: kernelci-results
+pullab_results_prefix: results
+# Inert. This names the KernelCI storage *service*, not an S3 bucket, and no
+# bucket by this name exists. Only the kernel-install tests would read it, and
+# none of them run. Kernel artifacts reach the VM by HTTP from the job
+# definition instead. Do not create a bucket to match it - see README.
+pullab_external_bucket: kernelci-storage
+pullab_ecr_repository: kernelci-ecr
+pullab_ecs_cluster: kernelci-cluster
+pullab_ecs_task_family: kernelci-task
+pullab_ecs_container_name: kernelci-app
+pullab_ecs_task_cpu: "1024"
+pullab_ecs_task_memory: "2048"
+pullab_vm_role_name: kernelci-ecs-role
+
+pullab_log_groups:
+  - name: /ecs/kernelci-task
+    retention_days: 7
+  - name: /ec2/kernelci-vms
+    retention_days: 3
+pullab_metrics_namespace: kernelci-metrics
+
+# --- KernelCI / KCIDB wiring ---------------------------------------------
+pullab_api_base_uri: https://api.kernelci.org/latest
+pullab_runtime_name: pull-labs-aws-ec2
+pullab_kcidb_submit_url: https://db.kernelci.org/submit
+pullab_kcidb_origin: pull_labs_aws_ec2
+pullab_poll_interval_sec: 30
+
+# --- Source ---------------------------------------------------------------
+pullab_repo: https://github.com/kernelci/pullab_cloud.git
+pullab_version: main
+pullab_install_dir: /root/pullab_cloud
+
+# --- Poller instances -----------------------------------------------------
+# One systemd service+timer per architecture. Both share runtime_name; the
+# platforms allowlist is what splits the job stream between them.
+pullab_pollers:
+  - name: amd64
+    platforms: ["aws-ec2-x86_64"]
+    ami_id: "resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
+    instance_type: c5a.4xlarge
+  - name: arm64
+    platforms: ["aws-ec2-arm64"]
+    ami_id: "resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64"
+    instance_type: c7g.4xlarge
+
+# Template only: pull_labs_translate rewrites test_config per job, so these
+# entries never run. They still define the VM shape each job inherits.
+pullab_tests:
+  - simple-unixbench
+  - unixbench-kernel-regression
+pullab_vm_root_volume_size: 40
+pullab_vm_max_runtime: 3600
+pullab_test_id: test-all-tests
+
+# How often each poller does one --once cycle. Matches the 300s sleep in the
+# hand-written loop.sh this replaces.
+pullab_poll_period_sec: 300

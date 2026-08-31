@@ -1,0 +1,15 @@
+# Inventory for the pullab_cloud (KernelCI pull-labs on AWS) poller host.
+#
+# The poller host itself is a small always-on EC2 instance; the actual test
+# VMs it spawns live in a different region (see pullab_aws_region).
+all:
+  children:
+    pullab_poller:
+      hosts:
+        # t3.micro in us-east-1. No ansible_host on purpose: the name matches
+        # the `Host kci-aws` alias in ~/.ssh/config, so the address is not
+        # published here. Set ansible_host locally if you have no such alias.
+        kci-aws:
+          ansible_port: 22
+          ansible_user: ec2-user
+          ansible_become: true

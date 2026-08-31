@@ -1,0 +1,15 @@
+# Provision the pullab_cloud poller host.
+#
+#   ansible-playbook -i inventory.yaml site.yml
+#
+# Secrets (UNIFIED_TOKEN, AWS keys) come from group_vars/vault.yml — see
+# group_vars/vault.yml.example. The role asserts on them before it touches the
+# host, so a run without them stops on the control node having changed nothing.
+# Set pullab_manage_aws_credentials=false if the host authenticates with an IAM
+# instance profile and has no static keys to place.
+- name: pullab_cloud poller
+  hosts: pullab_poller
+  gather_facts: true
+  become: true
+  roles:
+    - pullab_cloud

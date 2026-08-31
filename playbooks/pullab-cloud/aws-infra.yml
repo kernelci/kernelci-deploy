@@ -1,0 +1,15 @@
+# Create/verify the AWS resources the pullab_cloud pipeline runs against.
+#
+#   ansible-playbook -i inventory.yaml aws-infra.yml
+#
+# Runs locally against the AWS API, not over SSH. Idempotent and additive: it
+# never deletes buckets, images or log groups. The IAM role for the test VMs is
+# deliberately NOT managed here — pullab_cloud recreates it on every run
+# ("force_recreate_roles": true in the pipeline config), so Ansible would only
+# fight it. Check with --check --diff first.
+- name: pullab_cloud AWS infrastructure
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - pullab_aws_infra

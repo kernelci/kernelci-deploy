@@ -1,0 +1,236 @@
+{# Managed by Ansible - playbooks/pullab-cloud.
+   Renders examples/aws/config-<name>-prod.json for one architecture.
+   `poller` is the loop item from pullab_pollers. #}
+{
+  "provider": "aws",
+  "region": "{{ pullab_aws_region }}",
+  "storage": {
+    "type": "s3",
+    "bucket": "{{ pullab_results_bucket }}",
+    "results_prefix": "{{ pullab_results_prefix }}"
+  },
+  "external_storage": {
+    "type": "s3",
+    "bucket": "{{ pullab_external_bucket }}"
+  },
+  "force_recreate_roles": true,
+  "auth_credentials": {
+    "auth_provider": "aws"
+  },
+  "roles": {
+    "{{ pullab_vm_role_name }}": {
+      "description": "ECS task execution role with EC2 and SSM access",
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [
+                "ecs-tasks.amazonaws.com",
+                "ec2.amazonaws.com"
+              ]
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "policies": [
+        "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
+        "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
+        "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+      ],
+      "inline_policies": {
+        "AllowPassRole": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": "iam:PassRole",
+              "Resource": "arn:aws:iam::*:role/{{ pullab_vm_role_name }}",
+              "Condition": {
+                "StringEquals": {
+                  "iam:PassedToService": "ec2.amazonaws.com"
+                }
+              }
+            }
+          ]
+        },
+        "AllowEC2": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "EC2RunInstances",
+              "Effect": "Allow",
+              "Action": [
+                "ec2:RunInstances",
+                "ec2:CreateTags"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Sid": "EC2TerminateOwnInstances",
+              "Effect": "Allow",
+              "Action": "ec2:TerminateInstances",
+              "Resource": "arn:aws:ec2:*:*:instance/*",
+              "Condition": {
+                "StringLike": {
+                  "aws:ResourceTag/run_prefix": "run_*"
+                }
+              }
+            },
+            {
+              "Sid": "EC2Describe",
+              "Effect": "Allow",
+              "Action": [
+                "ec2:DescribeInstances",
+                "ec2:DescribeImages",
+                "ec2:DescribeSubnets",
+                "ec2:DescribeSecurityGroups",
+                "ec2:DescribeVpcs",
+                "ec2:GetConsoleOutput"
+              ],
+              "Resource": "*"
+            }
+          ]
+        },
+        "AllowS3Access": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:ListBucket"
+              ],
+              "Resource": [
+                "arn:aws:s3:::{{ pullab_results_bucket }}",
+                "arn:aws:s3:::{{ pullab_results_bucket }}/*",
+                "arn:aws:s3:::{{ pullab_results_bucket }}-*",
+                "arn:aws:s3:::{{ pullab_results_bucket }}-*/*",
+                "arn:aws:s3:::{{ pullab_external_bucket }}",
+                "arn:aws:s3:::{{ pullab_external_bucket }}/*"
+              ]
+            }
+          ]
+        },
+        "AllowSSMCommands": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "SSMSendCommandDocument",
+              "Effect": "Allow",
+              "Action": "ssm:SendCommand",
+              "Resource": "arn:aws:ssm:*::document/AWS-RunShellScript"
+            },
+            {
+              "Sid": "SSMSendCommandInstances",
+              "Effect": "Allow",
+              "Action": "ssm:SendCommand",
+              "Resource": "arn:aws:ec2:*:*:instance/*",
+              "Condition": {
+                "StringLike": {
+                  "ssm:resourceTag/run_prefix": "run_*"
+                }
+              }
+            },
+            {
+              "Sid": "SSMManageCommands",
+              "Effect": "Allow",
+              "Action": [
+                "ssm:GetCommandInvocation",
+                "ssm:CancelCommand"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Sid": "SSMDescribeAndResolve",
+              "Effect": "Allow",
+              "Action": [
+                "ssm:DescribeInstanceInformation",
+                "ssm:GetParameter"
+              ],
+              "Resource": "*"
+            }
+          ]
+        },
+        "AllowIAMInstanceProfile": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "iam:CreateInstanceProfile",
+                "iam:DeleteInstanceProfile",
+                "iam:AddRoleToInstanceProfile",
+                "iam:RemoveRoleFromInstanceProfile",
+                "iam:GetInstanceProfile"
+              ],
+              "Resource": "arn:aws:iam::*:instance-profile/{{ pullab_vm_role_name }}"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "ecr": {
+    "repository": "{{ pullab_ecr_repository }}",
+    "scan_on_push": false
+  },
+  "docker": {
+    "dockerfile": "dockerfiles/aws/test.dockerfile",
+    "build_context": ".",
+    "force_rebuild": true
+  },
+  "ecs": {
+    "cluster": "{{ pullab_ecs_cluster }}",
+    "task_definition": {
+      "family": "{{ pullab_ecs_task_family }}",
+      "cpu": "{{ pullab_ecs_task_cpu }}",
+      "memory": "{{ pullab_ecs_task_memory }}",
+      "container_name": "{{ pullab_ecs_container_name }}",
+      "region": "{{ pullab_aws_region }}"
+    }
+  },
+  "cloudwatch": {
+    "log_groups": {
+{% for lg in pullab_log_groups %}
+      "{{ lg.name }}": {
+        "retention_days": {{ lg.retention_days }}
+      }{{ "," if not loop.last }}
+{% endfor %}
+    },
+    "metrics_namespace": "{{ pullab_metrics_namespace }}"
+  },
+  "kernelci": {
+    "api_base_uri": "{{ pullab_api_base_uri }}",
+    "api_token": null,
+    "runtime_name": "{{ pullab_runtime_name }}",
+    "platforms": {{ poller.platforms | to_json }},
+    "poll_interval_sec": {{ pullab_poll_interval_sec }},
+    "cursor_file": "/tmp/pullab_cloud_cursor_{{ poller.name }}_prod.json",
+    "kcidb_submit_url": "{{ pullab_kcidb_submit_url }}",
+    "kcidb_origin": "{{ pullab_kcidb_origin }}",
+    "kcidb_jwt": null,
+    "comment": "Both architectures share runtime_name '{{ pullab_runtime_name }}'; the platforms filter is what splits the job stream. api_token/kcidb_jwt stay null and are injected at runtime via UNIFIED_TOKEN."
+  },
+  "test_config": {
+    "test_id": "{{ pullab_test_id }}",
+    "role_name": "{{ pullab_vm_role_name }}",
+    "vms": [
+{% for test in pullab_tests %}
+      {
+        "ami_id": "{{ poller.ami_id }}",
+        "instance_type": "{{ poller.instance_type }}",
+        "root_volume_size": {{ pullab_vm_root_volume_size }},
+        "max_runtime": {{ pullab_vm_max_runtime }},
+        "test": [
+          "{{ test }}"
+        ],
+        "min_count": 1
+      }{{ "," if not loop.last }}
+{% endfor %}
+    ]
+  }
+}

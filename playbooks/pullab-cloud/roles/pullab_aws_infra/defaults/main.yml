@@ -1,0 +1,4 @@
+---
+# Refuse to touch anything unless explicitly asked. AWS resources here are
+# shared and long-lived; a stray run should be a no-op, not a surprise.
+pullab_infra_apply: false

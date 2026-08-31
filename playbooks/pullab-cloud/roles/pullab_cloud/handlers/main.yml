@@ -1,0 +1,12 @@
+---
+- name: Reload systemd
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+- name: Restart pullab pollers
+  ansible.builtin.systemd_service:
+    name: "pullab-poller@{{ item.name }}.timer"
+    state: restarted
+  loop: "{{ pullab_pollers }}"
+  loop_control:
+    label: "{{ item.name }}"

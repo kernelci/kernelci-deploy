@@ -1,0 +1,211 @@
+---
+- name: Assert we are on Amazon Linux 2023
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == 'Amazon'
+      - ansible_distribution_major_version == '2023'
+    fail_msg: >-
+      pullab_cloud is packaged for Amazon Linux 2023 (python3.11 and awscli-2
+      come from the default repos there).
+
+# The systemd unit hard-requires /etc/pullab_cloud/env (EnvironmentFile= with
+# no leading '-'). Fail here rather than silently skipping the env file and
+# leaving units that only fail once systemd tries to start them.
+- name: Assert the poller token is available
+  ansible.builtin.assert:
+    that:
+      - pullab_unified_token is defined
+      - pullab_unified_token | default('') | length > 0
+    fail_msg: >-
+      pullab_unified_token is not set. Copy group_vars/vault.yml.example to
+      group_vars/vault.yml, fill it in, `ansible-vault encrypt` it, and re-run
+      with --ask-vault-pass.
+
+# Skipped when the host uses an IAM instance profile instead of static keys.
+- name: Assert AWS credentials are available
+  ansible.builtin.assert:
+    that:
+      - pullab_aws_access_key_id | default('') | length > 0
+      - pullab_aws_secret_access_key | default('') | length > 0
+    fail_msg: >-
+      pullab_aws_access_key_id / pullab_aws_secret_access_key are not set.
+      Add them to group_vars/vault.yml, or set
+      pullab_manage_aws_credentials: false if this host authenticates with an
+      IAM instance profile.
+  when: pullab_manage_aws_credentials | bool
+
+# --- packages -------------------------------------------------------------
+# AL2023 ships python3.9 as python3, which pullab_cloud does not support, so
+# python3.11 is installed and invoked explicitly everywhere.
+- name: Install system packages
+  ansible.builtin.dnf:
+    name:
+      - python3.11
+      - python3.11-pip
+      - python3.11-devel
+      - git
+      - make
+      - gcc
+      - awscli-2
+      - docker
+    state: present
+
+# Only needed to build and push the Fargate test image
+# (dockerfiles/aws/test.dockerfile); the poller itself does not use it.
+- name: Enable docker
+  ansible.builtin.systemd_service:
+    name: docker
+    enabled: true
+    state: started
+
+# --- source ---------------------------------------------------------------
+- name: Clone pullab_cloud
+  ansible.builtin.git:
+    repo: "{{ pullab_repo }}"
+    dest: "{{ pullab_install_dir }}"
+    version: "{{ pullab_version }}"
+    update: "{{ pullab_update_checkout }}"
+  register: pullab_checkout
+
+# `pip install -e` reports changed on every run, so it is gated. Gating on the
+# checkout alone is not enough: with pullab_update_checkout false the clone only
+# changes once, so a run that failed after the clone would never install.
+- name: Check whether pullab_cloud is installed
+  ansible.builtin.command: /usr/bin/pip3.11 show kernel-ci-cloud-labs
+  register: pullab_installed
+  changed_when: false
+  failed_when: false
+
+- name: Install pullab_cloud into the system python3.11
+  ansible.builtin.pip:
+    name: "{{ pullab_install_dir }}"
+    editable: true
+    executable: /usr/bin/pip3.11
+  when: pullab_checkout.changed or pullab_installed.rc != 0
+
+# --- AWS credentials ------------------------------------------------------
+- name: Create /root/.aws
+  ansible.builtin.file:
+    path: /root/.aws
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+  when: pullab_manage_aws_credentials | bool
+
+- name: Write AWS config
+  ansible.builtin.copy:
+    dest: /root/.aws/config
+    owner: root
+    group: root
+    mode: "0600"
+    content: |
+      [default]
+      region = {{ pullab_host_region }}
+  when: pullab_manage_aws_credentials | bool
+
+- name: Write AWS credentials
+  ansible.builtin.copy:
+    dest: /root/.aws/credentials
+    owner: root
+    group: root
+    mode: "0600"
+    content: |
+      [default]
+      aws_access_key_id = {{ pullab_aws_access_key_id }}
+      aws_secret_access_key = {{ pullab_aws_secret_access_key }}
+  no_log: true
+  when: pullab_manage_aws_credentials | bool
+
+# --- configuration --------------------------------------------------------
+- name: Create config directory
+  ansible.builtin.file:
+    path: "{{ pullab_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+
+# Replaces the UNIFIED_TOKEN=... prefix that was inlined in prod-*.sh.
+- name: Write poller environment file
+  ansible.builtin.template:
+    src: pullab-poller.env.j2
+    dest: "{{ pullab_config_dir }}/env"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  notify: Restart pullab pollers
+
+- name: Write per-architecture pipeline configs
+  ansible.builtin.template:
+    src: config.json.j2
+    dest: "{{ pullab_install_dir }}/examples/aws/config-{{ poller.name }}-prod.json"
+    owner: root
+    group: root
+    mode: "0644"
+    validate: "{{ pullab_python }} -m json.tool %s"
+  loop: "{{ pullab_pollers }}"
+  loop_control:
+    loop_var: poller
+    label: "{{ poller.name }}"
+  notify: Restart pullab pollers
+
+# --- systemd --------------------------------------------------------------
+# Upstream ran this as `screen -dmS ... ./loop.sh`, an unsupervised root shell
+# looping `--once` over both architectures with a 300s sleep. The units below
+# are the same cycle under systemd: survives reboots, logs to the journal, and
+# does not silently vanish when the screen session dies.
+- name: Install poller service unit
+  ansible.builtin.template:
+    src: pullab-poller@.service.j2
+    dest: /etc/systemd/system/pullab-poller@.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart pullab pollers
+
+- name: Install poller timer unit
+  ansible.builtin.template:
+    src: pullab-poller@.timer.j2
+    dest: /etc/systemd/system/pullab-poller@.timer
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart pullab pollers
+
+- name: Flush handlers before enabling timers
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable and start poller timers
+  ansible.builtin.systemd_service:
+    name: "pullab-poller@{{ item.name }}.timer"
+    enabled: true
+    state: started
+  loop: "{{ pullab_pollers }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+# --- migration off the hand-rolled screen session -------------------------
+# Not automated: killing the running loop is a judgement call, and the old
+# scripts hold the only copy of a token that is not yet rotated.
+- name: Check for the legacy screen-based loop
+  ansible.builtin.command: pgrep -f 'loop\.sh'
+  register: pullab_legacy_loop
+  changed_when: false
+  failed_when: false
+
+- name: Warn about the legacy loop still running
+  ansible.builtin.debug:
+    msg: >-
+      The old screen session running loop.sh is still alive (PIDs:
+      {{ pullab_legacy_loop.stdout_lines | join(', ') }}). Stop it by hand once
+      the systemd timers are confirmed working, otherwise both will poll:
+      attach with `screen -r` as root, Ctrl-C, then remove
+      {{ pullab_install_dir }}/loop.sh and prod-*.sh - they contain a
+      plaintext JWT.
+  when: pullab_legacy_loop.rc == 0

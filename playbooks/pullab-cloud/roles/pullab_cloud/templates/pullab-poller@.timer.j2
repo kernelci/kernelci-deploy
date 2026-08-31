@@ -1,0 +1,14 @@
+# Managed by Ansible - playbooks/pullab-cloud
+[Unit]
+Description=KernelCI pull-lab AWS poller timer (%i)
+
+[Timer]
+# Same cadence as the sleep in the loop.sh this replaces. Measured from the end
+# of the previous run, so cycles never overlap.
+OnBootSec=60
+OnUnitInactiveSec={{ pullab_poll_period_sec }}
+AccuracySec=10
+Unit=pullab-poller@%i.service
+
+[Install]
+WantedBy=timers.target

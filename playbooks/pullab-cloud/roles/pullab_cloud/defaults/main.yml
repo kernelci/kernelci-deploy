@@ -1,0 +1,12 @@
+---
+# Manage /root/.aws/credentials from the vault. Set to false once the host has
+# an IAM instance profile, so no static keys are written at all.
+pullab_manage_aws_credentials: true
+
+# Update the checkout to pullab_version on every run. Off by default so a run
+# never pulls new code from under a poller cycle unexpectedly; enable with
+# -e pullab_update_checkout=true when you actually mean to deploy.
+pullab_update_checkout: false
+
+pullab_config_dir: /etc/pullab_cloud
+pullab_python: /usr/bin/python3.11

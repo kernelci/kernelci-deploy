@@ -1,0 +1,87 @@
+---
+# Idempotent, additive bootstrap of the eu-west-2 resources the pipeline uses.
+# Nothing here deletes; teardown is `kernel-ci-cloud-runner aws cleanup`.
+#
+# Run with --check --diff first, then -e pullab_infra_apply=true to apply.
+
+- name: Confirm the caller meant to touch AWS
+  ansible.builtin.assert:
+    that: pullab_infra_apply | bool
+    fail_msg: >-
+      Refusing to modify AWS resources. Re-run with -e pullab_infra_apply=true
+      (and preferably --check --diff first).
+
+# Lives in the gitignored vault, not group_vars/all.yml, because this repo is
+# public. Check it is present before spending an API call.
+- name: Assert the expected account id is known
+  ansible.builtin.assert:
+    that:
+      - pullab_aws_account_id | default('') | length > 0
+    fail_msg: >-
+      pullab_aws_account_id is not set. Add it to group_vars/vault.yml (see
+      vault.yml.example) so this playbook can confirm it is talking to the
+      right AWS account before it creates anything.
+
+- name: Verify we are pointed at the expected account
+  amazon.aws.aws_caller_info:
+    region: "{{ pullab_aws_region }}"
+  register: pullab_caller
+
+- name: Assert account id
+  ansible.builtin.assert:
+    that: pullab_caller.account | string == pullab_aws_account_id | string
+    fail_msg: >-
+      Connected to AWS account {{ pullab_caller.account }}, expected
+      {{ pullab_aws_account_id }}. Check your AWS_PROFILE.
+
+# The credentials currently on the poller host are root-account keys. Flag it
+# rather than fail: rotating them is a separate, deliberate change.
+- name: Warn if running as the account root
+  ansible.builtin.debug:
+    msg: >-
+      Authenticated as the account root ({{ pullab_caller.arn }}). Root access
+      keys should be replaced with a dedicated IAM user or an instance profile.
+  when: "':root' in pullab_caller.arn"
+
+# --- S3 -------------------------------------------------------------------
+- name: Create results bucket
+  amazon.aws.s3_bucket:
+    name: "{{ pullab_results_bucket }}"
+    region: "{{ pullab_aws_region }}"
+    state: present
+    public_access:
+      block_public_acls: true
+      block_public_policy: true
+      ignore_public_acls: true
+      restrict_public_buckets: true
+
+# --- ECR ------------------------------------------------------------------
+- name: Create ECR repository for the test image
+  community.aws.ecs_ecr:
+    name: "{{ pullab_ecr_repository }}"
+    region: "{{ pullab_aws_region }}"
+    scan_on_push: false
+    state: present
+
+# --- ECS ------------------------------------------------------------------
+# The task definition itself is registered by pullab_cloud at run time from the
+# "ecs" block of the pipeline config; only the cluster is managed here.
+- name: Create ECS cluster
+  community.aws.ecs_cluster:
+    name: "{{ pullab_ecs_cluster }}"
+    region: "{{ pullab_aws_region }}"
+    state: present
+
+# --- CloudWatch -----------------------------------------------------------
+# pullab_cloud creates a per-run log group under /ec2/kernelci-vms/<run_prefix>
+# with no retention set, so those accumulate indefinitely. Only the two parent
+# groups are declared here; pruning the per-run ones is a separate job.
+- name: Create log groups with retention
+  amazon.aws.cloudwatchlogs_log_group:
+    log_group_name: "{{ item.name }}"
+    retention: "{{ item.retention_days }}"
+    region: "{{ pullab_aws_region }}"
+    state: present
+  loop: "{{ pullab_log_groups }}"
+  loop_control:
+    label: "{{ item.name }}"
