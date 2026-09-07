@@ -457,14 +457,56 @@ function backup_pipeline_configmap {
 
 
 
-if [ -z "$AZURE_RG" ]; then
-    echo "AZURE_RG not set, not an Azure deployment"
-    echo "You need to retrieve the static IP address of the ingress controller and set the IP variable in pipeline-initial-deploy.cfg"
-    exit 1
-fi
+# Validate deployment inputs only for commands that consume them.
+case "$1" in
+    full)
+        if [ -z "$AZURE_RG" ]; then
+            echo "AZURE_RG not set, not an Azure deployment"
+            echo "You need to retrieve the static IP address of the ingress controller and set the IP variable in pipeline-initial-deploy.cfg"
+            exit 1
+        fi
+        if [ -z "$EMAIL_USER" ]; then
+            echo "EMAIL_USER not set, exiting"
+            exit 1
+        fi
+        ;;
+esac
 
+case "$1" in
+    full|backup-mongo)
+        if [ -z "$MONGO" ]; then
+            echo "MONGO not set, exiting"
+            exit 1
+        fi
+        ;;
+esac
 
-
+case "$1" in
+    full|token|pipeline-credentials)
+        if [ -z "$API_TOKEN" ]; then
+            # TODO(nuclearcat): reference to documentation
+            echo "API_TOKEN not set, please follow procedure to create users and issue token after deployment"
+        fi
+        if [ -z "$API_SECRET_KEY" ]; then
+            # TODO(nuclearcat): reference to documentation
+            echo "API_SECRET_KEY not set. Suggested to keep it persistent for same token"
+        fi
+        if [ -z "$EMAIL_PASSWORD" ]; then
+            echo "EMAIL_PASSWORD not set, exiting"
+            exit 1
+        fi
+        if [ -z "$KCIDB_REST" ]; then
+            echo "KCIDB_REST not set, exiting"
+            exit 1
+        fi
+        # id_rsa is used for NIPA ssh access to upload artifacts.
+        if [ ! -f id_rsa ]; then
+            echo "id_rsa not found, exiting"
+            echo "You need to create id_rsa file with your private key for NIPA ssh access to upload artifacts"
+            exit 1
+        fi
+        ;;
+esac
 
 # Local toolset setup
 local_setup
@@ -495,39 +537,6 @@ fi
 if [ "$1" == "retrieve_secrets_toml" ]; then
     retrieve_secrets_toml
     exit 0
-fi
-
-if [ -z "$API_TOKEN" ]; then
-    # TODO(nuclearcat): reference to documentation
-    echo "API_TOKEN not set, please follow procedure to create users and issue token after deployment"
-fi
-
-if [ -z "$API_SECRET_KEY" ]; then
-    # TODO(nuclearcat): reference to documentation
-    echo "API_SECRET_KEY not set. Suggested to keep it persistent for same token"
-fi
-
-if [ -z "$MONGO" ]; then
-    echo "MONGO not set, exiting"
-    exit 1
-fi
-
-if [ -z "$EMAIL_USER" ] || [ -z "$EMAIL_PASSWORD" ]; then
-    echo "EMAIL_USER or EMAIL_PASSWORD not set, exiting"
-    exit 1
-fi
-
-if [ -z "$KCIDB_REST" ]; then
-    echo "KCIDB_REST not set, exiting"
-    exit 1
-fi
-
-# id_rsa is used for NIPA ssh access to upload artifacts
-# check for id_rsa existence
-if [ ! -f id_rsa ]; then
-    echo "id_rsa not found, exiting"
-    echo "You need to create id_rsa file with your private key for NIPA ssh access to upload artifacts"
-    exit 1
 fi
 
 # if argument delete set just delete namespace and exit
