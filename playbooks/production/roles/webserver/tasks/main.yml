@@ -24,10 +24,16 @@
     state: started
 
 - name: Select the vhosts that are enabled
+  # Tagged nginx as well: every vhost task below consumes web_vhosts, so a
+  # config-only run (--tags nginx) has to compute it or the loops fail on an
+  # undefined variable.
   ansible.builtin.set_fact:
     web_vhosts: >-
       {{ vhosts | rejectattr('enabled', 'defined') | list
          + (vhosts | selectattr('enabled', 'defined') | selectattr('enabled') | list) }}
+  tags:
+    - nginx
+    - certbot
 
 - name: Check whether nginx.conf already defines the storage gate maps
   ansible.builtin.command: grep -q storage_cookie_gate /etc/nginx/nginx.conf
@@ -127,6 +133,9 @@
 
 - name: Apply the pending nginx configuration
   ansible.builtin.meta: flush_handlers
+  tags:
+    - nginx
+    - certbot
 
 # Certificates. All enabled vhosts share a single certificate named after
 # nginx_cert_name, which certbot expands as names are added. A name that does
