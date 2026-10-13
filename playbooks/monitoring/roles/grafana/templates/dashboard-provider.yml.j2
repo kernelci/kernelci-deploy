@@ -2,13 +2,17 @@
 apiVersion: 1
 
 providers:
-- name: Prometheus
+- name: kernelci
   orgId: 1
-  folder: ''
   type: file
-{% if grafana_provision_dashboards and grafana_allow_ui_updates %}
+  # Dashboards in the repository cannot be deleted from the UI.
+  disableDeletion: true
+  updateIntervalSeconds: {{ grafana_dashboards_update_interval }}
+{% if grafana_allow_ui_updates %}
   # Without this Grafana refuses to save UI edits to a provisioned dashboard.
   allowUiUpdates: true
 {% endif %}
   options:
-    path: /var/lib/grafana/dashboards
+    path: /etc/grafana/provisioning/{{ grafana_dashboards_subdir }}
+    # Each subdirectory of files/dashboards becomes a Grafana folder.
+    foldersFromFilesStructure: true

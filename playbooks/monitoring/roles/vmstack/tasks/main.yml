@@ -20,32 +20,64 @@
       configuration of an existing stack; it does not deploy the stack itself.
   when: not vmstack_compose.stat.exists
 
-- name: Deploy the vmagent scrape configuration
-  ansible.builtin.copy:
-    src: prometheus.yml
-    dest: "{{ monitoring_dir }}/prometheus.yml"
-    owner: "{{ vmstack_scrape_owner }}"
-    group: "{{ vmstack_scrape_owner }}"
-    mode: '0644'
-  notify: Reload vmagent
+# These three files are bind-mounted into their containers individually, e.g.
+#   /srv/monitoring/prometheus.yml -> vmagent:/etc/prometheus/prometheus.yml
+# A single-file bind mount is bound to the *inode*, not the path. Ansible's
+# copy is atomic - temp file plus rename - which produces a new inode, so the
+# container carries on reading the original file forever. The role reported
+# "changed", the handler reloaded, everything looked green, and vmagent was
+# still serving a config from 2026-03-20 five months later.
+#
+# unsafe_writes does not help: it is only a fallback for when the atomic
+# rename fails, so it still swapped the inode (seen again on 2026-10-10).
+# Instead the file is staged next to the stack and copied over the live file
+# with cp, which truncates and rewrites the existing file in place, keeping
+# the inode. The alternative is to bind-mount the directory instead of the
+# file (as the blackbox exporter does, which is why that one always worked) -
+# but the compose file is not managed from this repository.
+- name: Ensure the staging directory exists
+  ansible.builtin.file:
+    path: "{{ monitoring_dir }}/.staged"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
 
-- name: Deploy the alerting rules
+- name: Stage the bind-mounted configuration files
   ansible.builtin.copy:
-    src: alerts.yml
-    dest: "{{ monitoring_dir }}/alerts.yml"
+    src: "{{ item.name }}"
+    dest: "{{ monitoring_dir }}/.staged/{{ item.name }}"
     owner: root
     group: root
     mode: '0644'
-  notify: Reload vmalert
+  loop: "{{ vmstack_bind_mounted }}"
+  loop_control:
+    label: "{{ item.name }}"
 
-- name: Deploy the alertmanager routing
-  ansible.builtin.copy:
-    src: alertmanager.yml
-    dest: "{{ monitoring_dir }}/alertmanager.yml"
-    owner: root
-    group: root
+- name: Write the configuration files in place
+  # cmp first so an unchanged file is not touched and no reload is triggered.
+  ansible.builtin.shell:
+    cmd: >-
+      cmp -s .staged/{{ item.name }} {{ item.name }}
+      || { cp .staged/{{ item.name }} {{ item.name }} && echo written; }
+    chdir: "{{ monitoring_dir }}"
+  loop: "{{ vmstack_bind_mounted }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: vmstack_written
+  changed_when: "'written' in vmstack_written.stdout"
+  notify: "{{ item.handler }}"
+
+- name: Set ownership of the configuration files
+  # file only changes metadata, never the inode.
+  ansible.builtin.file:
+    path: "{{ monitoring_dir }}/{{ item.name }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.owner }}"
     mode: '0644'
-  notify: Reload alertmanager
+  loop: "{{ vmstack_bind_mounted }}"
+  loop_control:
+    label: "{{ item.name }}"
 
 - name: Ensure the blackbox exporter directory exists
   ansible.builtin.file:
@@ -56,12 +88,16 @@
     mode: '0755'
 
 - name: Deploy the blackbox exporter modules
+  # Notifies a reload: without it a module change sat on disk until the
+  # container happened to restart, so the file in git and the behaviour of the
+  # running probe could disagree indefinitely.
   ansible.builtin.copy:
     src: blackbox-exporter/blackbox.yml
     dest: "{{ monitoring_dir }}/blackbox-exporter/blackbox.yml"
     owner: root
     group: root
     mode: '0644'
+  notify: Reload blackbox exporter
 
 - name: Apply any pending reloads
   ansible.builtin.meta: flush_handlers

@@ -3,7 +3,14 @@ apiVersion: 1
 
 datasources:
     - name: {{ grafana_datasource_name }}
+      uid: {{ grafana_datasource_uid }}
       type: prometheus
       access: proxy
       url: {{ grafana_datasource_url }}
       isDefault: true
+      editable: false
+      jsonData:
+        # The global scrape_interval in prometheus.yml; $__rate_interval is
+        # derived from it. Jobs scraped slower (the node exporters, every 5m)
+        # need their own rate window in the dashboard.
+        timeInterval: 10s

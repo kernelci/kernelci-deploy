@@ -1,13 +1,14 @@
-# Grafana dashboards and provisioning.
+# Grafana datasource and dashboards, provisioned from this repository.
 #
-# The thirteen dashboards under files/dashboards were extracted from the live
-# grafana.db, where they existed in one copy on one VM. This role keeps the
-# host in step with the repository copy.
+# Every file under files/dashboards/<Folder>/ is copied into the provisioning
+# tree that the compose file bind-mounts into the container, and shows up in
+# Grafana folder <Folder>. Files removed from the repository are removed from
+# the host too, so the repository is the complete list. Legacy/ holds the
+# thirteen dashboards extracted from the original grafana.db.
 #
 # It deliberately does not manage the compose stack, the Kubernetes
 # credentials in /srv/monitoring/config and /srv/monitoring/k8suser, or the
-# alerting rules. Those are either secrets or hand-maintained operational
-# configuration.
+# admin password (kept in /root/grafana-admin-password on the host).
 - name: Check the monitoring stack is deployed
   ansible.builtin.stat:
     path: "{{ monitoring_dir }}/docker-compose.yml"
@@ -31,6 +32,7 @@
   loop:
     - dashboards
     - datasources
+    - "{{ grafana_dashboards_subdir }}"
 
 - name: Configure the Grafana datasource
   ansible.builtin.template:
@@ -50,40 +52,114 @@
     mode: '0644'
   notify: Restart grafana
 
-- name: Stage the dashboards on the host
-  # Always done, and always harmless: nothing mounts this directory into the
-  # container unless provisioning is turned on, so this is a backup on disk.
+- name: Deploy the dashboards
+  # No restart: Grafana rescans the directory every
+  # grafana_dashboards_update_interval seconds.
   ansible.builtin.copy:
     src: dashboards/
-    dest: "{{ grafana_dashboards_dir }}/"
+    dest: "{{ grafana_provisioning_dir }}/{{ grafana_dashboards_subdir }}/"
     owner: root
     group: root
     mode: '0644'
+    directory_mode: '0755'
 
-- name: Find where Grafana keeps its data
-  # The compose file uses a named volume for /var/lib/grafana, so the file
-  # provider reads from inside that volume rather than from a bind mount.
-  ansible.builtin.command: docker volume inspect monitoring_grafanadata --format {{ '{{' }}.Mountpoint{{ '}}' }}
-  register: grafana_volume
-  changed_when: false
-  failed_when: false
+- name: List the dashboards in the repository
+  # Not the fileglob lookup: it only expands wildcards in the file name, so
+  # files/dashboards/*/*.json matches nothing and every dashboard on the host
+  # looks stale.
+  ansible.builtin.find:
+    paths: "{{ role_path }}/files/dashboards"
+    patterns: "*.json"
+    recurse: true
+  delegate_to: localhost
+  become: false
+  run_once: true
   check_mode: false
-  when: grafana_provision_dashboards | bool
+  register: grafana_repo
 
-- name: Provision the dashboards into Grafana
-  # Grafana takes ownership of these UIDs once they are provisioned. That is
-  # the point on a rebuilt host, and the reason this is opt-in on a live one.
-  ansible.builtin.copy:
-    src: dashboards/
-    dest: "{{ grafana_volume.stdout }}/dashboards/"
-    owner: '472'
+- name: List the dashboards on the host
+  ansible.builtin.find:
+    paths: "{{ grafana_provisioning_dir }}/{{ grafana_dashboards_subdir }}"
+    patterns: "*.json"
+    recurse: true
+  register: grafana_deployed
+
+- name: Remove dashboards no longer in the repository
+  ansible.builtin.file:
+    path: "{{ grafana_dashboards_root }}/{{ item }}"
+    state: absent
+  loop: "{{ grafana_on_host | difference(grafana_in_repo) }}"
+  vars:
+    grafana_dashboards_root: "{{ grafana_provisioning_dir }}/{{ grafana_dashboards_subdir }}"
+    grafana_on_host: >-
+      {{ grafana_deployed.files | map(attribute='path')
+         | map('relpath', grafana_dashboards_root) | list }}
+    grafana_in_repo: >-
+      {{ grafana_repo.files | map(attribute='path')
+         | map('relpath', role_path ~ '/files/dashboards') | list }}
+
+- name: Configure Grafana settings
+  # Recreated, not restarted, by the handler: environment changes only take
+  # effect on a new container.
+  ansible.builtin.template:
+    src: docker-compose.override.yml.j2
+    dest: "{{ monitoring_dir }}/docker-compose.override.yml"
+    owner: root
     group: root
     mode: '0644'
-  when:
-    - grafana_provision_dashboards | bool
-    - grafana_volume.rc == 0
-    - grafana_volume.stdout | length > 0
-  notify: Restart grafana
+  notify: Recreate grafana
+
+# Folder permissions are set before the handler recreates Grafana with
+# anonymous access on, so a private folder is never briefly public.
+- name: Read the Grafana admin password
+  ansible.builtin.slurp:
+    src: "{{ grafana_admin_password_file }}"
+  register: grafana_admin_password
+  no_log: true
+
+- name: List the Grafana folders
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ grafana_port }}/api/folders"
+    url_username: admin
+    url_password: "{{ grafana_admin_password.content | b64decode | trim }}"
+    force_basic_auth: true
+  register: grafana_folders
+  check_mode: false
+
+- name: Read the folder permissions
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ grafana_port }}/api/folders/{{ item.uid }}/permissions"
+    url_username: admin
+    url_password: "{{ grafana_admin_password.content | b64decode | trim }}"
+    force_basic_auth: true
+  loop: "{{ grafana_folders.json }}"
+  loop_control:
+    label: "{{ item.title }}"
+  register: grafana_folder_permissions
+  check_mode: false
+
+- name: Grant viewers access to public folders only
+  # The POST replaces the folder's permission list. Editors keep edit rights
+  # everywhere; Admins always have full access.
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ grafana_port }}/api/folders/{{ item.item.uid }}/permissions"
+    method: POST
+    url_username: admin
+    url_password: "{{ grafana_admin_password.content | b64decode | trim }}"
+    force_basic_auth: true
+    body_format: json
+    body:
+      items: >-
+        {{ ([{'role': 'Viewer', 'permission': 1}] if public else [])
+           + [{'role': 'Editor', 'permission': 2}] }}
+  loop: "{{ grafana_folder_permissions.results }}"
+  loop_control:
+    label: "{{ item.item.title }}: {{ 'public' if public else 'private' }}"
+  vars:
+    public: "{{ grafana_public and item.item.title in grafana_public_folders }}"
+    viewer_now: "{{ item.json | selectattr('role', 'defined') | selectattr('role', 'equalto', 'Viewer') | list | length > 0 }}"
+  when: public | bool != viewer_now | bool
+  changed_when: true
 
 - name: Apply any pending restart
   ansible.builtin.meta: flush_handlers

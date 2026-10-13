@@ -17,3 +17,13 @@
     url: "http://127.0.0.1:{{ alertmanager_port }}/-/reload"
     method: POST
     status_code: [200, 204]
+
+# The blackbox exporter is not published on the host: it is reachable only on
+# the compose network, as blackboxexporter:9115. Reload it from inside its own
+# container rather than over a host port that does not exist.
+- name: Reload blackbox exporter
+  ansible.builtin.command:
+    cmd: >-
+      docker exec {{ blackbox_container }}
+      wget -q -O /dev/null --post-data= http://127.0.0.1:9115/-/reload
+  changed_when: true

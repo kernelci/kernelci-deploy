@@ -1,0 +1,13 @@
+# Managed by ansible (kernelci-deploy playbooks/monitoring) - do not edit by hand
+#
+# docker compose merges this into docker-compose.yml automatically, so the
+# hand-managed compose file stays untouched. Grafana settings only.
+services:
+  grafana:
+    environment:
+      GF_SERVER_ROOT_URL: "{{ grafana_root_url }}"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_USERS_VIEWERS_CAN_EDIT: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "{{ grafana_public | string | lower }}"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_ANONYMOUS_HIDE_VERSION: "true"
