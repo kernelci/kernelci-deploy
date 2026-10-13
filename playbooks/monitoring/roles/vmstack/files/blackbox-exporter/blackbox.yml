@@ -5,3 +5,10 @@ modules:
     http:
       valid_status_codes: [] #default to 2xx
       method: GET
+      # The exporter defaults to preferring IPv6, and falls back to IPv4 only
+      # when *resolution* fails - not when the connection does. This host has
+      # no working IPv6 route, so any target publishing an AAAA record
+      # resolved fine and then failed to connect, reporting probe_success 0
+      # forever. kernelci.org (AAAA 2620:12a:8000::4) was down in monitoring
+      # for exactly this reason while serving traffic normally over IPv4.
+      preferred_ip_protocol: ip4

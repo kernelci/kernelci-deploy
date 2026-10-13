@@ -2,3 +2,10 @@
   # Grafana reads its provisioning tree at startup, so configuration changes
   # only take effect on restart.
   ansible.builtin.command: docker restart {{ grafana_container }}
+
+- name: Recreate grafana
+  # Picks up docker-compose.override.yml; a plain restart would keep the old
+  # environment.
+  ansible.builtin.command:
+    cmd: docker compose up -d grafana
+    chdir: "{{ monitoring_dir }}"

@@ -3,43 +3,69 @@
 # Kubernetes exporter and a Kubernetes web view - plus a second uptime-kuma,
 # behind caddy and nginx.
 #
-# This playbook covers Grafana only, which is where the irreplaceable state
-# is: thirteen dashboards that existed nowhere but the SQLite database on this
-# one VM. The rest of the stack is still deployed by hand; its configuration
-# (prometheus.yml, alerts.yml, alertmanager.yml) and its Kubernetes
-# credentials are untouched here.
+# The grafana role provisions Grafana's datasource and every dashboard from
+# this repository; the vmstack role manages scrape config and alerting. The
+# compose file itself and the Kubernetes credentials are still hand-managed.
+#
+# Grafana's own database (users, preferences, anything made only in the UI)
+# lives in the monitoring_grafanadata docker volume and is NOT backed up by
+# this playbook - it was lost once already, in the 2026-10-10 trixie upgrade.
+# A dashboard worth keeping belongs in roles/grafana/files/dashboards.
 monitoring_dir: /srv/monitoring
 grafana_container: grafana
 grafana_port: 3002
 
-# Where the compose file bind-mounts Grafana's provisioning tree.
+# Where the compose file bind-mounts Grafana's provisioning tree
+# (./provisioning -> /etc/grafana/provisioning in the container).
 grafana_provisioning_dir: "{{ monitoring_dir }}/provisioning"
-# Dashboards checked into this repository are copied here.
-grafana_dashboards_dir: "{{ monitoring_dir }}/dashboards"
+# Dashboard JSON lives inside that tree, so it reaches the container through
+# the existing bind mount and survives the Grafana volume being wiped.
+grafana_dashboards_subdir: dashboards/json
 
-# The datasource every dashboard queries.
+# The datasource every dashboard queries. The uid is pinned because the
+# dashboards reference it: P4169E866C3094E38 is what Grafana derived from the
+# name on the original instance, and what the Legacy dashboards point at.
 grafana_datasource_name: VictoriaMetrics
+grafana_datasource_uid: P4169E866C3094E38
 grafana_datasource_url: http://victoriametrics:8428
 
-# Provisioning the dashboards is opt-in.
+# How often Grafana rescans the dashboard files, so a playbook run needs no
+# restart to publish a dashboard change.
+grafana_dashboards_update_interval: 30
+# Anonymous (not logged in) visitors get the Viewer role, but only folders
+# listed in grafana_public_folders keep Viewer access; every other folder is
+# restricted to Editors and Admins.
 #
-# Off (the default) the repository copy is only a backup: the files are put on
-# the host but Grafana does not read them, because the compose file does not
-# mount them into /var/lib/grafana/dashboards. Nothing about the running
-# instance changes.
-#
-# On, the files are also placed where the existing file provider reads them,
-# so a rebuilt host comes up with its dashboards. Grafana then owns those UIDs
-# as provisioned dashboards, which is why allow_ui_updates matters below.
-grafana_provision_dashboards: false
-# Keep the UI editable even for provisioned dashboards. With this false,
-# Grafana refuses to save UI edits to a provisioned dashboard.
+# Open-source Grafana has no per-datasource permissions, so an anonymous
+# visitor can run arbitrary PromQL against VictoriaMetrics through
+# /api/ds/query, not only the queries on the public dashboards. Nothing
+# secret should be scraped into it.
+grafana_public: true
+grafana_public_folders:
+  - KernelCI
+grafana_root_url: https://mon.kernelci.org/
+# Written by hand on the host; read by the playbook to call the Grafana API.
+grafana_admin_password_file: /root/grafana-admin-password
+
+# Allow saving UI edits to provisioned dashboards. Handy while iterating, but
+# such an edit is only in the Grafana database: it is overwritten the next
+# time the file changes, and lost with the volume. Export the JSON into the
+# repository to keep it.
 grafana_allow_ui_updates: true
 
 # VictoriaMetrics stack. Scrape config and alerting rules are managed outright
 # by the vmstack role: they are configuration, not accumulated state.
 # prometheus.yml is owned by the deploying user on the live host.
 vmstack_scrape_owner: kernelci
+# Configuration files bind-mounted into containers one file at a time; see the
+# vmstack tasks for why they must be written in place.
+vmstack_bind_mounted:
+  - {name: prometheus.yml, handler: Reload vmagent, owner: "{{ vmstack_scrape_owner }}"}
+  - {name: alerts.yml, handler: Reload vmalert, owner: root}
+  - {name: alertmanager.yml, handler: Reload alertmanager, owner: root}
 vmagent_port: 8429
 vmalert_port: 8880
 alertmanager_port: 9093
+# Not published on the host, only on the compose network - reloaded via
+# docker exec rather than a host port.
+blackbox_container: blackboxexporter

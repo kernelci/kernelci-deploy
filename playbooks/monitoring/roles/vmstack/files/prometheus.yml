@@ -17,12 +17,19 @@ scrape_configs:
       module: [http_2xx]  # Look for a HTTP 200 response.
     static_configs:
       - targets:
-        - https://collabora.com
         - https://kernelci.org
         - https://staging.kernelci.org:9000/viewer
         - https://kernelci-api.westus3.cloudapp.azure.com/viewer
         - https://staging.kernelci.org:9100
         - https://kernelci-pipeline.westus3.cloudapp.azure.com
+        # Artifact delivery. These two carry the overwhelming majority of the
+        # project's outbound traffic (~9.6 TB per fortnight between them) and
+        # were the only major public endpoints not probed at all.
+        # Both answer 200 to the blackbox default user agent: the storage
+        # cookie gate only challenges UAs matching Safari|Android, which
+        # Go-http-client does not.
+        - https://files.kernelci.org
+        - https://storage.kernelci.org
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
@@ -113,20 +120,21 @@ scrape_configs:
     static_configs:
       - targets: ['dashboard.kernelci.org:2001']
 
-  - job_name: 'ingester'
+  # The KCIDB ingester (kcidb-ng-ingester-1 on db.kernelci.org): what actually
+  # lands in the database, per origin, lab and platform. kcidb-rest above only
+  # sees what arrives.
+  #
+  # Its /metrics merges a prometheus_client multiprocess directory that grows
+  # with every worker process and is never cleaned, so the endpoint gets
+  # slower over time (35s, i.e. always timing out, after three weeks; fixed
+  # for now on 2026-10-10 by recreating the container). The generous timeout
+  # buys time until the dashboard backend cleans up after its workers.
+  #
+  # Replaces the old 'ingester' (:2002, nothing listens there any more) and
+  # 'ingesterdjango' jobs. process_pending_aggregations (:2004) is not
+  # scraped: it does not start a metrics server at all.
+  - job_name: 'kcidb_ingester'
     scrape_interval: 5m
-    scrape_timeout: 30s
-    static_configs:
-      - targets: ['db.kernelci.org:2002']
-
-  - job_name: 'ingesterdjango'
-    scrape_interval: 5m
-    scrape_timeout: 30s
+    scrape_timeout: 2m
     static_configs:
       - targets: ['db.kernelci.org:2003']
-
-  - job_name: 'process_pending_django'
-    scrape_interval: 5m
-    scrape_timeout: 30s
-    static_configs:
-      - targets: ['db.kernelci.org:2004']
