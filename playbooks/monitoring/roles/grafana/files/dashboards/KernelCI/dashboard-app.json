@@ -124,7 +124,7 @@
         },
         "multi": true,
         "includeAll": true,
-        "allValue": ".*",
+        "allValue": ".+",
         "current": {
           "text": [
             "All"
@@ -1935,10 +1935,10 @@
       }
     },
     {
-      "type": "timeseries",
+      "type": "bargauge",
       "title": "p95 latency, slowest 10 endpoints",
       "id": 21,
-      "description": "",
+      "description": "p95 over the whole dashboard time range, per endpoint. Endpoints with fewer than 20 requests in the range are left out: with a handful of requests the p95 is only a guess between two bucket edges. 75s means the p95 is above the largest finite bucket.",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -1955,53 +1955,36 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "topk(10, histogram_quantile(0.95, sum by (endpoint, le) (increase(dashboard_backend_request_latency_seconds_bucket{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$rate]))))",
+          "expr": "sort_desc(topk(10, histogram_quantile(0.95, sum by (endpoint, le) (increase(dashboard_backend_request_latency_seconds_bucket{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range]))) and on (endpoint) (sum by (endpoint) (increase(dashboard_backend_request_latency_seconds_count{job=\"dashboard_metrics\", client=~\"$client\", endpoint=~\"$endpoint\"}[$__range])) >= 20)))",
           "legendFormat": "{{endpoint}}",
           "refId": "A",
-          "range": true,
-          "instant": false,
+          "range": false,
+          "instant": true,
           "format": "time_series"
         }
       ],
       "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "right",
+        "orientation": "horizontal",
+        "displayMode": "basic",
+        "valueMode": "color",
+        "showUnfilled": true,
+        "namePlacement": "left",
+        "sizing": "auto",
+        "reduceOptions": {
           "calcs": [
-            "lastNotNull",
-            "max"
+            "lastNotNull"
           ],
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
+          "fields": "",
+          "values": false
         }
       },
       "fieldConfig": {
         "defaults": {
           "unit": "s",
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 0,
-            "showPoints": "never",
-            "spanNulls": true,
-            "barAlignment": -1,
-            "stacking": {
-              "mode": "none",
-              "group": "A"
-            },
-            "thresholdsStyle": {
-              "mode": "dashed"
-            },
-            "scaleDistribution": {
-              "type": "log",
-              "log": 10
-            }
-          },
+          "min": 0,
+          "decimals": 2,
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           },
           "thresholds": {
             "mode": "absolute",
@@ -2019,8 +2002,7 @@
                 "value": 5
               }
             ]
-          },
-          "min": 0
+          }
         },
         "overrides": []
       }
