@@ -1,0 +1,23 @@
+# Managed by ansible (kernelci-deploy playbooks/monitoring) - do not edit by hand
+#
+# Notification templates. Grafana's default text lists every label of every
+# alert, about 1 kB each, and Discord cuts a message at 2000 characters: one
+# line per host or endpoint fits. Email keeps Grafana's default HTML.
+apiVersion: 1
+
+templates:
+  - orgId: 1
+    name: kernelci
+    template: |
+      {{ define "kernelci.title" -}}
+      [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}
+      {{- end }}
+
+      {{ define "kernelci.message" -}}
+      {{ range .Alerts.Firing }}- **{{ .Labels.severity }}** {{ .Annotations.summary }}
+      {{ end -}}
+      {{ range .Alerts.Resolved }}- resolved: {{ .Annotations.summary }}
+      {{ end -}}
+      {{ with index .Alerts 0 }}{{ .Annotations.description }}
+      {{ .Annotations.dashboard }} | rule: {{ .GeneratorURL }}{{ end }}
+      {{- end }}
