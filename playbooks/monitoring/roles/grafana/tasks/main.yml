@@ -30,6 +30,7 @@
     group: root
     mode: '0755'
   loop:
+    - alerting
     - dashboards
     - datasources
     - "{{ grafana_dashboards_subdir }}"
@@ -98,6 +99,67 @@
       {{ grafana_repo.files | map(attribute='path')
          | map('relpath', role_path ~ '/files/dashboards') | list }}
 
+# Alerting. Rules come from files/alerting; where they are delivered (Discord
+# webhook, email recipients, SMTP relay) from a file on the host, which the
+# first run creates with empty values. Until it is filled in, the rules run
+# and show in Grafana, but notify nobody.
+- name: Create the alert delivery settings file
+  ansible.builtin.copy:
+    src: alerting-secrets.yml
+    dest: "{{ grafana_alerting_secrets_file }}"
+    owner: root
+    group: root
+    mode: '0600'
+    force: false
+
+- name: Read the alert delivery settings
+  ansible.builtin.slurp:
+    src: "{{ grafana_alerting_secrets_file }}"
+  register: grafana_alerting_raw
+  # In check mode on a fresh host the file was not actually created.
+  failed_when: false
+  no_log: true
+
+- name: Parse the alert delivery settings
+  # Missing keys fall back to empty, so a trimmed-down file still works.
+  ansible.builtin.set_fact:
+    grafana_alerting: >-
+      {{ {'discord_webhook_url': '', 'email_to': [], 'smtp_host': '',
+          'smtp_from_address': ''}
+         | combine(grafana_alerting_raw.content | default('') | b64decode | from_yaml or {}) }}
+  no_log: true
+
+- name: Deploy the alert rules and notification templates
+  # Careful: a provisioning file Grafana rejects stops Grafana from starting
+  # at its next restart, not just alerting.
+  ansible.builtin.copy:
+    src: "alerting/{{ item }}"
+    dest: "{{ grafana_provisioning_dir }}/alerting/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - rules.yml
+    - templates.yml
+  register: grafana_alert_rules
+
+- name: Deploy the alert contact points and notification policy
+  # Holds the webhook URL: readable by the container's grafana user only.
+  ansible.builtin.template:
+    src: alerting-notifications.yml.j2
+    dest: "{{ grafana_provisioning_dir }}/alerting/notifications.yml"
+    owner: root
+    group: "{{ grafana_container_gid }}"
+    mode: '0640'
+  register: grafana_alert_notifications
+  no_log: true
+
+- name: Report the alert channels
+  ansible.builtin.debug:
+    msg: >-
+      Alerts go to: {{ grafana_alert_receivers | join(', ') if grafana_alert_receivers
+      else 'nobody yet - fill in ' ~ grafana_alerting_secrets_file }}
+
 - name: Configure Grafana settings
   # Recreated, not restarted, by the handler: environment changes only take
   # effect on a new container.
@@ -106,8 +168,9 @@
     dest: "{{ monitoring_dir }}/docker-compose.override.yml"
     owner: root
     group: root
-    mode: '0644'
+    mode: '0600'
   notify: Recreate grafana
+  no_log: true
 
 # Folder permissions are set before the handler recreates Grafana with
 # anonymous access on, so a private folder is never briefly public.
@@ -116,6 +179,21 @@
     src: "{{ grafana_admin_password_file }}"
   register: grafana_admin_password
   no_log: true
+
+- name: Reload the alerting provisioning
+  # Grafana only reads provisioning at startup otherwise. Done before the
+  # folder permissions so the rules' folder exists and is made private in the
+  # same run.
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ grafana_port }}/api/admin/provisioning/alerting/reload"
+    method: POST
+    url_username: admin
+    url_password: "{{ grafana_admin_password.content | b64decode | trim }}"
+    force_basic_auth: true
+    status_code: 200
+  when:
+    - grafana_alert_rules is changed or grafana_alert_notifications is changed
+    - not ansible_check_mode
 
 - name: List the Grafana folders
   ansible.builtin.uri:

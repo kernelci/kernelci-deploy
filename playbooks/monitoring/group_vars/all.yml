@@ -53,6 +53,21 @@ grafana_admin_password_file: /root/grafana-admin-password
 # repository to keep it.
 grafana_allow_ui_updates: true
 
+# Grafana alerting. Rules live in roles/grafana/files/alerting/rules.yml, in
+# the Grafana folder "Alerts" (not public). Delivery settings - Discord
+# webhook, email recipients, SMTP relay - are kept on the host in this file,
+# created with empty values by the first run.
+grafana_alerting_secrets_file: /root/grafana-alerting.yml
+# How often an alert that is still firing is sent again.
+grafana_alert_repeat_interval: 4h
+# The channels that are configured, for the contact point.
+grafana_alert_receivers: >-
+  {{ (['discord'] if grafana_alerting.discord_webhook_url else [])
+     + (['email'] if grafana_alerting.email_to and grafana_alerting.smtp_host else []) }}
+# The grafana user inside the official image, which must read the
+# provisioning file holding the webhook.
+grafana_container_gid: 472
+
 # VictoriaMetrics stack. Scrape config and alerting rules are managed outright
 # by the vmstack role: they are configuration, not accumulated state.
 # prometheus.yml is owned by the deploying user on the live host.

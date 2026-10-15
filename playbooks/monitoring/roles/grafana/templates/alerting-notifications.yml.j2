@@ -1,0 +1,46 @@
+# Managed by ansible (kernelci-deploy playbooks/monitoring) - do not edit by hand
+#
+# Where alerts go. The Discord webhook, the recipients and the SMTP relay
+# come from {{ grafana_alerting_secrets_file }} on the host, not from git.
+apiVersion: 1
+
+{% if grafana_alert_receivers | length > 0 %}
+contactPoints:
+  - orgId: 1
+    name: kernelci
+    receivers:
+{% if grafana_alerting.discord_webhook_url %}
+      - uid: kernelci-discord
+        type: discord
+        disableResolveMessage: false
+        settings:
+          url: {{ grafana_alerting.discord_webhook_url | to_json }}
+          use_discord_username: false
+          # From files/alerting/templates.yml.
+          title: '{% raw %}{{ template "kernelci.title" . }}{% endraw %}'
+          message: '{% raw %}{{ template "kernelci.message" . }}{% endraw %}'
+{% endif %}
+{% if grafana_alerting.email_to and grafana_alerting.smtp_host %}
+      - uid: kernelci-email
+        type: email
+        disableResolveMessage: false
+        settings:
+          addresses: {{ grafana_alerting.email_to | join(';') | to_json }}
+          singleEmail: true
+{% endif %}
+policies:
+  - orgId: 1
+    receiver: kernelci
+    # One notification per rule, listing every host or endpoint it fired for.
+    group_by: [grafana_folder, alertname]
+    group_wait: 30s
+    group_interval: 5m
+    # How often a still-firing alert is sent again.
+    repeat_interval: {{ grafana_alert_repeat_interval }}
+{% else %}
+# No channel configured yet: Grafana keeps its built-in policy and contact
+# point, which send nothing without SMTP. The rules still run and show under
+# Alerting. (Do not name the built-in contact point here: its name differs
+# between Grafana versions, and a policy naming a missing contact point stops
+# Grafana from starting.)
+{% endif %}

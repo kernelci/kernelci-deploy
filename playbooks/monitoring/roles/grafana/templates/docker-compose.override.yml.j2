@@ -11,3 +11,15 @@ services:
       GF_AUTH_ANONYMOUS_ENABLED: "{{ grafana_public | string | lower }}"
       GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
       GF_AUTH_ANONYMOUS_HIDE_VERSION: "true"
+{% if grafana_alerting.smtp_host %}
+      # Alert email. The password makes this file root-only (0600). '$' is
+      # doubled because compose would otherwise interpolate it.
+      GF_SMTP_ENABLED: "true"
+      GF_SMTP_HOST: {{ grafana_alerting.smtp_host | to_json }}
+      GF_SMTP_USER: {{ grafana_alerting.smtp_user | default('') | replace('$', '$$') | to_json }}
+      GF_SMTP_PASSWORD: {{ grafana_alerting.smtp_password | default('') | replace('$', '$$') | to_json }}
+      GF_SMTP_FROM_ADDRESS: {{ grafana_alerting.smtp_from_address | to_json }}
+      GF_SMTP_FROM_NAME: {{ grafana_alerting.smtp_from_name | default('KernelCI monitoring') | to_json }}
+      GF_SMTP_STARTTLS_POLICY: {{ grafana_alerting.smtp_starttls_policy | default('') | to_json }}
+      GF_SMTP_SKIP_VERIFY: "{{ grafana_alerting.smtp_skip_verify | default(false) | string | lower }}"
+{% endif %}

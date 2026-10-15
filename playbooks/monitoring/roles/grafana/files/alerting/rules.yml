@@ -1,0 +1,573 @@
+# Managed by ansible (kernelci-deploy playbooks/monitoring) - do not edit by hand
+#
+# Grafana alert rules. Every rule notifies the "kernelci" contact point
+# (Discord and/or email, see contact-points.yml.j2) through the default
+# notification policy.
+#
+# Each rule is a PromQL query (A) that returns the measured value, and a
+# threshold (C) on it, so the number in the notification is the real one and
+# the threshold is in one place. Thresholds were set against two weeks of data
+# in October 2026; the comment on each rule says what normal looks like.
+#
+# The node exporters and dashboard_metrics are scraped every 5m, so rate
+# windows on them are at least 10m and nothing on them can react in under
+# ~10 minutes. Probes are scraped every 10s.
+#
+# noDataState is OK throughout: "no samples" means a host or exporter is down,
+# which "Host down" and "Metrics endpoint down" report once, instead of every
+# rule on that host going off at the same time.
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: hosts
+    folder: Alerts
+    interval: 1m
+    rules:
+      # Normal: 17-95% free. At the time of writing staging.db / (5%),
+      # docs /data (18%) and staging /data (17%) were already under 25%.
+      - uid: kci-disk-space-low
+        title: Disk space low
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: P4169E866C3094E38
+            model:
+              refId: A
+              instant: true
+              expr: >-
+                100 * node_filesystem_avail_bytes{fstype=~"ext4|xfs|btrfs", job=~"node_.*"}
+                / node_filesystem_size_bytes{fstype=~"ext4|xfs|btrfs", job=~"node_.*"}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              # Below 10% is "Disk space critical" instead.
+              conditions:
+                - evaluator: {type: within_range, params: [10, 25]}
+        for: 15m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          dashboard: https://mon.kernelci.org/d/kci-hosts-health
+          summary: '{{ $labels.instance }} {{ $labels.mountpoint }}: {{ printf "%.1f" $values.A.Value }}% free'
+          description: Less than 25% of the filesystem is free.
+
+      - uid: kci-disk-space-critical
+        title: Disk space critical
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: P4169E866C3094E38
+            model:
+              refId: A
+              instant: true
+              expr: >-
+                100 * node_filesystem_avail_bytes{fstype=~"ext4|xfs|btrfs", job=~"node_.*"}
+                / node_filesystem_size_bytes{fstype=~"ext4|xfs|btrfs", job=~"node_.*"}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: lt, params: [10]}
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: critical}
+        annotations:
+          dashboard: https://mon.kernelci.org/d/kci-hosts-health
+          summary: '{{ $labels.instance }} {{ $labels.mountpoint }}: {{ printf "%.1f" $values.A.Value }}% free'
+          description: Less than 10% of the filesystem is free.
+
+      # Catches a runaway log or spool long before the percentage rules do.
+      - uid: kci-disk-filling
+        title: Disk filling up
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 21600, to: 0}
+            datasourceUid: P4169E866C3094E38
+            model:
+              refId: A
+              instant: true
+              # Free space projected 24h ahead from the trend of the last 6h.
+              expr: >-
+                predict_linear(node_filesystem_avail_bytes{fstype=~"ext4|xfs|btrfs", job=~"node_.*"}[6h], 24 * 3600)
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: lt, params: [0]}
+        for: 30m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          dashboard: https://mon.kernelci.org/d/kci-hosts-health
+          summary: '{{ $labels.instance }} {{ $labels.mountpoint }} will be full within 24h at the current rate'
+          description: Projected from the growth over the last 6 hours.
+
+      # Normal: 1-15%, peaks 30-45%. dashboard.kernelci.org reached 100% once
+      # in the two weeks sampled.
+      - uid: kci-cpu-high
+        title: CPU high
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: P4169E866C3094E38
+            model:
+              refId: A
+              instant: true
+              expr: >-
+                100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle", job=~"node_.*"}[10m])))
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: gt, params: [80]}
+        # On top of the 10m rate window: with a 5m scrape interval the alert
+        # fires after roughly 10-15 minutes of sustained load.
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          dashboard: https://mon.kernelci.org/d/kci-hosts-health
+          summary: '{{ $labels.instance }}: CPU {{ printf "%.0f" $values.A.Value }}% busy'
+          description: Average CPU use across all cores has been above 80% for at least 5 minutes.
+
+      # PSI "some": the share of time at least one task was stalled on I/O.
+      # Normal: under 1%; p99 5% on db, 31% on docs (its nightly jobs).
+      - uid: kci-io-pressure
+        title: Disk I/O pressure
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: P4169E866C3094E38
+            model:
+              refId: A
+              instant: true
+              expr: >-
+                100 * rate(node_pressure_io_waiting_seconds_total{job=~"node_.*"}[10m])
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: gt, params: [40]}
+        for: 15m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          dashboard: https://mon.kernelci.org/d/kci-hosts-health
+          summary: '{{ $labels.instance }}: tasks stalled on I/O {{ printf "%.0f" $values.A.Value }}% of the time'
+          description: >-
+            I/O pressure (PSI) has been above 40% for 15 minutes: the disk cannot
+            keep up, and anything touching it is slow.
+
+      # Normal: 43-89% available.
+      - uid: kci-memory-low
+        title: Memory low
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: P4169E866C3094E38
+            model:
+              refId: A
+              instant: true
+              expr: >-
+                100 * node_memory_MemAvailable_bytes{job=~"node_.*"}
+                / node_memory_MemTotal_bytes{job=~"node_.*"}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: lt, params: [10]}
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          dashboard: https://mon.kernelci.org/d/kci-hosts-health
+          summary: '{{ $labels.instance }}: {{ printf "%.1f" $values.A.Value }}% memory available'
+          description: Less than 10% of memory available for 10 minutes; the OOM killer is next.
+
+      - uid: kci-host-down
+        title: Host down
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: P4169E866C3094E38
+            model:
+              refId: A
+              instant: true
+              expr: up{job=~"node_.*"}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: lt, params: [1]}
+        # Two missed 5m scrapes.
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: critical}
+        annotations:
+          dashboard: https://mon.kernelci.org/d/kci-hosts-health
+          summary: '{{ $labels.instance }} is not answering'
+          description: The node exporter has not been scraped for 10 minutes; the host is down or unreachable.
+
+  - orgId: 1
+    name: traffic
+    folder: Alerts
+    # The baseline is a 7-day subquery: no need to compute it every minute.
+    interval: 5m
+    rules:
+      # Outbound traffic against the same host's own 7-day p95, so a host that
+      # normally serves 15 MB/s (docs) and one that serves 10 kB/s (dashboard)
+      # are each judged by their own normal. Below 5 MB/s (~13 TB a month)
+      # nothing fires, so idle hosts do not alert on a few hundred kB/s.
+      - uid: kci-egress-unusual
+        title: Outgoing traffic unusual
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 604800, to: 0}
+            datasourceUid: P4169E866C3094E38
+            model:
+              refId: A
+              instant: true
+              # Current 30m average / 7-day p95 of the 30m average.
+              expr: >-
+                (
+                  sum by (instance) (rate(node_network_transmit_bytes_total{device!~"lo|docker.*|veth.*|br-.*|cni.*|flannel.*|cali.*", job=~"node_.*"}[30m]))
+                  /
+                  quantile_over_time(0.95,
+                    sum by (instance) (rate(node_network_transmit_bytes_total{device!~"lo|docker.*|veth.*|br-.*|cni.*|flannel.*|cali.*", job=~"node_.*"}[30m]))[7d:30m]
+                  )
+                )
+                and on (instance)
+                sum by (instance) (rate(node_network_transmit_bytes_total{device!~"lo|docker.*|veth.*|br-.*|cni.*|flannel.*|cali.*", job=~"node_.*"}[30m])) > 5e6
+          - refId: B
+            relativeTimeRange: {from: 1800, to: 0}
+            datasourceUid: P4169E866C3094E38
+            model:
+              refId: B
+              instant: true
+              # For the notification only: current outbound rate in MB/s.
+              expr: >-
+                sum by (instance) (rate(node_network_transmit_bytes_total{device!~"lo|docker.*|veth.*|br-.*|cni.*|flannel.*|cali.*", job=~"node_.*"}[30m])) / 1e6
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: gt, params: [3]}
+        for: 15m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          dashboard: https://mon.kernelci.org/d/kci-hosts-health
+          summary: >-
+            {{ $labels.instance }}: sending {{ printf "%.1f" $values.B.Value }} MB/s,
+            {{ printf "%.1f" $values.A.Value }}x its usual peak
+          description: >-
+            Outbound traffic over the last 30 minutes is more than 3 times the
+            host's 95th percentile of the past week. Check for a crawler, a
+            leaked artifact URL or a misbehaving client.
+
+  - orgId: 1
+    name: web
+    folder: Alerts
+    interval: 1m
+    rules:
+      - uid: kci-probe-down
+        title: Endpoint down
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: P4169E866C3094E38
+            model:
+              refId: A
+              instant: true
+              # Share of successful probes over the last 3 minutes.
+              expr: avg_over_time(probe_success{job="blackboxexporter"}[3m])
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: lt, params: [0.5]}
+        for: 3m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: critical}
+        annotations:
+          dashboard: https://mon.kernelci.org/d/kci-probes
+          summary: '{{ $labels.instance }} is failing its probe'
+          description: More than half of the HTTP probes failed for 3 minutes in a row.
+
+      # Normal p95: 0.03-0.3s. A timed-out probe counts at ~5s.
+      - uid: kci-probe-slow
+        title: Endpoint slow
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: P4169E866C3094E38
+            model:
+              refId: A
+              instant: true
+              expr: avg_over_time(probe_duration_seconds{job="blackboxexporter"}[10m])
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: gt, params: [2]}
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          dashboard: https://mon.kernelci.org/d/kci-probes
+          summary: '{{ $labels.instance }} answers in {{ printf "%.2f" $values.A.Value }}s on average'
+          description: The probe response time has averaged over 2 seconds for 10 minutes.
+
+      - uid: kci-cert-expiry
+        title: TLS certificate expiring
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: P4169E866C3094E38
+            model:
+              refId: A
+              instant: true
+              expr: (probe_ssl_earliest_cert_expiry{job="blackboxexporter"} - time()) / 86400
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: lt, params: [14]}
+        for: 1h
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          dashboard: https://mon.kernelci.org/d/kci-probes
+          summary: '{{ $labels.instance }}: certificate expires in {{ printf "%.0f" $values.A.Value }} days'
+          description: Automatic renewal should have happened by now; check certbot/caddy on that host.
+
+      # Normal: p95 over 15m is under 4s nine times out of ten; it has spiked
+      # to 75s. Needs 20 requests in the window: the dashboard sees ~100 an
+      # hour, too few for a per-endpoint p95 to mean anything yet.
+      - uid: kci-dashboard-latency
+        title: Dashboard latency high
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 1800, to: 0}
+            datasourceUid: P4169E866C3094E38
+            model:
+              refId: A
+              instant: true
+              expr: >-
+                histogram_quantile(0.95, sum by (le) (increase(dashboard_backend_request_latency_seconds_bucket{job="dashboard_metrics"}[30m])))
+                and on ()
+                sum(increase(dashboard_backend_request_latency_seconds_count{job="dashboard_metrics"}[30m])) >= 20
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: gt, params: [10]}
+        for: 15m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          dashboard: https://mon.kernelci.org/d/kci-dashboard-app
+          summary: 'Dashboard backend p95 latency is {{ printf "%.1f" $values.A.Value }}s'
+          description: >-
+            95th percentile response time of the dashboard backend over the last
+            30 minutes is above 10 seconds. See "p95 latency, slowest 10
+            endpoints" for which views.
+
+      # Normal: no 5xx at all.
+      - uid: kci-dashboard-5xx
+        title: Dashboard server errors
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 1800, to: 0}
+            datasourceUid: P4169E866C3094E38
+            model:
+              refId: A
+              instant: true
+              # % of requests answered 5xx in the last 30m, if at least 5 were.
+              expr: >-
+                100 * sum(increase(dashboard_backend_requests_by_client_total{job="dashboard_metrics", status_class="5xx"}[30m]))
+                / sum(increase(dashboard_backend_requests_by_client_total{job="dashboard_metrics"}[30m]))
+                and on ()
+                sum(increase(dashboard_backend_requests_by_client_total{job="dashboard_metrics", status_class="5xx"}[30m])) >= 5
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: gt, params: [5]}
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: critical}
+        annotations:
+          dashboard: https://mon.kernelci.org/d/kci-dashboard-app
+          summary: 'Dashboard backend: {{ printf "%.1f" $values.A.Value }}% of requests fail with 5xx'
+          description: More than 5% of dashboard backend requests in the last 30 minutes were server errors.
+
+      # Normal: ~6% of requests are 4xx (bots, stale links). Compared with the
+      # last week's ratio so a broken frontend deploy stands out.
+      - uid: kci-dashboard-4xx
+        title: Dashboard client errors unusual
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 604800, to: 0}
+            datasourceUid: P4169E866C3094E38
+            model:
+              refId: A
+              instant: true
+              # 4xx share in the last hour / 4xx share in the last week,
+              # if there were at least 30 4xx in the hour.
+              expr: >-
+                (
+                  sum(increase(dashboard_backend_requests_by_client_total{job="dashboard_metrics", status_class="4xx"}[1h]))
+                  / sum(increase(dashboard_backend_requests_by_client_total{job="dashboard_metrics"}[1h]))
+                )
+                /
+                (
+                  sum(increase(dashboard_backend_requests_by_client_total{job="dashboard_metrics", status_class="4xx"}[7d]))
+                  / sum(increase(dashboard_backend_requests_by_client_total{job="dashboard_metrics"}[7d]))
+                )
+                and on ()
+                sum(increase(dashboard_backend_requests_by_client_total{job="dashboard_metrics", status_class="4xx"}[1h])) >= 30
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: gt, params: [3]}
+        for: 15m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          dashboard: https://mon.kernelci.org/d/kci-dashboard-app
+          summary: 'Dashboard backend 4xx rate is {{ printf "%.1f" $values.A.Value }}x the weekly norm'
+          description: See "4xx / 5xx by endpoint" for which views and clients.
+
+      # Normal: zero errors in a week, against ~325k submissions a day.
+      - uid: kci-kcidb-errors
+        title: KCIDB submission errors
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 1800, to: 0}
+            datasourceUid: P4169E866C3094E38
+            model:
+              refId: A
+              instant: true
+              expr: sum(increase(kcidb_errors_total{job="rest_db_kernelci_org"}[30m]))
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: gt, params: [10]}
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          dashboard: https://mon.kernelci.org/d/kci-kcidb
+          summary: 'KCIDB rejected {{ printf "%.0f" $values.A.Value }} submissions in the last 30 minutes'
+          description: See the "Errors" panel for system versus user errors.
+
+      # The scrape targets the rules above depend on. Without this an exporter
+      # going away makes its rules silently go quiet.
+      - uid: kci-scrape-down
+        title: Metrics endpoint down
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: P4169E866C3094E38
+            model:
+              refId: A
+              instant: true
+              expr: >-
+                up{job=~"blackboxexporter|dashboard_metrics|rest_db_kernelci_org|kcidb_ingester|prodapimetrics|prodpipemetrics"}
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: lt, params: [1]}
+        # Three missed scrapes of the slowest (5m) jobs.
+        for: 15m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: warning}
+        annotations:
+          dashboard: https://mon.kernelci.org/d/kci-monitoring
+          summary: '{{ $labels.job }} ({{ $labels.instance }}) cannot be scraped'
+          description: Alerts based on this target's metrics are blind until it is back.
