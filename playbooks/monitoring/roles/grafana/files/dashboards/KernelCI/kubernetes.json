@@ -99,7 +99,7 @@
       "type": "stat",
       "title": "Clusters",
       "id": 52,
-      "description": "",
+      "description": "The exporter still reports a cluster it cannot reach, with every value 0. Allocatable CPU is never 0 on a live cluster, so that is what tells them apart.",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -116,19 +116,31 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "count(count by (cluster) (kci_k8s_cluster_status{cluster=~\"$cluster\"}))",
-          "legendFormat": "",
+          "expr": "count(max by (cluster) (kci_k8s_cluster_status{namespace=\"_all_\", status=\"allocatable_cpu\", cluster=~\"$cluster\"}) > 0) or vector(0)",
+          "legendFormat": "Up",
           "refId": "A",
+          "range": false,
+          "instant": true,
+          "format": "time_series"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(max by (cluster) (kci_k8s_cluster_status{namespace=\"_all_\", status=\"allocatable_cpu\", cluster=~\"$cluster\"}) == 0) or vector(0)",
+          "legendFormat": "Unreachable",
+          "refId": "B",
           "range": false,
           "instant": true,
           "format": "time_series"
         }
       ],
       "options": {
-        "colorMode": "none",
+        "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "center",
-        "textMode": "value",
+        "textMode": "value_and_name",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -154,7 +166,32 @@
             "mode": "thresholds"
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Unreachable"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
       }
     },
     {
@@ -767,6 +804,18 @@
           "range": false,
           "instant": true,
           "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (c) (label_replace(label_replace(kci_k8s_cluster_status{namespace=\"_all_\", cluster=~\"$cluster\", status=\"allocatable_cpu\"} > bool 0, \"c\", \"$1\", \"cluster\", \"(.*)\"), \"c\", \"$1\", \"cluster\", \"gke_[^_]+_[^_]+_(.*)\"))",
+          "legendFormat": "",
+          "refId": "I",
+          "range": false,
+          "instant": true,
+          "format": "table"
         }
       ],
       "transformations": [
@@ -789,19 +838,21 @@
               "Value #E": "CPU used",
               "Value #F": "Memory",
               "Value #G": "Mem requested",
-              "Value #H": "Mem used"
+              "Value #H": "Mem used",
+              "Value #I": "Status"
             },
             "indexByName": {
               "c": 0,
               "Cluster": 1,
-              "Running": 2,
-              "Pending": 3,
-              "CPU": 4,
-              "CPU requested": 5,
-              "CPU used": 6,
-              "Memory": 7,
-              "Mem requested": 8,
-              "Mem used": 9
+              "Running": 3,
+              "Pending": 4,
+              "CPU": 5,
+              "CPU requested": 6,
+              "CPU used": 7,
+              "Memory": 8,
+              "Mem requested": 9,
+              "Mem used": 10,
+              "Status": 2
             }
           }
         }
@@ -839,6 +890,44 @@
           }
         },
         "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "Unreachable",
+                        "color": "red",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "Up",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
           {
             "matcher": {
               "id": "byName",

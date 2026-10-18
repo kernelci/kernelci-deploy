@@ -42,7 +42,10 @@ scrape_configs:
 #      - targets: ['collectd:9103']
   - job_name: 'k8sexporter'
     scrape_interval: 2m
-    scrape_timeout: 30s
+    # It queries every cluster on each scrape, and an unreachable one costs
+    # it a credential timeout; with the GKE clusters down p95 was 25s and
+    # scrapes hit a 30s limit.
+    scrape_timeout: 90s
     static_configs:
       - targets: ['k8sexporter:8080']
 
