@@ -1,0 +1,65 @@
+# linux-firmware cache for AKS build clusters.
+#
+# Builds copy /data/linux-firmware.tar.gz from the shared-data azurefile
+# share (mounted read-only). This CronJob refreshes it from storage.kernelci.org:
+# - hourly, downloading only if the upstream ETag changed (file mtimes are
+#   not preserved on azurefile, so Last-Modified can't be compared)
+# - into a temporary file, verified with gzip -t, then renamed over the
+#   old one, so a build never reads a partially written tarball
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: file-sync
+  namespace: default
+spec:
+  schedule: "20 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 1800
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: fetch
+            image: curlimages/curl:8.11.1
+            command:
+            - sh
+            - -c
+            - |
+              set -eu
+              URL=https://storage.kernelci.org/linux-firmware.tar.gz
+              DST=/data/linux-firmware.tar.gz
+              TMP=/data/.linux-firmware.tar.gz.tmp
+              ETAG=/data/.linux-firmware.etag
+              rm -f "$TMP" "$ETAG.new"
+              [ -s "$DST" ] || rm -f "$ETAG"
+              curl -fsSL --retry 3 --etag-compare "$ETAG" --etag-save "$ETAG.new" \
+                -o "$TMP" "$URL"
+              if [ ! -s "$TMP" ]; then
+                rm -f "$TMP" "$ETAG.new"
+                echo "linux-firmware.tar.gz unchanged"
+                exit 0
+              fi
+              gzip -t "$TMP"
+              # SMB refuses to replace a file a build has open, retry
+              n=0
+              until mv -f "$TMP" "$DST"; do
+                n=$((n + 1))
+                [ "$n" -lt 60 ] || exit 1
+                sleep 10
+              done
+              mv -f "$ETAG.new" "$ETAG"
+              echo "linux-firmware.tar.gz updated"
+              ls -la /data/
+            volumeMounts:
+            - name: data
+              mountPath: /data
+          volumes:
+          - name: data
+            persistentVolumeClaim:
+              claimName: shared-data
