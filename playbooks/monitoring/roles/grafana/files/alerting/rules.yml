@@ -245,6 +245,48 @@ groups:
           description: The node exporter has not been scraped for 10 minutes; the host is down or unreachable.
 
   - orgId: 1
+    name: kubernetes
+    folder: Alerts
+    interval: 1m
+    rules:
+      # k8sexporter keeps reporting a cluster it cannot reach, with every
+      # value 0. Allocatable CPU is never 0 on a live cluster (one blip in
+      # two weeks of October 2026), so 0 for 15m means unreachable: lost
+      # credentials, a deleted cluster or a suspended cloud account.
+      # The GKE clusters are left out while android-kernelci-external is
+      # suspended; drop the filter when it is back.
+      - uid: kci-k8s-cluster-unreachable
+        title: Kubernetes cluster unreachable
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 600, to: 0}
+            datasourceUid: P4169E866C3094E38
+            model:
+              refId: A
+              instant: true
+              expr: >-
+                max by (cluster) (kci_k8s_cluster_status{namespace="_all_", status="allocatable_cpu", cluster!~"gke_.*"})
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: lt, params: [1]}
+        for: 15m
+        noDataState: OK
+        execErrState: Error
+        labels: {severity: critical}
+        annotations:
+          dashboard: https://mon.kernelci.org/d/kci-k8s
+          summary: '{{ $labels.cluster }} is unreachable'
+          description: >-
+            The k8s exporter cannot read the cluster. If it is a build cluster,
+            the scheduler skips it and its share of builds waits on the others.
+
+  - orgId: 1
     name: traffic
     folder: Alerts
     # The baseline is a 7-day subquery: no need to compute it every minute.
@@ -553,7 +595,7 @@ groups:
               refId: A
               instant: true
               expr: >-
-                up{job=~"blackboxexporter|dashboard_metrics|rest_db_kernelci_org|kcidb_ingester|prodapimetrics|prodpipemetrics"}
+                up{job=~"blackboxexporter|dashboard_metrics|rest_db_kernelci_org|kcidb_ingester|prodapimetrics|prodpipemetrics|k8sexporter"}
           - refId: C
             datasourceUid: __expr__
             model:
