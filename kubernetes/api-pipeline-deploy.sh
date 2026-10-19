@@ -497,36 +497,51 @@ if [ "$1" == "retrieve_secrets_toml" ]; then
     exit 0
 fi
 
-if [ -z "$API_TOKEN" ]; then
-    # TODO(nuclearcat): reference to documentation
-    echo "API_TOKEN not set, please follow procedure to create users and issue token after deployment"
-fi
+# Validate only the local credentials used by the requested operation.
+case "$1" in
+    full|token|pipeline-credentials)
+        if [ -z "$API_TOKEN" ]; then
+            # TODO(nuclearcat): reference to documentation
+            echo "API_TOKEN not set, please follow procedure to create users and issue token after deployment"
+        fi
 
-if [ -z "$API_SECRET_KEY" ]; then
-    # TODO(nuclearcat): reference to documentation
-    echo "API_SECRET_KEY not set. Suggested to keep it persistent for same token"
-fi
+        if [ -z "$API_SECRET_KEY" ]; then
+            # TODO(nuclearcat): reference to documentation
+            echo "API_SECRET_KEY not set. Suggested to keep it persistent for same token"
+        fi
 
-if [ -z "$MONGO" ]; then
-    echo "MONGO not set, exiting"
-    exit 1
-fi
+        if [ -z "$EMAIL_PASSWORD" ]; then
+            echo "EMAIL_PASSWORD not set, exiting"
+            exit 1
+        fi
 
-if [ -z "$EMAIL_USER" ] || [ -z "$EMAIL_PASSWORD" ]; then
-    echo "EMAIL_USER or EMAIL_PASSWORD not set, exiting"
-    exit 1
-fi
+        if [ -z "$KCIDB_REST" ]; then
+            echo "KCIDB_REST not set, exiting"
+            exit 1
+        fi
 
-if [ -z "$KCIDB_REST" ]; then
-    echo "KCIDB_REST not set, exiting"
-    exit 1
-fi
+        # id_rsa is used for NIPA ssh access to upload artifacts
+        # check for id_rsa existence
+        if [ ! -f id_rsa ]; then
+            echo "id_rsa not found, exiting"
+            echo "You need to create id_rsa file with your private key for NIPA ssh access to upload artifacts"
+            exit 1
+        fi
 
-# id_rsa is used for NIPA ssh access to upload artifacts
-# check for id_rsa existence
-if [ ! -f id_rsa ]; then
-    echo "id_rsa not found, exiting"
-    echo "You need to create id_rsa file with your private key for NIPA ssh access to upload artifacts"
+        ;;
+esac
+
+case "$1" in
+    full|backup-mongo)
+        if [ -z "$MONGO" ]; then
+            echo "MONGO not set, exiting"
+            exit 1
+        fi
+        ;;
+esac
+
+if [ "$1" == "full" ] && [ -z "$EMAIL_USER" ]; then
+    echo "EMAIL_USER not set, exiting"
     exit 1
 fi
 
