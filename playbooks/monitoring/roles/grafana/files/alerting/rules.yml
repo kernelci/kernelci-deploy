@@ -24,8 +24,9 @@ groups:
     folder: Alerts
     interval: 1m
     rules:
-      # Normal: 17-95% free. At the time of writing staging.db / (5%),
-      # docs /data (18%) and staging /data (17%) were already under 25%.
+      # Normal: 17-95% free. At the time of writing staging.db / (5%) was
+      # already under 12%; docs /data (16%) and staging /data (17%) run steadily
+      # in the 15-20% range, so 25% warned on them all the time.
       - uid: kci-disk-space-low
         title: Disk space low
         condition: C
@@ -47,7 +48,7 @@ groups:
               expression: A
               # Below 10% is "Disk space critical" instead.
               conditions:
-                - evaluator: {type: within_range, params: [10, 25]}
+                - evaluator: {type: within_range, params: [10, 12]}
         for: 15m
         noDataState: OK
         execErrState: Error
@@ -55,7 +56,7 @@ groups:
         annotations:
           dashboard: https://mon.kernelci.org/d/kci-hosts-health
           summary: '{{ $labels.instance }} {{ $labels.mountpoint }}: {{ printf "%.1f" $values.A.Value }}% free'
-          description: Less than 25% of the filesystem is free.
+          description: Less than 12% of the filesystem is free.
 
       - uid: kci-disk-space-critical
         title: Disk space critical
