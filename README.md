@@ -367,3 +367,34 @@ Settings come from the environment or a `.env` file: `GITHUB_TOKEN`,
 `DISCORD_WEBHOOK_URL`, `POSTGRES_HOST`/`PORT`/`USER`/`DATABASE`/`PASSWORD`,
 `POSTGRES_EMAIL_TO` and `SMTP_PASSWORD`. Nothing secret lives in the script.
 Previously ran only on the production KCIDB host, outside version control.
+
+## CA trust-store security updates
+
+The host playbooks upgrade `ca-certificates` before configuring services and
+verify the installed version against the distribution's eMudhra security fix.
+A stale package mirror or an unsupported distribution stops the run. This
+currently covers Debian 12/13 and Ubuntu 22.04/24.04/26.04/26.10.
+
+To update hosts without provisioning services or restarting them, use an
+existing inventory with the standalone playbook:
+
+```sh
+ansible-playbook -i playbooks/dashboard/inventory.yaml playbooks/update-trust-store.yml
+```
+
+Alternatively, run a host playbook with `--tags trust-store`. Repeat for each
+inventory, including workers and lab hosts under our administration. Review
+`--check --diff` output first. The installed-version check still checks the
+current package in check mode, so an unpatched host will fail that check.
+
+Host updates do not update container filesystems, Python `certifi`, embedded
+Rust roots, or Go binaries. Rebuild and redeploy affected images and binaries
+with their patched dependencies, then restart affected clients to reload their
+trust stores. Check both the normal and Sectigo-cross-signed chains using the
+[incident checker](https://emudhra.we-have-a-problem.com/), and confirm ordinary
+HTTPS requests and ACME renewal still work. Do not disable TLS verification if
+a dependency becomes unreachable after the update.
+
+Fixed package versions come from the
+[Debian security tracker](https://security-tracker.debian.org/tracker/ca-certificates)
+and [Ubuntu advisory](https://ubuntu.com/blog/emudhra-ca-compromise-fixes-available).
