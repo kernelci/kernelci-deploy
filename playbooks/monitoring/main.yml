@@ -7,6 +7,10 @@
 - hosts: all
   gather_facts: true
   become: true
+  pre_tasks:
+    - name: Update the system CA trust store
+      ansible.builtin.import_tasks: ../tasks/trust-store.yml
+      tags: trust-store
   roles:
     - role: grafana
       tags: grafana

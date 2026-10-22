@@ -1,0 +1,57 @@
+---
+# Distribution updates remove trust in the compromised eMudhra chains,
+# including their Sectigo cross-signs. Do not maintain a second CA blocklist.
+- name: Update and verify the system CA trust store
+  vars:
+    trust_store_fixed_versions:
+      Debian:
+        '12': '20250419~deb12u2'
+        '13': '20250419+deb13u1'
+      Ubuntu:
+        '22.04': '20260816ubuntu0.22.04.1'
+        '24.04': '20260816ubuntu0.24.04.1'
+        '26.04': '20260816ubuntu0.26.04.1'
+        '26.10': '20260816ubuntu0.26.10.1'
+    trust_store_release: >-
+      {{ ansible_facts['distribution_major_version']
+         if ansible_facts['distribution'] == 'Debian'
+         else ansible_facts['distribution_version'] }}
+    trust_store_minimum_version: >-
+      {{ trust_store_fixed_versions.get(ansible_facts['distribution'], {}).get(trust_store_release, '') }}
+  block:
+    - name: Require a supported distribution with a known fixed CA package
+      ansible.builtin.assert:
+        that:
+          - trust_store_minimum_version | length > 0
+        fail_msg: >-
+          No verified eMudhra fix version for {{ ansible_facts['distribution'] }}
+          {{ trust_store_release }}. Upgrade to a supported release or add its
+          distribution security advisory's fixed ca-certificates version.
+
+    - name: Upgrade ca-certificates from the distribution repositories
+      ansible.builtin.apt:
+        name: ca-certificates
+        state: latest
+        update_cache: true
+
+    - name: Read the installed CA package version
+      ansible.builtin.command:
+        argv:
+          - dpkg-query
+          - --show
+          - --showformat=${Version}
+          - ca-certificates
+      register: trust_store_installed_version
+      changed_when: false
+      check_mode: false
+
+    - name: Verify the CA package contains the eMudhra distrust update
+      ansible.builtin.command:
+        argv:
+          - dpkg
+          - --compare-versions
+          - '{{ trust_store_installed_version.stdout }}'
+          - ge
+          - '{{ trust_store_minimum_version }}'
+      changed_when: false
+      check_mode: false
