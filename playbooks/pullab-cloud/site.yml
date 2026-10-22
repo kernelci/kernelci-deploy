@@ -4,7 +4,8 @@
 #
 # Secrets (UNIFIED_TOKEN, AWS keys) come from group_vars/vault.yml — see
 # group_vars/vault.yml.example. The role asserts on them before it touches the
-# host, so a run without them stops on the control node having changed nothing.
+# service configuration. The shared trust-store update runs before this check;
+# missing secrets stop the role before it changes the poller configuration.
 # Set pullab_manage_aws_credentials=false if the host authenticates with an IAM
 # instance profile and has no static keys to place.
 - name: pullab_cloud poller
