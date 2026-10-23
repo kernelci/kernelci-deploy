@@ -2,13 +2,15 @@
 #
 #   ansible-playbook -i inventory.yaml aws-infra.yml
 #
-# Runs locally against the AWS API, not over SSH. Idempotent and additive: it
+# Runs locally against the AWS API by default. Set pullab_infra_host=kci-aws
+# and ansible_connection=ssh to use credentials on the poller host instead.
+# Idempotent and additive: it
 # never deletes buckets, images or log groups. The IAM role for the test VMs is
 # deliberately NOT managed here — pullab_cloud recreates it on every run
 # ("force_recreate_roles": true in the pipeline config), so Ansible would only
 # fight it. Check with --check --diff first.
 - name: pullab_cloud AWS infrastructure
-  hosts: localhost
+  hosts: "{{ pullab_infra_host | default('localhost') }}"
   connection: local
   gather_facts: false
   roles:

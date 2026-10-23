@@ -15,6 +15,9 @@ pullab_host_region: us-east-1
 # --- Resource names (must match the deployed pipeline) --------------------
 pullab_results_bucket: kernelci-results
 pullab_results_prefix: results
+# Public access is limited by bucket policy to console-output.log objects.
+pullab_results_cors_origins:
+  - https://dashboard.kernelci.org
 # Inert. This names the KernelCI storage *service*, not an S3 bucket, and no
 # bucket by this name exists. Only the kernel-install tests would read it, and
 # none of them run. Kernel artifacts reach the VM by HTTP from the job
