@@ -46,6 +46,32 @@ running poll cycle.
 ansible-galaxy collection install -r requirements.yml
 ```
 
+### Public console logs
+
+The results bucket permits anonymous `s3:GetObject` only for
+`*/test_*/output/*/console-output.log`, matching the URLs published to KCIDB.
+Public ACLs remain blocked. CORS allows `GET` and `HEAD` from
+`https://dashboard.kernelci.org`; override `pullab_results_cors_origins` to
+add another dashboard origin. Other results and test payloads remain private.
+
+Use `--tags s3` to configure only the results bucket. The apply and expected
+AWS account checks still run. To use the credentials already on the poller
+host, run from this directory (substitute the expected account ID):
+
+```sh
+ansible-playbook aws-infra.yml --tags s3 --check --diff \
+  -e pullab_infra_apply=true -e pullab_aws_account_id=EXPECTED_ACCOUNT_ID \
+  -e pullab_infra_host=kci-aws -e ansible_connection=ssh \
+  -e ansible_become=true -e ansible_python_interpreter=/usr/bin/python3.11
+```
+
+Remove `--check --diff` to deploy after reviewing the dry run. Account-level
+S3 public-access restrictions, if configured, must also permit bucket policies;
+this playbook only manages the bucket-level settings.
+Some collection versions skip S3 modules in check mode. In that case, inspect
+the current bucket configuration separately before applying, and verify the
+public log URL and CORS response afterward.
+
 ## As deployed today (2026-08-31)
 
 **Poller host** — `kci-aws`, a `t3.micro` in
