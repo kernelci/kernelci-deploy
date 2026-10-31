@@ -1,0 +1,185 @@
+# Pull-through cache for kernel source tarballs in external build clusters.
+#
+# Every kbuild job downloads its source tarball from files.kernelci.org
+# (kernelci-core, KBuild._add_tarball_download), so a cluster running N
+# builds of one checkout downloads the same ~270 MB file N times.  Measured
+# on the prod nginx logs (Oct 2026): 30-140 downloads per tarball per day,
+# 93-97% of the bytes sent to the build clusters were repeats.  That egress
+# is billed on the prod Azure VM (~$0.085/GB to GKE, $0.02/GB to AKS scus).
+#
+# kbuild uses http://tarball-cache/<name> when this Service resolves in the
+# job's namespace and falls back to files.kernelci.org otherwise, so the
+# cache can be added to (or removed from) a cluster at any time.
+#
+# Only GET/HEAD of *.tar.gz / *.tar.xz is proxied; everything else (API,
+# uploads) gets 404 and is never sent upstream.  Upstream sends no
+# Cache-Control, so caching is forced: the tarball names carry the commit
+# hash or version, a given URL never changes content.
+#
+# All objects carry app.kubernetes.io/managed-by=kernelci-deploy-tarball-cache;
+# deploy-tarball-cache.sh refuses to touch same-named objects without it.
+# Deploy with deploy-tarball-cache.sh, see README.md.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tarball-cache-nginx
+  namespace: default
+  labels:
+    app.kubernetes.io/name: tarball-cache
+    app.kubernetes.io/part-of: kernelci
+    app.kubernetes.io/managed-by: kernelci-deploy-tarball-cache
+data:
+  default.conf: |
+    # Included in the http{} block of the stock nginx.conf
+    proxy_cache_path /var/cache/nginx/tarballs levels=1:2 keys_zone=tgz:50m
+                     max_size=90g inactive=7d use_temp_path=off;
+
+    log_format cache '$remote_addr [$time_local] "$request" $status '
+                     '$body_bytes_sent cache=$upstream_cache_status '
+                     'rt=$request_time';
+
+    server {
+        listen 80 default_server;
+        access_log /dev/stdout cache;
+
+        location = /healthz {
+            access_log off;
+            return 200 "ok\n";
+        }
+
+        location ~ \.tar\.(gz|xz)$ {
+            limit_except GET HEAD { deny all; }
+
+            proxy_pass https://files.kernelci.org;
+            proxy_http_version 1.1;
+            proxy_set_header Host files.kernelci.org;
+            proxy_set_header Connection "";
+            proxy_ssl_server_name on;
+            proxy_ssl_name files.kernelci.org;
+            proxy_ssl_verify on;
+            proxy_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;
+            proxy_ssl_verify_depth 3;
+            proxy_connect_timeout 30s;
+            proxy_read_timeout 600s;
+
+            proxy_cache tgz;
+            proxy_cache_key $uri;
+            proxy_cache_valid 200 7d;
+            proxy_ignore_headers Cache-Control Expires Set-Cookie;
+            # Many jobs of one checkout start together: one upstream fetch,
+            # the others wait for it (kbuild read timeout is 360s, above the 5m lock)
+            proxy_cache_lock on;
+            proxy_cache_lock_timeout 5m;
+            proxy_cache_lock_age 5m;
+            proxy_cache_use_stale error timeout updating;
+
+            add_header X-Cache $upstream_cache_status always;
+        }
+
+        location / {
+            return 404;
+        }
+    }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tarball-cache
+  namespace: default
+  labels:
+    app.kubernetes.io/name: tarball-cache
+    app.kubernetes.io/part-of: kernelci
+    app.kubernetes.io/managed-by: kernelci-deploy-tarball-cache
+spec:
+  accessModes: [ReadWriteOnce]
+  # No storageClassName here: AKS uses its default (StandardSSD).  On GKE
+  # deploy-tarball-cache.sh sets standard-rwo (pd-balanced) on the next line,
+  # as used by nfs-backing-storage: the default "standard" (pd-standard)
+  # cannot be attached to C3 nodes (kci-big-us-east4), and some clusters
+  # mark two classes as default.
+  #STORAGECLASS#
+  resources:
+    requests:
+      storage: 100Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tarball-cache
+  namespace: default
+  labels:
+    app.kubernetes.io/name: tarball-cache
+    app.kubernetes.io/part-of: kernelci
+    app.kubernetes.io/managed-by: kernelci-deploy-tarball-cache
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate          # ReadWriteOnce volume
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tarball-cache
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tarball-cache
+        app.kubernetes.io/part-of: kernelci
+      annotations:
+        # Do not keep an otherwise idle node alive just for the cache; it
+        # restarts on another node with the same volume (builds fall back
+        # to direct download meanwhile).
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+    spec:
+      securityContext:
+        fsGroup: 101        # nginx worker group in the nginx image
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: nginx
+        image: nginx:1.28-alpine
+        ports:
+        - name: http
+          containerPort: 80
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            memory: 512Mi
+        readinessProbe:
+          httpGet: { path: /healthz, port: http }
+          periodSeconds: 10
+        livenessProbe:
+          httpGet: { path: /healthz, port: http }
+          periodSeconds: 30
+          failureThreshold: 3
+        volumeMounts:
+        - name: config
+          mountPath: /etc/nginx/conf.d
+          readOnly: true
+        - name: cache
+          mountPath: /var/cache/nginx/tarballs
+      volumes:
+      - name: config
+        configMap:
+          name: tarball-cache-nginx
+      - name: cache
+        persistentVolumeClaim:
+          claimName: tarball-cache
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tarball-cache
+  namespace: default
+  labels:
+    app.kubernetes.io/name: tarball-cache
+    app.kubernetes.io/part-of: kernelci
+    app.kubernetes.io/managed-by: kernelci-deploy-tarball-cache
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: tarball-cache
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
