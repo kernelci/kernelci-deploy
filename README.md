@@ -316,6 +316,13 @@ DEPRECATED: Will be removed in 1 month if no objections.
 ### kci-k8swatch.py
 Same for kubernetes cluster, not working well, not useful.
 DEPRECATED: Will be removed in 1 month if no objections.
+### kci-k8s-exporter-rs
+Prometheus exporter for the capacity and usage of every Kubernetes cluster in a
+kubeconfig (`kci_k8s_cluster_status`, `kci_k8s_cluster_up`). Runs as the
+`k8sexporter` service of the monitoring stack on mon.kernelci.org and feeds the
+Kubernetes dashboard and alerts. Replaces `kci-k8s-metrics`, whose source was
+lost. GKE clusters are authenticated with tokens from `gcloud`. See its README
+for deployment.
 ### legacy_watchdog.py
 This is script to monitor legacy services. Not used anymore, as we are not running legacy services.
 DEPRECATED: Will be removed in 1 month if no objections.
