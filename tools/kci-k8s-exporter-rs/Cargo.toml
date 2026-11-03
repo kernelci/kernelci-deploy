@@ -1,0 +1,20 @@
+[package]
+name = "kci-k8s-exporter-rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.104"
+axum = { version = "0.8.9", default-features = false, features = ["http1", "tokio"] }
+clap = { version = "4.6.7", features = ["derive"] }
+http = "1.5.0"
+humantime = "2.4.0"
+k8s-openapi = { version = "0.29.0", features = ["latest"] }
+kube = { version = "5.0.0", default-features = false, features = ["client", "config", "rustls-tls", "ring"] }
+prometheus = { version = "0.14.0", features = ["process"] }
+secrecy = "0.10.3"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+tokio = { version = "1.54.1", features = ["rt-multi-thread", "macros", "time", "process", "sync"] }
+tracing = "0.1.44"
+tracing-subscriber = "0.3.23"
