@@ -40,14 +40,29 @@ cargo run --release -- --dryrun --verbose   # polls ~/.kube/config once, prints 
 
 ## Deploy
 
-Copy `Cargo.toml`, `Cargo.lock`, `src/` and `Dockerfile` to
-`/srv/monitoring/k8s-exporter/` (replacing the old build context), and in
-`/srv/monitoring/docker-compose.yml`:
+mon.kernelci.org is too small (2 CPUs, little free disk) to compile this
+comfortably, so the image is built elsewhere and loaded there:
+
+```sh
+docker build -t kci-k8s-exporter-rs:latest -t kci-k8s-exporter-rs:$(git rev-parse --short HEAD) .
+docker save kci-k8s-exporter-rs:latest | gzip -1 | \
+  ssh mon.kernelci.org 'gunzip | sudo docker load'
+```
+
+The source is also kept on the host as the build context, so
+`docker compose build k8sexporter` can rebuild it there if needed:
+
+```sh
+git archive HEAD . | ssh mon.kernelci.org 'sudo tar -x -C /srv/monitoring/k8s-exporter'
+```
+
+The service in `/srv/monitoring/docker-compose.yml`:
 
 ```yaml
   k8sexporter:
     restart: always
     container_name: k8sexporter
+    image: kci-k8s-exporter-rs:latest
     build: k8s-exporter/
     depends_on:
       - "victoriametrics"
@@ -58,13 +73,14 @@ Copy `Cargo.toml`, `Cargo.lock`, `src/` and `Dockerfile` to
       - vm_net
 ```
 
-(no `command:` - the entrypoint is the exporter; pass flags as e.g.
-`command: ['--timeout', '20s']`). Then:
+There is no `command:`: the entrypoint is the exporter. Pass flags as e.g.
+`command: ['--timeout', '20s']`. Then:
 
 ```sh
 cd /srv/monitoring
-docker compose build k8sexporter && docker compose up -d k8sexporter
+sudo docker compose up -d --no-build --no-deps k8sexporter
 ```
 
 The kubeconfig is re-read on every poll, so adding or removing a context does
-not need a restart.
+not need a restart. The GKE clusters only accept API connections from
+allowlisted IPs (master authorized networks); mon's IP must be on that list.
