@@ -10,3 +10,14 @@ pullab_update_checkout: false
 
 pullab_config_dir: /etc/pullab_cloud
 pullab_python: /usr/bin/python3.11
+
+pullab_state_dir: /var/lib/pullab_cloud
+pullab_execution_lock: /run/lock/pullab-cloud.lock
+pullab_force_recreate_roles: false
+pullab_force_rebuild: false
+pullab_image_tag: latest
+
+# Native kernel/LTP runner configuration. A missing requested skipfile fails.
+pullab_environment: production
+pullab_skipfiles:
+  skipfile-lkft.yaml: https://raw.githubusercontent.com/Linaro/test-definitions/a6247b6442319af519b8760421a50cb504351eec/automated/linux/ltp/skipfile-lkft.yaml

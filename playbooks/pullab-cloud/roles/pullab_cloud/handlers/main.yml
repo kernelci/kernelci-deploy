@@ -10,3 +10,4 @@
   loop: "{{ pullab_pollers }}"
   loop_control:
     label: "{{ item.name }}"
+  when: not ansible_check_mode

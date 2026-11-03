@@ -71,17 +71,24 @@
 # checkout alone is not enough: with pullab_update_checkout false the clone only
 # changes once, so a run that failed after the clone would never install.
 - name: Check whether pullab_cloud is installed
-  ansible.builtin.command: /usr/bin/pip3.11 show kernel-ci-cloud-labs
+  ansible.builtin.command:
+    argv:
+      - "{{ pullab_python }}"
+      - -c
+      - "import kernel_ci_cloud_labs; print(kernel_ci_cloud_labs.__file__)"
   register: pullab_installed
   changed_when: false
   failed_when: false
+  check_mode: false
 
 - name: Install pullab_cloud into the system python3.11
   ansible.builtin.pip:
     name: "{{ pullab_install_dir }}"
     editable: true
     executable: /usr/bin/pip3.11
-  when: pullab_checkout.changed or pullab_installed.rc != 0
+  when: >-
+    pullab_checkout.changed or pullab_installed.rc != 0 or
+    not pullab_installed.stdout.startswith(pullab_install_dir ~ '/src/')
 
 # --- AWS credentials ------------------------------------------------------
 - name: Create /root/.aws
@@ -126,21 +133,33 @@
     group: root
     mode: "0750"
 
+- name: Create persistent cursor directory
+  ansible.builtin.file:
+    path: "{{ pullab_state_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+
 # Replaces the UNIFIED_TOKEN=... prefix that was inlined in prod-*.sh.
 - name: Write poller environment file
   ansible.builtin.template:
     src: pullab-poller.env.j2
-    dest: "{{ pullab_config_dir }}/env"
+    dest: "{{ pullab_config_dir }}/{{ poller.name }}.env"
     owner: root
     group: root
     mode: "0600"
+  loop: "{{ pullab_pollers }}"
+  loop_control:
+    loop_var: poller
+    label: "{{ poller.name }}"
   no_log: true
   notify: Restart pullab pollers
 
 - name: Write per-architecture pipeline configs
   ansible.builtin.template:
     src: config.json.j2
-    dest: "{{ pullab_install_dir }}/examples/aws/config-{{ poller.name }}-prod.json"
+    dest: "{{ pullab_install_dir }}/examples/aws/config-{{ poller.name }}.json"
     owner: root
     group: root
     mode: "0644"
@@ -189,6 +208,7 @@
   loop: "{{ pullab_pollers }}"
   loop_control:
     label: "{{ item.name }}"
+  when: not ansible_check_mode
 
 # --- migration off the hand-rolled screen session -------------------------
 # Not automated: killing the running loop is a judgement call, and the old
@@ -205,7 +225,9 @@
       The old screen session running loop.sh is still alive (PIDs:
       {{ pullab_legacy_loop.stdout_lines | join(', ') }}). Stop it by hand once
       the systemd timers are confirmed working, otherwise both will poll:
-      attach with `screen -r` as root, Ctrl-C, then remove
-      {{ pullab_install_dir }}/loop.sh and prod-*.sh - they contain a
-      plaintext JWT.
-  when: pullab_legacy_loop.rc == 0
+      retire the legacy loop after verifying the new services. Keep the
+      original launch scripts in the private rollback backup; they contain
+      a plaintext JWT.
+  when: >-
+    pullab_legacy_loop.rc == 0 and
+    pullab_legacy_loop.stdout | default('') | length > 0
