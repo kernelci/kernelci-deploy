@@ -116,7 +116,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "count(max by (cluster) (kci_k8s_cluster_status{namespace=\"_all_\", status=\"allocatable_cpu\", cluster=~\"$cluster\"}) > 0) or vector(0)",
+          "expr": "count(max by (cluster) (kci_k8s_cluster_up{cluster=~\"$cluster\"}) == 1) or vector(0)",
           "legendFormat": "Up",
           "refId": "A",
           "range": false,
@@ -128,7 +128,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "count(max by (cluster) (kci_k8s_cluster_status{namespace=\"_all_\", status=\"allocatable_cpu\", cluster=~\"$cluster\"}) == 0) or vector(0)",
+          "expr": "count(max by (cluster) (kci_k8s_cluster_up{cluster=~\"$cluster\"}) == 0) or vector(0)",
           "legendFormat": "Unreachable",
           "refId": "B",
           "range": false,
@@ -810,7 +810,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "max by (c) (label_replace(label_replace(kci_k8s_cluster_status{namespace=\"_all_\", cluster=~\"$cluster\", status=\"allocatable_cpu\"} > bool 0, \"c\", \"$1\", \"cluster\", \"(.*)\"), \"c\", \"$1\", \"cluster\", \"gke_[^_]+_[^_]+_(.*)\"))",
+          "expr": "max by (c) (label_replace(label_replace(kci_k8s_cluster_up{cluster=~\"$cluster\"}, \"c\", \"$1\", \"cluster\", \"(.*)\"), \"c\", \"$1\", \"cluster\", \"gke_[^_]+_[^_]+_(.*)\"))",
           "legendFormat": "",
           "refId": "I",
           "range": false,

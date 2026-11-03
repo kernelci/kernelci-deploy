@@ -250,12 +250,12 @@ groups:
     folder: Alerts
     interval: 1m
     rules:
-      # k8sexporter keeps reporting a cluster it cannot reach, with every
-      # value 0. Allocatable CPU is never 0 on a live cluster (one blip in
-      # two weeks of October 2026), so 0 for 15m means unreachable: lost
-      # credentials, a deleted cluster or a suspended cloud account.
-      # The GKE clusters are left out while android-kernelci-external is
-      # suspended; drop the filter when it is back.
+      # kci_k8s_cluster_up is 0 when the exporter (kci-k8s-exporter-rs)
+      # cannot read the cluster: lost credentials, a deleted cluster, a
+      # suspended cloud account, or mon's IP missing from the API allowlist
+      # (what kept the GKE clusters dark in October 2026). Allocatable CPU
+      # is not used: an idle GKE Autopilot cluster has no nodes and reports
+      # 0 while perfectly reachable.
       - uid: kci-k8s-cluster-unreachable
         title: Kubernetes cluster unreachable
         condition: C
@@ -267,7 +267,7 @@ groups:
               refId: A
               instant: true
               expr: >-
-                max by (cluster) (kci_k8s_cluster_status{namespace="_all_", status="allocatable_cpu", cluster!~"gke_.*"})
+                max by (cluster) (kci_k8s_cluster_up)
           - refId: C
             datasourceUid: __expr__
             model:
