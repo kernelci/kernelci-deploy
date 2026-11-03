@@ -55,10 +55,12 @@ pullab_install_dir: /root/pullab_cloud
 # platforms allowlist is what splits the job stream between them.
 pullab_pollers:
   - name: amd64
+    arch: x86_64
     platforms: ["aws-ec2-x86_64"]
     ami_id: "resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
     instance_type: c5a.4xlarge
   - name: arm64
+    arch: arm64
     platforms: ["aws-ec2-arm64"]
     ami_id: "resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64"
     instance_type: c7g.4xlarge

@@ -1,6 +1,6 @@
 # Managed by Ansible - playbooks/pullab-cloud
-# %i is the poller name (amd64, arm64), matching
-# examples/aws/config-%i-prod.json.
+# %i is the poller name, including its environment and architecture.
+# It matches examples/aws/config-%i.json.
 [Unit]
 Description=KernelCI pull-lab AWS poller (%i)
 After=network-online.target
@@ -10,9 +10,9 @@ Wants=network-online.target
 Type=oneshot
 User=root
 WorkingDirectory={{ pullab_install_dir }}
-EnvironmentFile={{ pullab_config_dir }}/env
-ExecStart={{ pullab_python }} -m kernel_ci_cloud_labs.pull_labs_poller \
-    --config {{ pullab_install_dir }}/examples/aws/config-%i-prod.json --once
+EnvironmentFile={{ pullab_config_dir }}/%i.env
+ExecStart=/usr/bin/flock --exclusive {{ pullab_execution_lock }} {{ pullab_python }} -m kernel_ci_cloud_labs.pull_labs_poller \
+    --config {{ pullab_install_dir }}/examples/aws/config-%i.json --once
 # A poll cycle spawns EC2 VMs and waits for them; max_runtime is
 # {{ pullab_vm_max_runtime }}s per VM, so allow generous headroom.
 TimeoutStartSec={{ (pullab_vm_max_runtime | int) * 3 }}

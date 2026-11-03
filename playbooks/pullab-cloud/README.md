@@ -40,6 +40,30 @@ To deploy new code, add `-e pullab_update_checkout=true` — otherwise the
 checkout is left alone so a routine run never pulls `main` from under a
 running poll cycle.
 
+Each entry in `pullab_pollers` can override `api_base_uri`,
+`kcidb_submit_url`, and `token_variable` (the name of its secret variable).
+Give production and staging entries
+distinct names, such as `prod-amd64` and `staging-amd64`. Configuration is
+written to `examples/aws/config-<name>.json`, credentials to a root-only
+`/etc/pullab_cloud/<name>.env`, and polling cursors to
+`/var/lib/pullab_cloud/<name>.json`.
+
+All instances share an execution lock, so pipeline runs do not race over
+the shared AWS resources or build images concurrently on the poller host.
+Existing IAM roles are preserved by default. Set `pullab_image_tag` to a
+revision-specific tag when upgrading so the ECS image is built from the
+matching checkout once and reused on subsequent runs.
+
+When migrating, copy the existing production cursors before starting the
+new timers. Bootstrap staging cursors far enough back to include its
+currently available jobs. Confirm no legacy poll cycle is running before
+stopping the screen loop and changing the installed Python package.
+
+The current upstream `url-kernel-boot` test remains a download scaffold:
+without a boot hook it emits a successful placeholder result on the AMI
+kernel. Updating this deployment does not implement kernel boot or LTP
+execution. Treat those reported passes accordingly.
+
 `aws-infra.yml` needs the AWS collections; `site.yml` does not:
 
 ```sh
@@ -128,18 +152,18 @@ upstream quickstart. It is not used by the prod pollers and is left alone here.
 job list*. `pull_labs_translate.py` rewrites `test_config` wholesale for every
 job (`"vms": [vm_entry]`), carrying over only `role_name`, so the
 `simple-unixbench` / `unixbench-kernel-regression` entries never actually run.
-What each job inherits from the file is the shape: 40 GB root, 3600s max
-runtime, `c5a.4xlarge` on amd64 and `c7g.4xlarge` on arm64, both on the latest
-AL2023 AMI resolved via SSM.
+With `arch` set, the native translator uses `kernelci.platform_map` to
+inherit the configured AMI, instance type and 40 GB root volume. Test deadlines
+come from the job; setup headroom is described below.
 
-**How kernel artifacts actually arrive** — not over S3. Every test type
-(`baseline`, `ltp`, `unixbench`, and anything unrecognised) maps to the
-`url-kernel-boot` vm-test, which receives `artifacts.kernel`,
-`artifacts.modules` and `artifacts.rootfs` from the job definition as
-`KERNEL_URL` / `MODULES_URL` / `ROOTFS_URL` and `curl`s them **inside the VM**.
-Those URLs point at the KernelCI storage server (the Azure-backed service in
-`kernelci/kernelci-storage`, behind storage.kernelci.org) — nothing to do with
-AWS.
+**How kernel artifacts arrive** — the job definition supplies HTTP(S)
+`artifacts.kernel`, `artifacts.modules` and optional `artifacts.rootfs` URLs.
+The VM downloads them as `KERNEL_URL` / `MODULES_URL` / `ROOTFS_URL`.
+With the native runner, `boot`/`baseline` map to `url-kernel-boot`, and `ltp`
+maps to `url-kernel-ltp`. Unsupported types fail explicitly. Boot tests install
+and reboot into the supplied kernel. LTP uses the supplied rootfs's userspace
+after that reboot. KernelCI artifact storage is separate from the AWS results
+bucket and the inert `external_storage` setting.
 
 This is why the `external_storage` bucket does not exist: the S3-bucket field
 was filled in with the *name of the KernelCI storage service*, which is a
@@ -179,3 +203,31 @@ These are recorded deliberately — each needs a decision, not a playbook.
    No rotation.
 6. **Single point of failure.** One `t3.micro`, one screen session, no
    monitoring. The systemd units help; alerting does not exist.
+
+## Native kernel and LTP runner
+
+The native runner patch replaces the URL download scaffold with two stages:
+installation of the supplied kernel/modules and an SSM reboot, followed by
+release/build/hash/boot-ID verification. LTP jobs run the supplied rootfs's Kirk
+and requested suites after that verification. Unsupported tests and empty or
+failed Kirk reports cannot pass. Deploy a pinned pullab_cloud commit containing
+this implementation and a unique `pullab_image_tag`; ECS must register and pin
+the matching task definition revision. Older task-family existence checks can
+silently keep the previous image.
+
+Each poller may set `arch: x86_64` or `arch: arm64` to pass its configured AMI,
+instance type and root volume through `kernelci.platform_map`. Set
+`environment: staging` for staging pollers; production is the default.
+`pullab_skipfiles` maps requested file names to pinned HTTP(S) artifacts. The
+role supplies the LKFT skipfile absent from the current KernelCI LTP rootfs.
+Selectors use the configured environment and the job's platform/kernel branch.
+Missing requested skipfiles fail explicitly. Native payloads do not use the
+inert `external_storage` bucket.
+
+Before switching source, stop timers, drain active services and preserve the
+checkout, configurations, cursors, environment files and active ECS revision.
+Validate fresh ARM64 boot and x86_64 LTP canaries under the shared execution
+lock before switching scheduled pollers. Keep production/staging cursors and
+credentials separate. LTP needs its full test timeout plus kernel installation
+and reboot time; absent an explicit job deadline, the native translator adds
+900 seconds of setup time (with a 3600-second minimum and 43200-second cap).

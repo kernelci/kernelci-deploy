@@ -1,5 +1,5 @@
 {# Managed by Ansible - playbooks/pullab-cloud.
-   Renders examples/aws/config-<name>-prod.json for one architecture.
+   Renders examples/aws/config-<name>.json for one environment/architecture.
    `poller` is the loop item from pullab_pollers. #}
 {
   "provider": "aws",
@@ -13,7 +13,7 @@
     "type": "s3",
     "bucket": "{{ pullab_external_bucket }}"
   },
-  "force_recreate_roles": true,
+  "force_recreate_roles": {{ pullab_force_recreate_roles | bool | to_json }},
   "auth_credentials": {
     "auth_provider": "aws"
   },
@@ -181,7 +181,8 @@
   "docker": {
     "dockerfile": "dockerfiles/aws/test.dockerfile",
     "build_context": ".",
-    "force_rebuild": true
+    "force_rebuild": {{ pullab_force_rebuild | bool | to_json }},
+    "tag": "{{ pullab_image_tag }}"
   },
   "ecs": {
     "cluster": "{{ pullab_ecs_cluster }}",
@@ -204,13 +205,16 @@
     "metrics_namespace": "{{ pullab_metrics_namespace }}"
   },
   "kernelci": {
-    "api_base_uri": "{{ pullab_api_base_uri }}",
+    "api_base_uri": "{{ poller.api_base_uri | default(pullab_api_base_uri) }}",
     "api_token": null,
     "runtime_name": "{{ pullab_runtime_name }}",
     "platforms": {{ poller.platforms | to_json }},
+    "environment": {{ poller.environment | default(pullab_environment) | to_json }},
+    "skipfiles": {{ pullab_skipfiles | to_json }},
+    "platform_map": {{ ({poller.arch: {'ami_id': poller.ami_id, 'instance_type': poller.instance_type, 'root_volume_size': pullab_vm_root_volume_size}} if poller.arch is defined else {}) | to_json }},
     "poll_interval_sec": {{ pullab_poll_interval_sec }},
-    "cursor_file": "/tmp/pullab_cloud_cursor_{{ poller.name }}_prod.json",
-    "kcidb_submit_url": "{{ pullab_kcidb_submit_url }}",
+    "cursor_file": "{{ pullab_state_dir }}/{{ poller.name }}.json",
+    "kcidb_submit_url": "{{ poller.kcidb_submit_url | default(pullab_kcidb_submit_url) }}",
     "kcidb_origin": "{{ pullab_kcidb_origin }}",
     "kcidb_jwt": null,
     "comment": "Both architectures share runtime_name '{{ pullab_runtime_name }}'; the platforms filter is what splits the job stream. api_token/kcidb_jwt stay null and are injected at runtime via UNIFIED_TOKEN."
