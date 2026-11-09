@@ -1,0 +1,135 @@
+# Only the host sees the original TCP connection and TLS ClientHello.
+- name: Read the installed Debian nginx package version
+  ansible.builtin.command: dpkg-query -W -f=${Version} nginx
+  register: nginx_debian_version
+  changed_when: false
+  check_mode: false
+
+- name: Read the nginx source version
+  ansible.builtin.command: nginx -v
+  register: nginx_binary_version
+  changed_when: false
+  check_mode: false
+
+- name: Set versioned module build paths
+  ansible.builtin.set_fact:
+    nginx_connfp_build_dir: "/usr/local/src/nginx-connfp/{{ nginx_debian_version.stdout }}-{{ nginx_connfp_revision }}"
+    nginx_source_version: "{{ nginx_binary_version.stderr | regex_search('[0-9]+\\.[0-9]+\\.[0-9]+') }}"
+
+- name: Build and test the pinned module
+  ansible.builtin.import_tasks: fingerprints-build.yml
+  when: nginx_fingerprints_enabled | bool
+
+- name: Create the fingerprint log with nginx log permissions
+  ansible.builtin.file:
+    path: "{{ nginx_fingerprint_log }}"
+    state: touch
+    owner: www-data
+    group: adm
+    mode: '0640'
+    access_time: preserve
+    modification_time: preserve
+  when: nginx_fingerprints_enabled | bool
+
+- name: Inspect fingerprint configuration before deployment
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop:
+    - /etc/nginx/modules-enabled/50-connfp.conf
+    - /etc/nginx/conf.d/00-connfp.conf
+  register: nginx_connfp_previous
+
+- name: Create the rollback directory even when disabling capture
+  ansible.builtin.file:
+    path: /var/backups/nginx-connfp
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Back up existing fingerprint configuration
+  ansible.builtin.copy:
+    src: "{{ item.item }}"
+    dest: "/var/backups/nginx-connfp/{{ item.item | basename }}.before-{{ item.stat.checksum }}"
+    remote_src: true
+    mode: '0600'
+  loop: "{{ nginx_connfp_previous.results }}"
+  when:
+    - item.stat.exists
+    - not ansible_check_mode
+
+- name: Configure fingerprinting with automatic rollback on validation failure
+  block:
+    - name: Load the versioned fingerprint module
+      ansible.builtin.copy:
+        dest: /etc/nginx/modules-enabled/50-connfp.conf
+        owner: root
+        group: root
+        mode: '0644'
+        content: "load_module {{ nginx_connfp_module }};\n"
+      when: nginx_fingerprints_enabled | bool
+      register: nginx_connfp_load_config
+
+    - name: Configure the separate fingerprint log
+      ansible.builtin.template:
+        src: connfp.conf.j2
+        dest: /etc/nginx/conf.d/00-connfp.conf
+        owner: root
+        group: root
+        mode: '0644'
+      when: nginx_fingerprints_enabled | bool
+      register: nginx_connfp_log_config
+
+    - name: Remove fingerprint configuration when disabled
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/nginx/conf.d/00-connfp.conf
+        - /etc/nginx/modules-enabled/50-connfp.conf
+      when: not nginx_fingerprints_enabled | bool
+      register: nginx_connfp_removed
+
+    - name: Validate the complete nginx configuration before reloading
+      ansible.builtin.command: nginx -t
+      changed_when: false
+      when: not ansible_check_mode
+
+    - name: Reload nginx with the validated module configuration
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+      when:
+        - not ansible_check_mode
+        - nginx_connfp_load_config is changed or nginx_connfp_log_config is changed or nginx_connfp_removed is changed
+  rescue:
+    - name: Restore previous fingerprint configuration
+      ansible.builtin.copy:
+        src: "/var/backups/nginx-connfp/{{ item.item | basename }}.before-{{ item.stat.checksum }}"
+        dest: "{{ item.item }}"
+        remote_src: true
+        owner: root
+        group: root
+        mode: '0644'
+      loop: "{{ nginx_connfp_previous.results }}"
+      when: item.stat.exists
+
+    - name: Remove newly introduced fingerprint configuration
+      ansible.builtin.file:
+        path: "{{ item.item }}"
+        state: absent
+      loop: "{{ nginx_connfp_previous.results }}"
+      when: not item.stat.exists
+
+    - name: Validate restored nginx configuration
+      ansible.builtin.command: nginx -t
+      changed_when: false
+
+    - name: Reload restored nginx configuration
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+
+    - name: Report the failed fingerprint deployment
+      ansible.builtin.fail:
+        msg: "Fingerprint deployment failed; previous nginx configuration was restored. {{ ansible_failed_result.msg | default('Inspect the failed task above.') }}"

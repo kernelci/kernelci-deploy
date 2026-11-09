@@ -33,6 +33,13 @@ nginx_cert_name: staging.dashboard.kernelci.org
 # as data: created if missing, never rewritten from the repository.
 nginx_geo_ban_file: /etc/nginx/fake-macos-banned.geo
 
+# Capture the original connections at the host TLS terminator, not in the
+# dashboard containers. Re-run the nginx-fingerprints tag after nginx upgrades.
+nginx_fingerprints_enabled: true
+nginx_connfp_revision: 7d83cab08d1521df8a453c8b4fd0df9700a0f652
+nginx_connfp_sha256: 1c5caf70e63f0fb3fefb4eb344b02efd192091ca80da8c7549bdfa8dbb7df774
+nginx_fingerprint_log: /var/log/nginx/fingerprints.log
+
 # certbot. The renewal client here is the pip install, not the Debian package;
 # see the certbot role for why that matters.
 certbot_bin: /usr/local/bin/certbot
