@@ -1,5 +1,7 @@
 # Managed by kernelci-deploy. Capture at the host TCP/TLS terminator.
 # Existing access_log directives remain active in the same http context.
+# A server/location-level access_log overrides BOTH inherited logs. If one
+# is added later, repeat the fingerprint access_log there to retain coverage.
 log_format connfp escape=json
     '{"time":"$time_iso8601","host":"$host",'
     '"remote_addr":"$remote_addr","remote_port":"$remote_port",'

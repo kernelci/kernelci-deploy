@@ -1,0 +1,32 @@
+- name: Create the fingerprint operation helper directory
+  ansible.builtin.file:
+    path: /usr/local/libexec/nginx-connfp
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Install fingerprint operation helpers
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/usr/local/libexec/nginx-connfp/{{ item }}"
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - connfp-upgrade-guard.py
+    - reload-nginx-checked.py
+    - run-connfp-tests.py
+
+- name: Disable incompatible fingerprints before nginx package maintainer scripts run
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/00-nginx-connfp
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      // Managed by kernelci-deploy. Run BEFORE dpkg can restart nginx.
+      DPkg::Pre-Install-Pkgs { "/usr/local/libexec/nginx-connfp/connfp-upgrade-guard.py"; };
+      DPkg::Tools::Options::/usr/local/libexec/nginx-connfp/connfp-upgrade-guard.py::Version "1";
+      DPkg::Tools::Options::/usr/local/libexec/nginx-connfp/connfp-upgrade-guard.py::InfoFD "0";
+      DPkg::Post-Invoke { "/usr/local/libexec/nginx-connfp/connfp-upgrade-guard.py --check"; };

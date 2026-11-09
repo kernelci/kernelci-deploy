@@ -105,6 +105,9 @@
 
 # Debian's compiled-in temp paths are absolute. A root-run isolated nginx
 # would otherwise chown production's temp directories to its default user.
+# YAML removes the common indentation from this replacement. Its final
+# {log_format} line intentionally has no spaces, so the four-space regexp
+# does not match again. The runner also rejects missing/duplicated temp paths.
 - name: Keep integration-test temporary paths inside its private directory
   ansible.builtin.replace:
     path: "{{ nginx_connfp_build_dir }}/nginx-connfp-{{ nginx_connfp_revision }}/tests/integration.py"
@@ -117,22 +120,62 @@
           scgi_temp_path {root}/scgi;
           {log_format}
 
-- name: Verify the module with isolated real TLS and TCP connections
-  become: false
-  ansible.builtin.command:
-    argv:
-      - python3
-      - "{{ nginx_connfp_build_dir }}/nginx-connfp-{{ nginx_connfp_revision }}/tests/integration.py"
-      - /usr/sbin/nginx
-      - "{{ nginx_connfp_build_dir }}/debian-dev/usr/share/nginx/src/objs/ngx_http_connfp_module.so"
-  changed_when: false
-  when: not ansible_check_mode
-
-- name: Hash the tested module
+- name: Hash the built module
   ansible.builtin.stat:
     path: "{{ nginx_connfp_build_dir }}/debian-dev/usr/share/nginx/src/objs/ngx_http_connfp_module.so"
     checksum_algorithm: sha256
   register: nginx_connfp_binary
+
+- name: Hash the nginx binary and both test sources
+  ansible.builtin.stat:
+    path: "{{ item }}"
+    checksum_algorithm: sha256
+  loop:
+    - /usr/sbin/nginx
+    - "{{ nginx_connfp_build_dir }}/nginx-connfp-{{ nginx_connfp_revision }}/tests/integration.py"
+    - /usr/local/libexec/nginx-connfp/run-connfp-tests.py
+  register: nginx_connfp_test_inputs
+
+- name: Choose the verification marker for these exact binaries and tests
+  ansible.builtin.set_fact:
+    nginx_connfp_verified: "/var/lib/nginx-connfp/verified-{{ ([nginx_connfp_revision, nginx_connfp_binary.stat.checksum] + (nginx_connfp_test_inputs.results | map(attribute='stat.checksum') | list)) | join(':') | hash('sha256') }}"
+
+- name: Check whether these exact binaries and tests already passed
+  ansible.builtin.stat:
+    path: "{{ nginx_connfp_verified }}"
+  register: nginx_connfp_verified_before
+
+- name: Verify the new module without root and with guarded private paths
+  become: false
+  vars:
+    # The inventory's ansible_become connection variable outranks the become
+    # keyword. Override it here; the runner still rejects an actual root SSH login.
+    ansible_become: false
+  ansible.builtin.command:
+    argv:
+      - /usr/local/libexec/nginx-connfp/run-connfp-tests.py
+      - "{{ nginx_connfp_build_dir }}/nginx-connfp-{{ nginx_connfp_revision }}/tests/integration.py"
+      - /usr/sbin/nginx
+      - "{{ nginx_connfp_build_dir }}/debian-dev/usr/share/nginx/src/objs/ngx_http_connfp_module.so"
+  changed_when: false
+  when: not nginx_connfp_verified_before.stat.exists
+
+- name: Create root-owned verification marker storage
+  ansible.builtin.file:
+    path: /var/lib/nginx-connfp
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Record successful verification of these exact binaries and tests
+  ansible.builtin.copy:
+    dest: "{{ nginx_connfp_verified }}"
+    content: "Verified nginx, module, integration source and guarded test runner.\n"
+    owner: root
+    group: root
+    mode: '0644'
+    force: false
 
 # A changed binary needs a new pathname. Otherwise dlopen in a surviving
 # nginx master can reuse the old module during a graceful reload.
