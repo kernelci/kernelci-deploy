@@ -422,31 +422,92 @@ ansible-playbook -i inventory.yaml main.yml --tags nginx-fingerprints
 
 The role downloads the exact installed Debian nginx development package,
 verifies the module archive against its pinned SHA-256, and builds a versioned
-module without replacing or upgrading nginx. It runs the module's isolated
-integration tests against `/usr/sbin/nginx` before loading it. For nginx older
+module without replacing or upgrading nginx. The source remains the pinned
+personal repository by maintainer choice; moving it into the KernelCI
+organization is a separate change. If the exact installed `nginx-dev` version
+has left the configured mirrors, the play fails before changing live
+configuration. Update nginx deliberately or configure a matching Debian
+snapshot; do not substitute development headers from another version.
+
+It runs the module's isolated integration tests against `/usr/sbin/nginx`
+before loading a new build. A root-owned success marker covers the module
+revision, both binary hashes and both test-source hashes. An unchanged build
+skips the throwaway nginx on routine deployments. For nginx older
 than 1.25.0, the build omits a port-type check on the pre-HTTP/3 listener
 structure, whose HTTP listeners are all TCP. For nginx older than 1.25.1,
 the test uses the older HTTP/2 listener syntax. The tests cover
 IPv4/IPv6 SYN capture, TLS 1.2/1.3, HTTP/2, connection reuse, forged headers,
 fragmented ClientHellos, TLS resumption and reloads. A complete `nginx -t`
-precedes the graceful reload; a failed configuration or reload restores the
-previous fingerprint configuration.
-Tests run without root and explicitly use private temporary paths, including
-the paths Debian otherwise compiles as absolute production directories.
+precedes the graceful reload. After signaling nginx, the role requires a stable
+new worker generation within 15 seconds. If the master rejects the reload
+despite successful signal delivery, the role restores the previous fingerprint
+configuration and verifies its restored worker generation too.
+
+The task explicitly overrides inventory-level `ansible_become`, which takes
+precedence over the `become: false` keyword. The test runner still rejects an
+effective UID of zero, including root SSH logins. It also rejects missing or duplicated
+private temporary-path lines before launching nginx. Run the tag through an
+unprivileged SSH account. All five temporary paths stay in the test directory.
 The installed filename includes the binary's SHA-256, so a changed build gets
 a new load path during a graceful reload.
 
 JSON records go to `/var/log/nginx/fingerprints.log` alongside the unchanged
 access log, including requests rejected by the host's abuse rules. The existing
-`/etc/logrotate.d/nginx` wildcard rotates the new `.log` file. `tlsfp` uses ntop
+`/etc/logrotate.d/nginx` wildcard rotates the new `.log` file. It contains client
+IPs, user agents and full query strings, as the existing access log does. The
+maintainer confirmed retaining the existing daily rotation with 14 rotated
+files. `tlsfp` uses ntop
 TLSFP draft 0.1, `tlsfp_registry` is `1`, and `tcp_syn` uses the module's `syn1:`
 format. These are connection observations, not client-supplied headers or
 unique identities. HTTP has no TLSFP; SYN capture may be unavailable with SYN
 cookies or unsupported kernels.
 
-Re-run the tag after nginx package upgrades to build against matching headers.
+The role installs `/etc/apt/apt.conf.d/00-nginx-connfp`. Its
+`DPkg::Pre-Install-Pkgs` hook reads incoming package versions and removes both
+the module load line and the log/variable references before a different
+upstream nginx version can run package maintainer scripts. Compatible Debian
+security updates that retain the upstream version keep capture enabled. An
+APT post-invoke check also disables a mismatched installed version. Disabled
+fragments are backed up in `/var/backups/nginx-connfp/`; existing workers keep
+serving until the package's normal restart or reload.
+
+**After a version-changing upgrade, re-run the tag to rebuild and restore
+fingerprinting.** This applies to unattended-upgrades too. Direct `dpkg -i`
+installs bypass APT hooks. Disable fingerprinting first, or run
+`/usr/local/libexec/nginx-connfp/connfp-upgrade-guard.py --check` before starting
+or reloading an official package replacement. This guard checks the upstream
+version, not arbitrary ABI/build options. Always disable fingerprinting before
+installing a custom nginx binary, even if its version string is unchanged.
+
 Keep `nginx_connfp_revision` and `nginx_connfp_sha256` together when updating the
 module. Set `-e nginx_fingerprints_enabled=false` with the same tag to disable
-capture and its log. Versioned module builds remain under
+the module and its log. Removing the module during a graceful reload does not
+clear `TCP_SAVE_SYN` on inherited listening sockets. Kernel SYN saving stops
+at the next nginx restart; the role does not restart both dashboards merely to
+clear that flag.
+
+Versioned module builds remain under
 `/usr/local/src/nginx-connfp/`, and configuration backups under
-`/var/backups/nginx-connfp/`, for investigation and rollback.
+`/var/backups/nginx-connfp/`, for investigation and rollback. Old `.so` files,
+build directories, markers and backups are intentionally not pruned
+automatically. Disk use grows with updates; prune during maintenance only
+after checking which binaries are referenced by configuration or mapped by
+live nginx processes.
+
+Check mode does not compile, run connection tests or reload nginx. On a fresh
+host it uses a proposed module path so `--check` can report configuration
+changes without requiring a binary that has not been built yet.
+
+Run the package-hook and test-isolation regression checks locally, then run
+the real worker-reload cases as an unprivileged user on a Linux nginx host:
+
+```sh
+cd playbooks/dashboard
+python3 tests/test_fingerprint_operations.py
+python3 tests/test_fingerprint_operations.py --nginx /usr/sbin/nginx
+```
+
+The real reload test occupies an additional listening port. `nginx -t` passes,
+but the master cannot bind that port on reload. The checker must fail while
+the old workers keep serving, then verify recovery after restoring the config.
+Both test nginx instances use only private temporary paths and loopback ports.

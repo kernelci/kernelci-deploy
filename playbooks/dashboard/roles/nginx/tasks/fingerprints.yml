@@ -1,24 +1,46 @@
 # Only the host sees the original TCP connection and TLS ClientHello.
+- name: Install fingerprint operation guards
+  ansible.builtin.import_tasks: fingerprints-operations.yml
+
+- name: Check whether nginx is installed
+  ansible.builtin.stat:
+    path: /usr/sbin/nginx
+  register: nginx_present
+
+- name: Require nginx outside check mode
+  ansible.builtin.assert:
+    that: nginx_present.stat.exists or ansible_check_mode
+    fail_msg: Install nginx before running the fingerprint-only tag.
+
 - name: Read the installed Debian nginx package version
   ansible.builtin.command: dpkg-query -W -f=${Version} nginx
   register: nginx_debian_version
   changed_when: false
   check_mode: false
+  when: nginx_present.stat.exists
 
 - name: Read the nginx source version
   ansible.builtin.command: nginx -v
   register: nginx_binary_version
   changed_when: false
   check_mode: false
+  when: nginx_present.stat.exists
 
 - name: Set versioned module build paths
   ansible.builtin.set_fact:
-    nginx_connfp_build_dir: "/usr/local/src/nginx-connfp/{{ nginx_debian_version.stdout }}-{{ nginx_connfp_revision }}"
-    nginx_source_version: "{{ nginx_binary_version.stderr | regex_search('[0-9]+\\.[0-9]+\\.[0-9]+') }}"
+    nginx_connfp_build_dir: "/usr/local/src/nginx-connfp/{{ nginx_debian_version.stdout | default('check-mode') }}-{{ nginx_connfp_revision }}"
+    nginx_source_version: "{{ (nginx_binary_version.stderr | default('0.0.0')) | regex_search('[0-9]+\\.[0-9]+\\.[0-9]+') }}"
+
+- name: Use a proposed module path in check mode before a binary exists
+  ansible.builtin.set_fact:
+    nginx_connfp_module: /usr/lib/nginx/modules/ngx_http_connfp_module-CHECK-MODE.so
+  when: ansible_check_mode
 
 - name: Build and test the pinned module
   ansible.builtin.import_tasks: fingerprints-build.yml
-  when: nginx_fingerprints_enabled | bool
+  when:
+    - nginx_fingerprints_enabled | bool
+    - not ansible_check_mode
 
 - name: Create the fingerprint log with nginx log permissions
   ansible.builtin.file:
@@ -95,10 +117,9 @@
       changed_when: false
       when: not ansible_check_mode
 
-    - name: Reload nginx with the validated module configuration
-      ansible.builtin.service:
-        name: nginx
-        state: reloaded
+    - name: Reload nginx and require a stable new worker generation
+      ansible.builtin.command: /usr/local/libexec/nginx-connfp/reload-nginx-checked.py
+      changed_when: true
       when:
         - not ansible_check_mode
         - nginx_connfp_load_config is changed or nginx_connfp_log_config is changed or nginx_connfp_removed is changed
@@ -125,10 +146,9 @@
       ansible.builtin.command: nginx -t
       changed_when: false
 
-    - name: Reload restored nginx configuration
-      ansible.builtin.service:
-        name: nginx
-        state: reloaded
+    - name: Reload restored nginx configuration and verify its workers
+      ansible.builtin.command: /usr/local/libexec/nginx-connfp/reload-nginx-checked.py
+      changed_when: true
 
     - name: Report the failed fingerprint deployment
       ansible.builtin.fail:
