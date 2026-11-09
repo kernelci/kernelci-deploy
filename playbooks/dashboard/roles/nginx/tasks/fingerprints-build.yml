@@ -1,0 +1,168 @@
+- name: Install module build tools without upgrading nginx
+  ansible.builtin.apt:
+    name:
+      - gcc
+      - make
+      - libc6-dev
+      - libssl-dev
+      - libpcre2-dev
+      - zlib1g-dev
+      - curl
+      - ca-certificates
+    state: present
+    install_recommends: false
+
+- name: Create root-owned module build and install directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - "{{ nginx_connfp_build_dir }}"
+    - /usr/lib/nginx/modules
+
+# apt verifies this download against the signed Debian archive metadata. Use
+# precisely the installed package version, not an unrelated nginx release.
+- name: Download matching Debian nginx development sources
+  ansible.builtin.command:
+    argv:
+      - apt-get
+      - download
+      - "nginx-dev={{ nginx_debian_version.stdout }}"
+    chdir: "{{ nginx_connfp_build_dir }}"
+    creates: "{{ nginx_connfp_build_dir }}/nginx-dev_{{ nginx_debian_version.stdout }}_all.deb"
+
+- name: Extract nginx development sources without installing their dependencies
+  ansible.builtin.command:
+    argv:
+      - dpkg-deb
+      - --extract
+      - "nginx-dev_{{ nginx_debian_version.stdout }}_all.deb"
+      - debian-dev
+    chdir: "{{ nginx_connfp_build_dir }}"
+    creates: "{{ nginx_connfp_build_dir }}/debian-dev/usr/share/nginx/src/configure"
+
+- name: Download the pinned BSD-2-Clause fingerprint module
+  ansible.builtin.get_url:
+    url: "https://codeload.github.com/nuclearcat/nginx-connfp/tar.gz/{{ nginx_connfp_revision }}"
+    dest: "{{ nginx_connfp_build_dir }}/connfp.tar.gz"
+    checksum: "sha256:{{ nginx_connfp_sha256 }}"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Extract the pinned fingerprint module
+  ansible.builtin.unarchive:
+    src: "{{ nginx_connfp_build_dir }}/connfp.tar.gz"
+    dest: "{{ nginx_connfp_build_dir }}"
+    remote_src: true
+    creates: "{{ nginx_connfp_build_dir }}/nginx-connfp-{{ nginx_connfp_revision }}/config"
+
+# The port-type field arrived with HTTP/3 in nginx 1.25.0. Earlier HTTP
+# listeners are all TCP, so only their address family needs checking.
+- name: Adapt SYN listener enumeration for nginx before HTTP/3
+  ansible.builtin.replace:
+    path: "{{ nginx_connfp_build_dir }}/nginx-connfp-{{ nginx_connfp_revision }}/src/ngx_http_connfp_module.c"
+    regexp: 'if \(ports\[i\]\.type != SOCK_STREAM\n\s+\|\| \(ports\[i\]\.family'
+    replace: 'if ((ports[i].family'
+  when: nginx_source_version is version('1.25.0', '<')
+
+- name: Configure the compatible dynamic module against Debian headers
+  ansible.builtin.command:
+    argv:
+      - ./configure
+      - --with-compat
+      - --with-debug
+      - --with-threads
+      - --with-http_ssl_module
+      - --with-http_v2_module
+      - "--add-dynamic-module={{ nginx_connfp_build_dir }}/nginx-connfp-{{ nginx_connfp_revision }}"
+    chdir: "{{ nginx_connfp_build_dir }}/debian-dev/usr/share/nginx/src"
+    creates: "{{ nginx_connfp_build_dir }}/debian-dev/usr/share/nginx/src/objs/Makefile"
+
+- name: Compile the dynamic module
+  ansible.builtin.command:
+    argv: [make, -f, objs/Makefile, modules]
+    chdir: "{{ nginx_connfp_build_dir }}/debian-dev/usr/share/nginx/src"
+  register: nginx_connfp_make
+  changed_when: "'Nothing to be done' not in nginx_connfp_make.stdout"
+
+# nginx before 1.25.1 configures HTTP/2 on listen, not with 'http2 on'. This
+# changes only the upstream integration test's listener syntax.
+- name: Use older nginx HTTP/2 listener syntax in the integration test
+  ansible.builtin.replace:
+    path: "{{ nginx_connfp_build_dir }}/nginx-connfp-{{ nginx_connfp_revision }}/tests/integration.py"
+    regexp: "{{ item.regexp }}"
+    replace: "{{ item.replace }}"
+  loop:
+    - regexp: 'listen 127\.0\.0\.1:\{tls\} ssl; listen \[::1\]:\{ipv6\} ssl;'
+      replace: 'listen 127.0.0.1:{tls} ssl http2; listen [::1]:{ipv6} ssl http2;'
+    - regexp: ' http2 on;'
+      replace: ''
+  when: nginx_source_version is version('1.25.1', '<')
+
+# Debian's compiled-in temp paths are absolute. A root-run isolated nginx
+# would otherwise chown production's temp directories to its default user.
+- name: Keep integration-test temporary paths inside its private directory
+  ansible.builtin.replace:
+    path: "{{ nginx_connfp_build_dir }}/nginx-connfp-{{ nginx_connfp_revision }}/tests/integration.py"
+    regexp: '^    \{log_format\}$'
+    replace: |-
+          client_body_temp_path {root}/client_body;
+          proxy_temp_path {root}/proxy;
+          fastcgi_temp_path {root}/fastcgi;
+          uwsgi_temp_path {root}/uwsgi;
+          scgi_temp_path {root}/scgi;
+          {log_format}
+
+- name: Verify the module with isolated real TLS and TCP connections
+  become: false
+  ansible.builtin.command:
+    argv:
+      - python3
+      - "{{ nginx_connfp_build_dir }}/nginx-connfp-{{ nginx_connfp_revision }}/tests/integration.py"
+      - /usr/sbin/nginx
+      - "{{ nginx_connfp_build_dir }}/debian-dev/usr/share/nginx/src/objs/ngx_http_connfp_module.so"
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Hash the tested module
+  ansible.builtin.stat:
+    path: "{{ nginx_connfp_build_dir }}/debian-dev/usr/share/nginx/src/objs/ngx_http_connfp_module.so"
+    checksum_algorithm: sha256
+  register: nginx_connfp_binary
+
+# A changed binary needs a new pathname. Otherwise dlopen in a surviving
+# nginx master can reuse the old module during a graceful reload.
+- name: Choose the immutable module install path
+  ansible.builtin.set_fact:
+    nginx_connfp_module: "/usr/lib/nginx/modules/ngx_http_connfp_module-{{ nginx_debian_version.stdout }}-{{ nginx_connfp_revision }}-{{ nginx_connfp_binary.stat.checksum }}.so"
+
+- name: Install the tested immutable module
+  ansible.builtin.copy:
+    src: "{{ nginx_connfp_build_dir }}/debian-dev/usr/share/nginx/src/objs/ngx_http_connfp_module.so"
+    dest: "{{ nginx_connfp_module }}"
+    remote_src: true
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Install module license and specification attribution
+  ansible.builtin.file:
+    path: /usr/share/doc/nginx-connfp
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Copy module license and notice
+  ansible.builtin.copy:
+    src: "{{ nginx_connfp_build_dir }}/nginx-connfp-{{ nginx_connfp_revision }}/{{ item }}"
+    dest: "/usr/share/doc/nginx-connfp/{{ item }}"
+    remote_src: true
+    owner: root
+    group: root
+    mode: '0644'
+  loop: [LICENSE, NOTICE]

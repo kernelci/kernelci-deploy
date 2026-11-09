@@ -405,3 +405,48 @@ a dependency becomes unreachable after the update.
 Fixed package versions come from the
 [Debian security tracker](https://security-tracker.debian.org/tracker/ca-certificates)
 and [Ubuntu advisory](https://ubuntu.com/blog/emudhra-ca-compromise-fixes-available).
+
+### Dashboard host connection fingerprints
+
+The dashboard nginx role loads the pinned BSD-2-Clause `nginx-connfp` dynamic
+module into the host nginx. Both dashboards share this TLS terminator, so the
+host sees the original TCP SYN and TLS ClientHello. The dashboard containers
+receive HTTP from nginx and cannot recover those handshakes from headers.
+
+Deploy only this change with:
+
+```sh
+cd playbooks/dashboard
+ansible-playbook -i inventory.yaml main.yml --tags nginx-fingerprints
+```
+
+The role downloads the exact installed Debian nginx development package,
+verifies the module archive against its pinned SHA-256, and builds a versioned
+module without replacing or upgrading nginx. It runs the module's isolated
+integration tests against `/usr/sbin/nginx` before loading it. For nginx older
+than 1.25.0, the build omits a port-type check on the pre-HTTP/3 listener
+structure, whose HTTP listeners are all TCP. For nginx older than 1.25.1,
+the test uses the older HTTP/2 listener syntax. The tests cover
+IPv4/IPv6 SYN capture, TLS 1.2/1.3, HTTP/2, connection reuse, forged headers,
+fragmented ClientHellos, TLS resumption and reloads. A complete `nginx -t`
+precedes the graceful reload; a failed configuration or reload restores the
+previous fingerprint configuration.
+Tests run without root and explicitly use private temporary paths, including
+the paths Debian otherwise compiles as absolute production directories.
+The installed filename includes the binary's SHA-256, so a changed build gets
+a new load path during a graceful reload.
+
+JSON records go to `/var/log/nginx/fingerprints.log` alongside the unchanged
+access log, including requests rejected by the host's abuse rules. The existing
+`/etc/logrotate.d/nginx` wildcard rotates the new `.log` file. `tlsfp` uses ntop
+TLSFP draft 0.1, `tlsfp_registry` is `1`, and `tcp_syn` uses the module's `syn1:`
+format. These are connection observations, not client-supplied headers or
+unique identities. HTTP has no TLSFP; SYN capture may be unavailable with SYN
+cookies or unsupported kernels.
+
+Re-run the tag after nginx package upgrades to build against matching headers.
+Keep `nginx_connfp_revision` and `nginx_connfp_sha256` together when updating the
+module. Set `-e nginx_fingerprints_enabled=false` with the same tag to disable
+capture and its log. Versioned module builds remain under
+`/usr/local/src/nginx-connfp/`, and configuration backups under
+`/var/backups/nginx-connfp/`, for investigation and rollback.
