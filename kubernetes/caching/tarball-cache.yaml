@@ -1,4 +1,4 @@
-# Pull-through cache for kernel source tarballs in external build clusters.
+# Pull-through cache for kernel source and firmware tarballs in build clusters.
 #
 # Every kbuild job downloads its source tarball from files.kernelci.org
 # (kernelci-core, KBuild._add_tarball_download), so a cluster running N
@@ -12,9 +12,9 @@
 # cache can be added to (or removed from) a cluster at any time.
 #
 # Only GET/HEAD of *.tar.gz / *.tar.xz is proxied; everything else (API,
-# uploads) gets 404 and is never sent upstream.  Upstream sends no
-# Cache-Control, so caching is forced: the tarball names carry the commit
-# hash or version, a given URL never changes content.
+# uploads) gets 404. Firmware comes from storage.kernelci.org, sources from
+# files.kernelci.org. Honor upstream freshness and revalidate expired entries
+# with ETag/Last-Modified, including tarballs whose content changes in place.
 #
 # All objects carry app.kubernetes.io/managed-by=kernelci-deploy-tarball-cache;
 # deploy-tarball-cache.sh refuses to touch same-named objects without it.
@@ -48,6 +48,35 @@ data:
             return 200 "ok\n";
         }
 
+        # Firmware has a rolling URL and a separate upstream/cache key.
+        location = /linux-firmware.tar.gz {
+            limit_except GET HEAD { deny all; }
+
+            proxy_pass https://storage.kernelci.org;
+            proxy_http_version 1.1;
+            proxy_set_header Host storage.kernelci.org;
+            proxy_set_header Connection "";
+            proxy_ssl_server_name on;
+            proxy_ssl_name storage.kernelci.org;
+            proxy_ssl_verify on;
+            proxy_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;
+            proxy_ssl_verify_depth 3;
+            proxy_connect_timeout 30s;
+            proxy_read_timeout 600s;
+
+            proxy_cache tgz;
+            proxy_cache_key "firmware:$uri";
+            proxy_cache_valid 200 10m;
+            proxy_cache_revalidate on;
+            proxy_ignore_headers Set-Cookie;
+            proxy_cache_lock on;
+            proxy_cache_lock_timeout 5m;
+            proxy_cache_lock_age 5m;
+            proxy_cache_use_stale error timeout updating;
+
+            add_header X-Cache $upstream_cache_status always;
+        }
+
         location ~ \.tar\.(gz|xz)$ {
             limit_except GET HEAD { deny all; }
 
@@ -65,8 +94,9 @@ data:
 
             proxy_cache tgz;
             proxy_cache_key $uri;
-            proxy_cache_valid 200 7d;
-            proxy_ignore_headers Cache-Control Expires Set-Cookie;
+            proxy_cache_valid 200 10m;
+            proxy_cache_revalidate on;
+            proxy_ignore_headers Set-Cookie;
             # Many jobs of one checkout start together: one upstream fetch,
             # the others wait for it (kbuild read timeout is 360s, above the 5m lock)
             proxy_cache_lock on;
@@ -93,8 +123,8 @@ metadata:
     app.kubernetes.io/managed-by: kernelci-deploy-tarball-cache
 spec:
   accessModes: [ReadWriteOnce]
-  # No storageClassName here: AKS uses its default (StandardSSD).  On GKE
-  # deploy-tarball-cache.sh sets standard-rwo (pd-balanced) on the next line,
+  # deploy-tarball-cache.sh sets managed-csi (Standard SSD) on AKS or
+  # standard-rwo (pd-balanced) on GKE on the next line,
   # as used by nfs-backing-storage: the default "standard" (pd-standard)
   # cannot be attached to C3 nodes (kci-big-us-east4), and some clusters
   # mark two classes as default.
@@ -125,6 +155,8 @@ spec:
         app.kubernetes.io/name: tarball-cache
         app.kubernetes.io/part-of: kernelci
       annotations:
+        # Rendered by deploy-tarball-cache.sh to roll nginx on config changes.
+        #CONFIGCHECKSUM#
         # Do not keep an otherwise idle node alive just for the cache; it
         # restarts on another node with the same volume (builds fall back
         # to direct download meanwhile).

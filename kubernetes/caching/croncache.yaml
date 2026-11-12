@@ -1,35 +1,67 @@
+# Publish the shared firmware archive only after a complete, validated download.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: file-sync
+  namespace: default
 spec:
   schedule: "5 0 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 1800
       template:
         spec:
+          restartPolicy: Never
           containers:
           - name: fetch
-            image: alpine:latest  # Changed to alpine as curlimages/curl with uid 0 might have issues
+            image: curlimages/curl:8.11.1
             command:
             - sh
             - -c
             - |
-              echo "Creating directory if needed..."
-              mkdir -p /data
-              echo "Setting permissions..."
-              chmod 777 /data
-              echo "Downloading file..."
-              wget -O /data/linux-firmware.tar.gz https://storage.kernelci.org/linux-firmware.tar.gz || \
-              (echo "wget failed, trying curl..." && \
-               apk add --no-cache curl && \
-               curl -fsSLo /data/linux-firmware.tar.gz https://storage.kernelci.org/linux-firmware.tar.gz)
-              echo "Download complete!"
-              ls -la /data/
+              set -eu
+              URL=https://storage.kernelci.org/linux-firmware.tar.gz
+              DST=/data/linux-firmware.tar.gz
+              ETAG=/data/.linux-firmware.etag
+              TMP=$(mktemp /data/.linux-firmware.tar.gz.XXXXXX)
+              TMP_ETAG=$(mktemp /data/.linux-firmware.etag.XXXXXX)
+              trap 'rm -f "$TMP" "$TMP_ETAG"' EXIT HUP INT TERM
+              # A missing archive must be fetched even if an old ETag remains.
+              set -- --etag-save "$TMP_ETAG" -o "$TMP" -w '%{http_code}'
+              if [ -s "$DST" ] && [ -s "$ETAG" ]; then
+                set -- "$@" --etag-compare "$ETAG"
+              fi
+              STATUS=$(curl -fsSL --retry 3 "$@" "$URL")
+              case "$STATUS" in
+                304)
+                  [ -s "$DST" ] || exit 1
+                  echo "linux-firmware.tar.gz unchanged"
+                  exit 0
+                  ;;
+                200) ;;
+                *) echo "Unexpected HTTP status: $STATUS" >&2; exit 1 ;;
+              esac
+              # Never publish an empty, interrupted or corrupt download.
+              gzip -t "$TMP"
+              chmod 644 "$TMP"
+              # Both files are on the shared volume, making the rename atomic.
+              # SMB can temporarily refuse replacement while a build holds DST open.
+              n=0
+              until mv -f "$TMP" "$DST"; do
+                n=$((n + 1))
+                [ "$n" -lt 60 ] || exit 1
+                sleep 10
+              done
+              mv -f "$TMP_ETAG" "$ETAG"
+              echo "linux-firmware.tar.gz updated"
+              ls -l "$DST"
             volumeMounts:
             - name: data
               mountPath: /data
-          restartPolicy: OnFailure
           volumes:
           - name: data
             persistentVolumeClaim:
