@@ -12,7 +12,7 @@ Build jobs are scheduled on these clusters (kernelci-pipeline
 
 | Context | Where | shared-data / file-sync | tarball-cache |
 |---|---|---|---|
-| `aks-kbuild-medium-1` | Azure westus3 | azurefile | not needed (same region as prod VM, free egress) |
+| `aks-kbuild-medium-1` | Azure westus3 | azurefile (legacy firmware) | yes |
 | `aks-kbuild-scus-1` | Azure southcentralus | azurefile (set up by hand, not in this repo's scripts) | yes |
 | `gke_android-kernelci-external_europe-west1-d_kci-eu-west1` | GCP | nfs-server | yes |
 | `gke_android-kernelci-external_europe-west4-c_kci-eu-west4` | GCP | nfs-server | yes |
@@ -32,7 +32,7 @@ export KUBECONFIG=~/.kube/gke-kernelci/config   # own directory, see deploy-tarb
 
 ## Components
 
-### shared-data + file-sync (linux-firmware)
+### Legacy shared-data + file-sync (linux-firmware)
 
 A read-only RWX volume `shared-data` mounted at `/data` in every build pod
 (kernelci-core `config/runtime/base/kubernetes.jinja2`), refreshed by the
@@ -40,26 +40,92 @@ A read-only RWX volume `shared-data` mounted at `/data` in every build pod
 
 - GKE: `filestore-pvc.yaml` (nfs-server Deployment on a 50Gi disk + NFS PV)
 - AKS: `azurefile-pvc.yaml`, `azurefile-cronjob.yaml`
-- `croncache.yaml`: the original CronJob
+- `croncache.yaml`: standalone GKE refresh CronJob (also embedded in
+  `filestore-pvc.yaml`)
 
-> **Warning:** `deploy-cacher.sh` run **without arguments** deletes and
-> recreates `shared-data`, `shared-data-pv`, the `filestore-rwx` storage
-> class and the `nfs-server` Deployment on every GKE cluster.  Use
-> `deploy-cacher.sh update` or `deploy-cacher.sh fetch` for routine work.
+All refresh manifests use conditional HTTP requests with the saved ETag. A
+changed archive is downloaded to a unique temporary file on the shared volume,
+checked with `gzip -t`, and renamed over the published file only on success.
+Readers therefore keep the complete old file while a replacement downloads.
+Failed downloads leave both the published file and its ETag unchanged. CronJob
+overlap is disabled. The GKE schedule remains daily at 00:05 UTC; AKS remains
+hourly at minute 20.
 
-### tarball-cache (kernel source tarballs)
+`deploy-cacher.sh` now delegates explicit HTTP-cache commands to
+`deploy-tarball-cache.sh`; it no longer provisions or recreates NFS volumes.
+The legacy manifests remain available for older build images during migration.
+
+### tarball-cache (kernel source and firmware tarballs)
 
 `tarball-cache.yaml`: an nginx pull-through cache (ConfigMap, 100Gi PVC on
-`standard-rwo` on GKE / the default class on AKS, Deployment, ClusterIP Service `tarball-cache`).
+`standard-rwo` on GKE / `managed-csi` on AKS, Deployment, ClusterIP Service `tarball-cache`).
 kernelci-core kbuild downloads `http://tarball-cache/<name>` when the
 Service resolves, and falls back to `https://files.kernelci.org/<name>`
 when it does not or the download fails, so the cache is optional per
 cluster.
 
 - Only GET/HEAD of `*.tar.gz` / `*.tar.xz` is proxied; everything else is 404.
-- Entries are kept 7 days (90 GB max); `proxy_cache_lock` makes concurrent
-  jobs of one checkout share a single upstream fetch.
+- `/linux-firmware.tar.gz` is fetched from `storage.kernelci.org` with a separate
+  cache key; other tarballs are fetched from `files.kernelci.org`.
+- Upstream `Cache-Control` and `Expires` headers determine freshness, with a
+  ten-minute fallback. Expired entries are revalidated using ETag/Last-Modified,
+  so changes at an existing URL are discovered without redownloading unchanged
+  files. Entries unused for seven days are removed (90 GB maximum).
+- `proxy_cache_lock` makes concurrent requests share an upstream fetch.
 - `X-Cache` response header and the pod log (`cache=HIT|MISS`) show results.
+
+The companion `kernelci-core` firmware downloader fetches
+`http://tarball-cache/linux-firmware.tar.gz`, checks the gzip archive, and
+renames its local temporary download before extraction. Missing, failed,
+interrupted, or corrupt cache responses fall back to a fresh download from
+`https://storage.kernelci.org/linux-firmware.tar.gz`. Updated Kubernetes job
+templates no longer mount the `shared-data` PVC.
+
+### Firmware migration order
+
+1. Render and apply the HTTP-cache manifest to each build cluster, including
+   both AKS clusters. The deployment script injects a manifest checksum into
+   the Pod template, so nginx rolls automatically when its configuration changes.
+2. Update every build image with the companion `kernelci-core` downloader
+   first, while the scheduler still mounts `/data`. New clients use HTTP and
+   tolerate the extra mount; older images still need it. Verify a firmware-using
+   build and nginx `cache=MISS` then `cache=HIT` for `/linux-firmware.tar.gz`.
+3. Only after all build images use the HTTP downloader, update the scheduler's
+   `kernelci-core` runtime template to remove the PVC mount from new Jobs.
+   Verify a new build succeeds without `/data`. Updating the scheduler first
+   would break old build images. The direct HTTP fallback also lets new images
+   work when a cluster cache is unavailable.
+4. After the new images and scheduler are active, suspend the old `file-sync`
+   CronJob. Wait for all older running/pending Jobs that reference `shared-data`
+   to finish before retiring their NFS deployment/service or shared PVCs.
+   HTTP-cache deployment never deletes these resources; retain them for rollback
+   until the migration is verified. For rollback to older build images, restore
+   the scheduler mount template before switching those images back.
+
+For example, rendering is offline; check and diff are read-only:
+
+```sh
+./deploy-tarball-cache.sh render aks-kbuild-medium-1
+./deploy-tarball-cache.sh check <context>
+./deploy-tarball-cache.sh diff <context>
+./deploy-tarball-cache.sh apply <context>
+```
+
+These repository changes do not by themselves migrate running build images or
+retire any existing storage.
+
+Local validation, using a small HTTP fixture and nginx rather than production:
+
+```sh
+python3 -m unittest discover -s tests -p 'test_*.py' -v
+KCI_TEST_NGINX=1 python3 -m unittest discover -s tests -p 'test_*.py' -v
+```
+
+The second command needs Docker and `nginx:1.28-alpine`. Tests check cluster
+rendering and automatic nginx rollout on configuration changes, plus cache hits,
+conditional revalidation, changed content at the same URL, and concurrent
+downloads. Publication tests check corrupt/interrupted downloads and readers
+during atomic replacement.
 
 Deploy with `deploy-tarball-cache.sh`, which is additive only (never
 deletes, refuses to touch same-named objects it did not create):

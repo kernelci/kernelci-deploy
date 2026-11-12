@@ -1,6 +1,6 @@
 #!/bin/bash
-# Deploy the source tarball pull-through cache (tarball-cache.yaml) to the
-# external build clusters.  See README.md.
+# Deploy the source and firmware tarball pull-through cache (tarball-cache.yaml) to the
+# GKE and AKS build clusters.  See README.md.
 #
 # ADDITIVE ONLY.  This script never deletes anything: it only runs
 # "kubectl apply" (no --prune, no --force, no replace) on the objects in
@@ -12,12 +12,13 @@
 # nfs-server, file-sync) is not touched.
 #
 # Usage:
+#   ./deploy-tarball-cache.sh render ctx       offline: print the cluster manifest
 #   ./deploy-tarball-cache.sh check  [ctx...]   read-only: access, name clashes, server dry-run
 #   ./deploy-tarball-cache.sh diff   [ctx...]   read-only: kubectl diff against the live cluster
 #   ./deploy-tarball-cache.sh status [ctx...]   read-only: objects, pod, cache HIT/MISS counts
 #   ./deploy-tarball-cache.sh apply  ctx...|--all   check, then kubectl apply
 #
-# Without contexts, read-only commands run on all clusters in CONTEXTS.
+# Without contexts, check/diff/status run on all clusters in CONTEXTS.
 # "apply" needs explicit contexts (or --all) so rollout can be staged.
 #
 # GKE clusters are only reachable through the kernelci-staging jumphost and
@@ -36,11 +37,10 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 MANIFEST="$HERE/tarball-cache.yaml"
 LABEL_VAL=kernelci-deploy-tarball-cache
 NS=default
-OBJECTS="configmap/tarball-cache-nginx persistentvolumeclaim/tarball-cache deployment/tarball-cache service/tarball-cache"
+OBJECTS=(configmap/tarball-cache-nginx persistentvolumeclaim/tarball-cache deployment/tarball-cache service/tarball-cache)
 
-# Clusters that pay for source tarball egress.  aks-kbuild-medium-1 is not
-# listed on purpose: it is in westus3 like the prod VM, so its downloads
-# are free and a cache would only add cost.
+# Build clusters supported by this deployment.  Westus3 has free source
+# egress from prod; caching there reduces repeat downloads, but adds disk cost.
 CONTEXTS=(
   gke_android-kernelci-external_europe-west1-d_kci-eu-west1
   gke_android-kernelci-external_europe-west4-c_kci-eu-west4
@@ -48,35 +48,46 @@ CONTEXTS=(
   gke_android-kernelci-external_us-east4-c_kci-big-us-east4
   gke_android-kernelci-external_us-west1-a_kci-us-west1
   aks-kbuild-scus-1
+  aks-kbuild-medium-1
 )
 
 # Storage class for the cache PVC, per cloud (see tarball-cache.yaml)
 GKE_STORAGE_CLASS=standard-rwo
+AKS_STORAGE_CLASS=managed-csi
+
+storage_class() {
+  local ctx=$1
+  if [[ $ctx == gke_* ]]; then
+    echo "$GKE_STORAGE_CLASS"
+  else
+    echo "$AKS_STORAGE_CLASS"
+  fi
+}
 
 # Manifest for one cluster on stdout: fills in the #STORAGECLASS# marker
 manifest() {
   local ctx=$1
-  if [[ $ctx == gke_* ]]; then
-    sed "s|^  #STORAGECLASS#\$|  storageClassName: $GKE_STORAGE_CLASS|" "$MANIFEST"
-  else
-    sed '/^  #STORAGECLASS#$/d' "$MANIFEST"
-  fi
+  local checksum
+  checksum=$(sha256sum "$MANIFEST" | cut -d ' ' -f 1)
+  sed -e "s|^  #STORAGECLASS#\$|  storageClassName: $(storage_class "$ctx")|" \
+      -e "s|^        #CONFIGCHECKSUM#\$|        kernelci.org/cache-config-sha256: $checksum|" \
+      "$MANIFEST"
 }
 
 k() {
   local ctx=$1; shift
   if [[ $ctx == gke_* ]]; then
     HTTPS_PROXY=$GKE_PROXY CLOUDSDK_CONFIG=$GKE_CLOUDSDK_CONFIG \
-      KUBECONFIG=$GKE_KUBECONFIG timeout 120 kubectl --context="$ctx" "$@"
+      KUBECONFIG=$GKE_KUBECONFIG timeout 360 kubectl --context="$ctx" "$@"
   else
-    timeout 120 kubectl --context="$ctx" "$@"
+    timeout 360 kubectl --context="$ctx" "$@"
   fi
 }
 
 # Fail if any of our object names exists without our label
 check_ownership() {
   local ctx=$1 obj owner rc=0
-  for obj in $OBJECTS; do
+  for obj in "${OBJECTS[@]}"; do
     if owner=$(k "$ctx" -n "$NS" get "$obj" --ignore-not-found \
                  -o "jsonpath={.metadata.labels.app\.kubernetes\.io/managed-by}{'|found'}"); then
       if [[ -n $owner && $owner != "$LABEL_VAL|found" ]]; then
@@ -97,6 +108,8 @@ do_check() {
   k "$ctx" -n "$NS" auth can-i create deployments >/dev/null || {
     echo "  ERROR: no access to $ctx" >&2; return 1; }
   check_ownership "$ctx" || return 1
+  k "$ctx" get storageclass "$(storage_class "$ctx")" >/dev/null || {
+    echo "  ERROR: required storage class missing or inaccessible in $ctx" >&2; return 1; }
   manifest "$ctx" | k "$ctx" apply --dry-run=server -f - | sed 's/^/  /' || return 1
 }
 
@@ -111,7 +124,7 @@ do_diff() {
 do_status() {
   local ctx=$1
   echo "== status $ctx"
-  k "$ctx" -n "$NS" get $OBJECTS --ignore-not-found || return 1
+  k "$ctx" -n "$NS" get "${OBJECTS[@]}" --ignore-not-found || return 1
   k "$ctx" -n "$NS" get pods -l app.kubernetes.io/name=tarball-cache -o wide 2>/dev/null || true
   if k "$ctx" -n "$NS" get deployment/tarball-cache >/dev/null 2>&1; then
     echo "  cache results since pod start:"
@@ -130,6 +143,10 @@ do_apply() {
 
 cmd=${1:-}; shift || true
 case $cmd in
+  render)
+    if [[ $# -ne 1 || $1 == --all ]]; then
+      echo "render needs exactly one explicit context" >&2; exit 2
+    fi ;;
   check|diff|status) ;;
   apply)
     if [[ $# -eq 0 ]]; then
@@ -138,10 +155,32 @@ case $cmd in
   *) sed -n '2,/^GKE_PROXY/p' "$0" | sed '$d'; exit 2 ;;
 esac
 
+if [[ ${1:-} == --all && $# -ne 1 ]]; then
+  echo "--all cannot be combined with explicit contexts" >&2
+  exit 2
+fi
+
 if [[ ${1:-} == --all || $# -eq 0 ]]; then
   targets=("${CONTEXTS[@]}")
 else
   targets=("$@")
+fi
+
+# Validate every target before any cluster call, including an apply.
+for ctx in "${targets[@]}"; do
+  supported=false
+  for known in "${CONTEXTS[@]}"; do
+    [[ $ctx != "$known" ]] || supported=true
+  done
+  if [[ $supported != true ]]; then
+    echo "Unsupported context: $ctx" >&2
+    exit 2
+  fi
+done
+
+if [[ $cmd == render ]]; then
+  manifest "${targets[0]}"
+  exit
 fi
 
 # Note: functions run below as "f || failed+=", where set -e is off, so
