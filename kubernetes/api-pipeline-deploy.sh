@@ -283,10 +283,12 @@ function deploy_once_api {
 }
 
 function deploy_nginx {
+    # Disable HTTP/2 on both controllers to mitigate CVE-2026-123007 and CVE-2026-123633.
     echo "Deploying ingress-nginx for api... ${NS_API}"
     helm install ingress-nginx ingress-nginx/ingress-nginx \
         -n ${NS_API} \
         --kube-context=${CONTEXT} \
+        --set-string controller.config.use-http2=false \
         --set controller.replicaCount=1 \
         --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
         --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
@@ -306,6 +308,7 @@ function deploy_nginx {
     helm install ingress-nginx2 ingress-nginx/ingress-nginx \
         -n ${NS_PIPELINE} \
         --kube-context=${CONTEXT} \
+        --set-string controller.config.use-http2=false \
         --set controller.replicaCount=1 \
         --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
         --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
@@ -323,16 +326,12 @@ function deploy_nginx {
 }
 
 function patch_nginx_config {
-    echo "Patching nginx config..."
-    # patch nginx config for large lava callbacks
-    # set:
-    # data:
-    #   client-max-body-size: 128m
-    kubectl --context=${CONTEXT} patch configmap ingress-nginx2-controller -n ${NS_PIPELINE} --type merge --patch '{"data":{"proxy-body-size":"128m"}}'
-    # update creationTimestamp
-    kubectl --context=${CONTEXT} patch configmap ingress-nginx2-controller -n ${NS_PIPELINE} --type merge --patch '{"metadata":{"creationTimestamp":null}}'
-    # redeploy ingress-nginx
-    kubectl --context=${CONTEXT} rollout restart deployment ingress-nginx2-controller -n ${NS_PIPELINE}
+    echo "Disabling HTTP/2 on the API and pipeline ingress controllers..."
+    kubectl --context="${CONTEXT}" -n "${NS_API}" patch configmap ingress-nginx-controller \
+        --type merge --patch '{"data":{"use-http2":"false"}}'
+    # Keep the larger request body limit for LAVA callbacks.
+    kubectl --context="${CONTEXT}" -n "${NS_PIPELINE}" patch configmap ingress-nginx2-controller \
+        --type merge --patch '{"data":{"use-http2":"false","proxy-body-size":"128m"}}'
 }
 
 function deploy_cert_manager {
@@ -455,6 +454,10 @@ function backup_pipeline_configmap {
     kubectl --context=${CONTEXT} get configmap pipeline-configmap --namespace=${NS_PIPELINE} -o yaml > pipeline-configmap.yaml
 }
 
+if [ "$1" == "patch-nginx" ]; then
+    patch_nginx_config
+    exit 0
+fi
 
 
 if [ -z "$AZURE_RG" ]; then
@@ -615,12 +618,6 @@ fi
 if [ "$1" == "mongo-shell" ]; then
     echo "Mongo shell..."
     kubectl --context=${CONTEXT} exec -n ${NS_API} -it $(kubectl --context=${CONTEXT} get pods -n ${NS_API} -l app=mongo -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "mongosh kernelci"
-    exit 0
-fi
-
-# patch nginx config
-if [ "$1" == "patch-nginx" ]; then
-    patch_nginx_config
     exit 0
 fi
 
