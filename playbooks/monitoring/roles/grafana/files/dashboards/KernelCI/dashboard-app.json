@@ -3075,6 +3075,223 @@
         },
         "overrides": []
       }
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 103
+      },
+      "id": 39,
+      "panels": [],
+      "title": "View time",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Foreground time on the URL path over the selected time range. The query string is not included. A single visit is included. p50 and p95 are then both estimates inside that visit's bucket.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Visits"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "p50"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "p95"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Mean"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 104
+      },
+      "id": 40,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Visits"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (route) (( ( increase(dashboard_route_visible_seconds_count{job=\"dashboard_metrics\"}[$__range]) and dashboard_route_visible_seconds_count{job=\"dashboard_metrics\"} offset $__range ) or ( dashboard_route_visible_seconds_count{job=\"dashboard_metrics\"} unless dashboard_route_visible_seconds_count{job=\"dashboard_metrics\"} offset $__range ) ))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "",
+          "range": false,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "histogram_quantile(0.5, sum by (route, le) (( ( increase(dashboard_route_visible_seconds_bucket{job=\"dashboard_metrics\"}[$__range]) and dashboard_route_visible_seconds_bucket{job=\"dashboard_metrics\"} offset $__range ) or ( dashboard_route_visible_seconds_bucket{job=\"dashboard_metrics\"} unless dashboard_route_visible_seconds_bucket{job=\"dashboard_metrics\"} offset $__range ) )))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "",
+          "range": false,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "histogram_quantile(0.95, sum by (route, le) (( ( increase(dashboard_route_visible_seconds_bucket{job=\"dashboard_metrics\"}[$__range]) and dashboard_route_visible_seconds_bucket{job=\"dashboard_metrics\"} offset $__range ) or ( dashboard_route_visible_seconds_bucket{job=\"dashboard_metrics\"} unless dashboard_route_visible_seconds_bucket{job=\"dashboard_metrics\"} offset $__range ) )))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "",
+          "range": false,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (route) (( ( increase(dashboard_route_visible_seconds_sum{job=\"dashboard_metrics\"}[$__range]) and dashboard_route_visible_seconds_sum{job=\"dashboard_metrics\"} offset $__range ) or ( dashboard_route_visible_seconds_sum{job=\"dashboard_metrics\"} unless dashboard_route_visible_seconds_sum{job=\"dashboard_metrics\"} offset $__range ) )) / sum by (route) (( ( increase(dashboard_route_visible_seconds_count{job=\"dashboard_metrics\"}[$__range]) and dashboard_route_visible_seconds_count{job=\"dashboard_metrics\"} offset $__range ) or ( dashboard_route_visible_seconds_count{job=\"dashboard_metrics\"} unless dashboard_route_visible_seconds_count{job=\"dashboard_metrics\"} offset $__range ) ))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "",
+          "range": false,
+          "refId": "D"
+        }
+      ],
+      "title": "View time by route",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {
+              "Mean": 4,
+              "Visits": 1,
+              "p50": 2,
+              "p95": 3,
+              "route": 0
+            },
+            "renameByName": {
+              "Value #A": "Visits",
+              "Value #B": "p50",
+              "Value #C": "p95",
+              "Value #D": "Mean"
+            }
+          }
+        }
+      ],
+      "type": "table"
     }
   ]
 }
