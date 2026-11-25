@@ -1,0 +1,86 @@
+replicaCount: 1
+
+image:
+  repository: kernelci/kernelci
+  tag: api
+  pullPolicy: Always
+
+waitImage: busybox
+waitForMongo:
+  # Hostname only, not the MongoDB connection URI. Empty disables the check.
+  host: ""
+  port: 27017
+
+config:
+  mongoService: ""
+  # Optional key in existingSecret for a credential-bearing external URI.
+  mongoServiceSecretKey: ""
+  emailSender: ""
+  smtpHost: smtp.gmail.com
+  smtpPort: "465"
+  redisHost: "redis"
+
+existingSecret: kernelci-api-secret
+
+mongo:
+  enabled: false
+  image:
+    repository: mongo
+    tag: "8"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      memory: 10Gi
+      cpu: "2"
+  persistence:
+    size: 60Gi
+    # null uses the cluster default; "" disables storage-class selection.
+    storageClass: null
+
+resources:
+  requests:
+    memory: 1Gi
+    cpu: 500m
+
+redis:
+  enabled: true
+  image:
+    repository: redis
+    tag: "6.2"
+    pullPolicy: Always
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 500m
+
+service:
+  port: 80
+  targetPort: 8000
+
+gateway:
+  enabled: true
+  gatewayClassName: kernelci-envoy
+  hostnames:
+    - kernelci-api.westus3.cloudapp.azure.com
+    - api.kernelci.org
+  clusterIssuer: all-issuer
+  tlsSecretName: api-tls
+  certificate:
+    create: true
+  maxRequestBytes: 32Mi
+  compression: true
+  serviceAnnotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+
+issuer:
+  enabled: true
+  name: all-issuer
+  server: https://acme-v02.api.letsencrypt.org/directory
+  email: nuclearcat-kci@nuclearcat.com
+  privateKeySecretName: letsencrypt-account
+  apiGatewayName: api
+  apiGatewayNamespace: kernelci-api
+  pipelineGatewayName: pipeline
+  pipelineGatewayNamespace: kernelci-pipeline
+  pipelineHostnames:
+    - kernelci-pipeline.westus3.cloudapp.azure.com

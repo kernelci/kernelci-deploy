@@ -1,0 +1,70 @@
+{{- $component := index .Values.components "scheduler-k8s" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduler-k8s
+  labels:
+    {{- include "kernelci-pipeline.labels" . | nindent 4 }}
+    app: scheduler-k8s
+spec:
+  replicas: {{ dig "replicas" 1 $component }}
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app: scheduler-k8s}
+  template:
+    metadata:
+      labels: {app: scheduler-k8s}
+      annotations:
+        checksum/config: {{ toJson .Values.pipelineConfig | sha256sum }}
+    spec:
+      initContainers:
+        - name: wait-for-api
+          image: {{ .Values.waitForApi.image | quote }}
+          command: [sh, -c, {{ printf "until curl --fail --silent --insecure %s; do echo 'Waiting for API endpoint...'; sleep 5; done" .Values.waitForApi.url | quote }}]
+        - name: credentials
+          image: "{{ .Values.credentialsInit.image.repository }}:{{ .Values.credentialsInit.image.tag }}"
+          imagePullPolicy: {{ .Values.credentialsInit.image.pullPolicy }}
+          command: [tar, xzf, /tmp/k8s/k8s-credentials.tgz, -C, /tmp/secrets]
+          volumeMounts:
+            - {name: tmpsecrets, mountPath: /tmp/secrets}
+            - {name: k8scredentials, mountPath: /tmp/k8s, readOnly: true}
+      containers:
+        - name: scheduler-k8s
+          image: "{{ $component.image.repository }}:{{ $component.image.tag }}"
+          imagePullPolicy: {{ $component.image.pullPolicy }}
+          command: {{ toJson $component.command }}
+          env:
+            - name: KCI_API_TOKEN
+              valueFrom: {secretKeyRef: {name: {{ .Values.secrets.apiToken }}, key: token}}
+            {{- range $key, $value := $component.env }}
+            - {name: {{ $key }}, value: {{ $value | quote }}}
+            {{- end }}
+          {{- with $component.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $component.healthPort }}
+          livenessProbe:
+            httpGet: {path: /health, port: {{ . }}, scheme: HTTP}
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 10
+            failureThreshold: 3
+          {{- end }}
+          volumeMounts:
+            - {name: secrets, mountPath: /secrets}
+            - {name: config-volume, mountPath: /config}
+            - {name: config-volume, mountPath: /home/kernelci/config}
+            - {name: tmpsecrets, mountPath: /home/kernelci/secrets}
+            - {name: tmpsecrets, mountPath: /home/kernelci/.kube, subPath: k8s-credentials/.kube}
+            - {name: tmpsecrets, mountPath: /home/kernelci/.config/gcloud, subPath: k8s-credentials/.config/gcloud}
+            - {name: tmpsecrets, mountPath: /home/kernelci/.azure, subPath: k8s-credentials/.azure}
+      volumes:
+        - name: secrets
+          secret: {secretName: {{ .Values.secrets.pipeline }}}
+        - name: config-volume
+          configMap: {name: {{ include "kernelci-pipeline.configMapName" . }}}
+        - name: k8scredentials
+          secret: {secretName: {{ .Values.secrets.kubernetesCredentials }}}
+        - name: tmpsecrets
+          emptyDir: {}

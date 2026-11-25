@@ -1,0 +1,58 @@
+{{- $component := index .Values.components "lava-callback" }}
+{{- if .Values.lavaCallback.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lava-callback
+  labels:
+    {{- include "kernelci-pipeline.labels" . | nindent 4 }}
+    app: lava-callback
+spec:
+  replicas: {{ .Values.lavaCallback.replicas }}
+  selector:
+    matchLabels: {app: lava-callback}
+  template:
+    metadata:
+      labels: {app: lava-callback}
+      annotations:
+        checksum/config: {{ toJson .Values.pipelineConfig | sha256sum }}
+    spec:
+      initContainers:
+        - name: wait-for-api
+          image: {{ .Values.waitForApi.image | quote }}
+          command: [sh, -c, {{ printf "until curl --fail --silent --insecure %s; do echo 'Waiting for API endpoint...'; sleep 5; done" .Values.waitForApi.url | quote }}]
+      containers:
+        - name: lava-callback
+          image: "{{ $component.image.repository }}:{{ $component.image.tag }}"
+          imagePullPolicy: {{ $component.image.pullPolicy }}
+          workingDir: /home/kernelci
+          command: {{ toJson $component.command }}
+          args: {{ toJson $component.args }}
+          env:
+            - name: KCI_API_TOKEN
+              valueFrom: {secretKeyRef: {name: {{ .Values.secrets.apiToken }}, key: token}}
+            - {name: KCI_SETTINGS, value: /secrets/kernelci.toml}
+          ports:
+            - {name: http, containerPort: 8000}
+          volumeMounts:
+            - {name: secrets, mountPath: /secrets}
+            - {name: config-volume, mountPath: /config}
+            - {name: config-volume, mountPath: /home/kernelci/config}
+      volumes:
+        - name: secrets
+          secret: {secretName: {{ .Values.secrets.pipeline }}}
+        - name: config-volume
+          configMap: {name: {{ include "kernelci-pipeline.configMapName" . }}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lava-callback
+  labels:
+    {{- include "kernelci-pipeline.labels" . | nindent 4 }}
+spec:
+  ports:
+    - {name: http, port: 80, targetPort: 8000}
+  selector: {app: lava-callback}
+{{- end }}
+

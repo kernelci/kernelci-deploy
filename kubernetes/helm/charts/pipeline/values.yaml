@@ -1,0 +1,129 @@
+# Image used only by the scheduler credentials init containers.
+credentialsInit:
+  image:
+    repository: kernelci/kernelci
+    tag: pipeline
+    pullPolicy: Always
+
+waitForApi:
+  image: curlimages/curl:latest
+  url: http://api.kernelci-api.svc.cluster.local/
+
+secrets:
+  apiToken: kernelci-api-token
+  pipeline: pipeline-secrets
+  kubernetesCredentials: k8scredentials
+
+pipelineConfig:
+  existingConfigMap: ""
+  files: []
+
+environment:
+  kcidbRest: ""
+  # Optional key in secrets.pipeline for a credential-bearing endpoint.
+  kcidbRestSecretKey: ""
+
+# Each workload has a matching templates/<name>.yaml.
+# Commands, environment, replicas, resources, and health ports are configurable here.
+# Each component defines its own image repository, tag, and pullPolicy.
+# Environment values can override individual fields for that component.
+# A tag may include a digest, e.g. "pipeline@sha256:<digest>".
+# Component overrides apply only to main containers, not init containers.
+# Strategy, credentials, and volumes are defined in each workload template.
+components:
+  lava-callback:
+    image:
+      repository: kernelci/kernelci
+      tag: lava-callback
+      pullPolicy: Always
+    command: [uvicorn]
+    args: [--app-dir, src, "lava_callback:app", "--host=0.0.0.0", "--port=8000", --proxy-headers, "--forwarded-allow-ips=*"]
+  timeout:
+    image:
+      repository: kernelci/kernelci
+      tag: pipeline
+      pullPolicy: Always
+    command: [./src/timeout.py, --settings=/secrets/kernelci.toml, --yaml-config=/config, run, --mode=timeout]
+    resources: {requests: {memory: 128Mi, cpu: 500m}}
+  closing:
+    image:
+      repository: kernelci/kernelci
+      tag: pipeline
+      pullPolicy: Always
+    command: [./src/timeout.py, --settings=/secrets/kernelci.toml, --yaml-config=/config, run, --mode=closing]
+  holdoff:
+    image:
+      repository: kernelci/kernelci
+      tag: pipeline
+      pullPolicy: Always
+    command: [./src/timeout.py, --settings=/secrets/kernelci.toml, --yaml-config=/config, run, --mode=holdoff]
+  scheduler-k8s:
+    image:
+      repository: kernelci/kernelci
+      tag: pipeline
+      pullPolicy: Always
+    command: [./src/scheduler.py, --settings=/secrets/kernelci.toml, --yaml-config=/config, loop, --name=scheduler_k8s, --runtime-type=kubernetes]
+    healthPort: 8080
+    resources: {requests: {memory: 256Mi, cpu: 500m}}
+  scheduler-shell:
+    image:
+      repository: kernelci/kernelci
+      tag: pipeline
+      pullPolicy: Always
+    command: [./src/scheduler.py, --settings=/secrets/kernelci.toml, --yaml-config=/config, loop, --name=scheduler_shell, --runtimes, shell]
+    env:
+      KCI_SSH_KEY: /secrets/id_rsa
+    resources: {requests: {memory: 256Mi, cpu: 500m}}
+  scheduler-lava:
+    image:
+      repository: kernelci/kernelci
+      tag: pipeline
+      pullPolicy: Always
+    command: [./src/scheduler.py, --settings=/secrets/kernelci.toml, --yaml-config=/config, loop, --name=scheduler_lava, --runtime-type, lava, pull_labs]
+    healthPort: 8080
+    env:
+      KCI_INSTANCE: prod
+      KCI_INSTANCE_CALLBACK: https://kernelci-pipeline.westus3.cloudapp.azure.com
+    resources: {requests: {memory: 256Mi, cpu: 500m}}
+  tarball:
+    image:
+      repository: kernelci/kernelci
+      tag: pipeline
+      pullPolicy: Always
+    command: [./src/tarball.py, --settings=/secrets/kernelci.toml, --yaml-config=/config, run, --name=tarball]
+    resources:
+      requests: {memory: 5Gi, cpu: 500m}
+      limits: {memory: 16Gi, cpu: "4"}
+  trigger:
+    image:
+      repository: kernelci/kernelci
+      tag: pipeline
+      pullPolicy: Always
+    command: [./src/trigger.py, --settings=/secrets/kernelci.toml, --yaml-config=/config, run, "--trees=!kernelci", --name=trigger]
+    resources: {requests: {memory: 128Mi, cpu: 500m}}
+  pipeline-kcidb:
+    image:
+      repository: kernelci/kernelci
+      tag: pipeline
+      pullPolicy: Always
+    command: [./src/send_kcidb.py, --settings=/secrets/kernelci.toml, run, --name=pipeline_kcidb]
+    resources: {requests: {memory: 1Gi, cpu: 500m}}
+
+lavaCallback:
+  enabled: true
+  replicas: 1
+
+gateway:
+  enabled: true
+  gatewayClassName: kernelci-envoy
+  hostnames:
+    - kernelci-pipeline.westus3.cloudapp.azure.com
+  clusterIssuer: all-issuer
+  tlsSecretName: pipeline-tls
+  certificate:
+    create: true
+  maxRequestBytes: 128Mi
+  compression: false
+  serviceAnnotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+

@@ -1,0 +1,12 @@
+# Credentials only. Select the environment with DEPLOYMENT and ENVIRONMENT
+# when invoking deploy.sh; put other settings in the environment YAML files.
+# Copy to environments/<deployment>/<environment>/secrets/deploy.cfg.
+# Inherited credentials and the old shared deploy.cfg are never used.
+export API_SECRET_KEY=""
+export API_TOKEN=""
+export EMAIL_PASSWORD=""
+# Required only when the corresponding Helm values select these secret keys:
+# config.mongoServiceSecretKey: mongo-service
+export MONGO=""
+# environment.kcidbRestSecretKey: kcidb-rest
+export KCIDB_REST=""

@@ -1,0 +1,47 @@
+kubernetes:
+  context: kernelci-api-1
+  namespaces:
+    api: kernelci-api
+    pipeline: kernelci-pipeline
+
+azure:
+  resourceGroup: kernelci-api-1_group
+  clusterName: kernelci-api-1
+  location: westus3
+
+envoyGateway:
+  chart: oci://docker.io/envoyproxy/gateway-helm
+  version: v1.9.2
+  namespace: envoy-gateway-system
+  values:
+    deployment:
+      envoyGateway:
+        image:
+          repository: docker.io/envoyproxy/gateway
+          tag: "v1.9.2"
+
+certManager:
+  install: true
+
+sources:
+  core:
+    repository: https://github.com/kernelci/kernelci-core.git
+    branch: main
+  api:
+    repository: https://github.com/kernelci/kernelci-api.git
+    branch: main
+  pipeline:
+    repository: https://github.com/kernelci/kernelci-pipeline.git
+    branch: main
+
+build:
+  imagePrefix: kernelci/
+
+pipelineConfig:
+  # Relative directories are resolved from kubernetes/helm, independently of cwd.
+  include:
+    - directory: kernelci-pipeline/config
+      files: all
+
+update:
+  timeout: 10m

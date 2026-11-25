@@ -1,0 +1,154 @@
+{{- if .Values.gateway.enabled }}
+{{- if not (kindIs "slice" .Values.gateway.hostnames) }}
+{{- fail "gateway.hostnames must be a non-empty list of DNS hostnames" }}
+{{- end }}
+{{- $hostnames := required "gateway.hostnames must contain at least one DNS hostname" .Values.gateway.hostnames }}
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: api
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyDeployment:
+        replicas: 1
+        pod:
+          nodeSelector:
+            kubernetes.io/os: linux
+      envoyService:
+        type: LoadBalancer
+        externalTrafficPolicy: Local
+        annotations:
+          {{- toYaml .Values.gateway.serviceAnnotations | nindent 10 }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: api
+  labels:
+    {{- include "kernelci-api.labels" . | nindent 4 }}
+spec:
+  gatewayClassName: {{ .Values.gateway.gatewayClassName }}
+  infrastructure:
+    parametersRef:
+      group: gateway.envoyproxy.io
+      kind: EnvoyProxy
+      name: api
+  listeners:
+    - name: http
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Same
+    - name: https
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: {{ .Values.gateway.tlsSecretName }}
+      allowedRoutes:
+        namespaces:
+          from: Same
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: api
+spec:
+  parentRefs:
+    - name: api
+      sectionName: https
+  hostnames: {{ .Values.gateway.hostnames | mustToJson }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: api
+          port: {{ .Values.service.port }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: api-events
+spec:
+  parentRefs:
+    - name: api
+      sectionName: https
+  hostnames: {{ .Values.gateway.hostnames | mustToJson }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /latest/listen
+      timeouts:
+        request: "0s"
+        backendRequest: "0s"
+      backendRefs:
+        - name: api
+          port: {{ .Values.service.port }}
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: BackendTrafficPolicy
+metadata:
+  name: api-events
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: api-events
+  timeout:
+    http:
+      streamIdleTimeout: "0s"
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: api-https-redirect
+spec:
+  parentRefs:
+    - name: api
+      sectionName: http
+  hostnames: {{ .Values.gateway.hostnames | mustToJson }}
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: BackendTrafficPolicy
+metadata:
+  name: api
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: api
+  requestBuffer:
+    limit: {{ .Values.gateway.maxRequestBytes | quote }}
+  {{- if .Values.gateway.compression }}
+  compressor:
+    - type: Gzip
+      gzip: {}
+  {{- end }}
+{{- if .Values.gateway.certificate.create }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: api-tls
+spec:
+  secretName: {{ .Values.gateway.tlsSecretName }}
+  dnsNames: {{ .Values.gateway.hostnames | mustToJson }}
+  issuerRef:
+    name: {{ .Values.gateway.clusterIssuer }}
+    kind: ClusterIssuer
+{{- end }}
+{{- end }}

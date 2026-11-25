@@ -1,0 +1,61 @@
+{{- $mongo := .Values.mongo | default dict -}}
+{{- if and (hasKey $mongo "enabled") (not (kindIs "bool" $mongo.enabled)) -}}
+{{- fail "mongo.enabled must be a boolean" -}}
+{{- end -}}
+{{- if $mongo.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongo
+  labels:
+    {{- include "kernelci-api.labels" . | nindent 4 }}
+    app: mongo
+spec:
+  serviceName: mongo
+  replicas: 1
+  selector:
+    matchLabels: {app: mongo}
+  template:
+    metadata:
+      labels: {app: mongo}
+    spec:
+      containers:
+        - name: mongo
+          image: "{{ $mongo.image.repository }}:{{ $mongo.image.tag }}"
+          imagePullPolicy: {{ $mongo.image.pullPolicy }}
+          resources:
+            {{- toYaml $mongo.resources | nindent 12 }}
+          ports:
+            - name: mongo
+              containerPort: 27017
+          readinessProbe:
+            tcpSocket:
+              port: mongo
+          volumeMounts:
+            - name: data
+              mountPath: /data/db
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        {{- if ne $mongo.persistence.storageClass nil }}
+        storageClassName: {{ $mongo.persistence.storageClass | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ $mongo.persistence.size | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+  labels:
+    {{- include "kernelci-api.labels" . | nindent 4 }}
+spec:
+  ports:
+    - name: mongo
+      port: 27017
+      targetPort: mongo
+  selector: {app: mongo}
+{{- end }}
