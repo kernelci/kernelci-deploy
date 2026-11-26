@@ -1,0 +1,77 @@
+{{- $mongo := .Values.mongo | default dict -}}
+{{- $mongoHost := .Values.waitForMongo.host -}}
+{{- $mongoPort := .Values.waitForMongo.port -}}
+{{- if $mongo.enabled -}}
+{{- $mongoHost = "mongo" -}}
+{{- $mongoPort = 27017 -}}
+{{- end -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  labels:
+    {{- include "kernelci-api.labels" . | nindent 4 }}
+    app: api
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      initContainers:
+        {{ if $mongoHost }}
+        - name: wait-for-mongo
+          image: {{ .Values.waitImage | quote }}
+          command: ["sh", "-c", {{ printf "until nc -z %s %v; do echo waiting for mongo; sleep 2; done" $mongoHost $mongoPort | quote }}]
+        {{ end }}
+        - name: wait-for-redis
+          image: {{ .Values.waitImage | quote }}
+          command: ["sh", "-c", {{ printf "until nc -z %s 6379; do echo waiting for redis; sleep 2; done" .Values.config.redisHost | quote }}]
+      containers:
+        - name: api
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8000
+          command: [uvicorn]
+          args: [api.main:versioned_app, --port, "8000", --host, 0.0.0.0]
+          env:
+            - name: SECRET_KEY
+              valueFrom: {secretKeyRef: {name: {{ .Values.existingSecret }}, key: secret-key}}
+            - name: UNIFIED_SECRET
+              valueFrom: {secretKeyRef: {name: {{ .Values.existingSecret }}, key: unified_secret, optional: true}}
+            - name: EMAIL_PASSWORD
+              valueFrom: {secretKeyRef: {name: {{ .Values.existingSecret }}, key: email-password}}
+            - name: MONGO_SERVICE
+              {{- if and (not $mongo.enabled) .Values.config.mongoServiceSecretKey }}
+              valueFrom: {secretKeyRef: {name: {{ .Values.existingSecret }}, key: {{ .Values.config.mongoServiceSecretKey }}}}
+              {{- else }}
+              valueFrom: {configMapKeyRef: {name: kernelci-api-config, key: mongo_service}}
+              {{- end }}
+            {{- range $name, $key := dict "EMAIL_SENDER" "email_sender" "SMTP_HOST" "smtp_host" "SMTP_PORT" "smtp_port" "REDIS_HOST" "redis_host" }}
+            - name: {{ $name }}
+              valueFrom: {configMapKeyRef: {name: kernelci-api-config, key: {{ $key }}}}
+            {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  labels:
+    {{- include "kernelci-api.labels" . | nindent 4 }}
+spec:
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+  selector:
+    app: api

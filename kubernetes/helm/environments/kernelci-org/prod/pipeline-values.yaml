@@ -1,0 +1,43 @@
+environment:
+  kcidbRestSecretKey: kcidb-rest
+
+# Match kernelci/kernelci-pipeline main's kube/aks workload images (2026-10-23).
+# Keep these pins aligned when updating the upstream deployment manifests.
+components:
+  lava-callback:
+    image:
+      tag: "lava-callback@sha256:255fdb9dfd0552f22c50cb60debf5de3ef7f1c675f9bd14231d14a31bc24368f"
+  timeout:
+    image:
+      tag: "pipeline@sha256:bb01424c4dedcd2ffa87cef225b09116cf874bc2b91fc63ed6d993d6fc5c43cb"
+  closing:
+    image:
+      tag: "pipeline@sha256:bb01424c4dedcd2ffa87cef225b09116cf874bc2b91fc63ed6d993d6fc5c43cb"
+  holdoff:
+    image:
+      tag: "pipeline@sha256:bb01424c4dedcd2ffa87cef225b09116cf874bc2b91fc63ed6d993d6fc5c43cb"
+  scheduler-k8s:
+    image:
+      tag: "pipeline@sha256:5ecd9b94a22f064a15a9ded85cbe09ff10018fe7cf6fdfaca794121f3b4a4b5f"
+  scheduler-shell:
+    image:
+      tag: "pipeline@sha256:34b13865be01a90b600604b7612f4cc048463d72626c2175ba2d2b40375eee12"
+  scheduler-lava:
+    image:
+      tag: "pipeline@sha256:5ecd9b94a22f064a15a9ded85cbe09ff10018fe7cf6fdfaca794121f3b4a4b5f"
+  tarball:
+    image:
+      tag: "pipeline@sha256:bb01424c4dedcd2ffa87cef225b09116cf874bc2b91fc63ed6d993d6fc5c43cb"
+  trigger:
+    image:
+      tag: "pipeline@sha256:bb01424c4dedcd2ffa87cef225b09116cf874bc2b91fc63ed6d993d6fc5c43cb"
+  pipeline-kcidb:
+    image:
+      tag: "pipeline@sha256:0c4a5ca55a7de6788dda0ac869210f8adfc169f1a0509b4c8e44335ac71488e2"
+
+gateway:
+  certificate:
+    create: true
+  serviceAnnotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "false"
+    service.beta.kubernetes.io/azure-dns-label-name: kernelci-pipeline

@@ -1,0 +1,7 @@
+apiVersion: v2
+name: kernelci-pipeline
+description: KernelCI Pipeline Kubernetes resources
+type: application
+version: 0.2.0
+appVersion: "1.0"
+

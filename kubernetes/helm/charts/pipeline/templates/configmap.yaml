@@ -1,0 +1,27 @@
+{{- if not .Values.pipelineConfig.existingConfigMap }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pipeline-configmap
+  labels:
+    {{- include "kernelci-pipeline.labels" . | nindent 4 }}
+data:
+  {{- range .Values.pipelineConfig.files }}
+  {{ .name }}: |
+    {{- .content | nindent 4 }}
+  {{- end }}
+{{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kernelci-pipeline-env
+  labels:
+    {{- include "kernelci-pipeline.labels" . | nindent 4 }}
+{{- if .Values.environment.kcidbRestSecretKey }}
+data: {}
+{{- else }}
+data:
+  KCIDB_REST: {{ required "environment.kcidbRest is required" .Values.environment.kcidbRest | quote }}
+{{- end }}
+

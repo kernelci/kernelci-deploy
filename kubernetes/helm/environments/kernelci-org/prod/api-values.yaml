@@ -1,0 +1,18 @@
+config:
+  # Supply the credential-bearing URI through deploy.cfg and the API Secret.
+  mongoServiceSecretKey: mongo-service
+  emailSender: nuclearcat-kci@nuclearcat.com
+
+mongo:
+  enabled: false
+
+gateway:
+  certificate:
+    create: true
+  serviceAnnotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "false"
+    service.beta.kubernetes.io/azure-dns-label-name: kernelci-api
+
+issuer:
+  enabled: true
+  server: https://acme-staging-v02.api.letsencrypt.org/directory

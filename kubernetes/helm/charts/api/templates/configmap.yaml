@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kernelci-api-config
+  labels:
+    {{- include "kernelci-api.labels" . | nindent 4 }}
+data:
+  redis_host: {{ .Values.config.redisHost | quote }}
+  {{- $mongo := .Values.mongo | default dict }}
+  {{- if or $mongo.enabled (not .Values.config.mongoServiceSecretKey) }}
+  mongo_service: {{ include "kernelci-api.mongoUri" . | quote }}
+  {{- end }}
+  email_sender: {{ required "config.emailSender is required" .Values.config.emailSender | quote }}
+  smtp_host: {{ .Values.config.smtpHost | quote }}
+  smtp_port: {{ .Values.config.smtpPort | quote }}
+

@@ -1,0 +1,54 @@
+{{- $component := index .Values.components "holdoff" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: holdoff
+  labels:
+    {{- include "kernelci-pipeline.labels" . | nindent 4 }}
+    app: holdoff
+spec:
+  replicas: {{ dig "replicas" 1 $component }}
+  selector:
+    matchLabels: {app: holdoff}
+  template:
+    metadata:
+      labels: {app: holdoff}
+      annotations:
+        checksum/config: {{ toJson .Values.pipelineConfig | sha256sum }}
+    spec:
+      initContainers:
+        - name: wait-for-api
+          image: {{ .Values.waitForApi.image | quote }}
+          command: [sh, -c, {{ printf "until curl --fail --silent --insecure %s; do echo 'Waiting for API endpoint...'; sleep 5; done" .Values.waitForApi.url | quote }}]
+      containers:
+        - name: holdoff
+          image: "{{ $component.image.repository }}:{{ $component.image.tag }}"
+          imagePullPolicy: {{ $component.image.pullPolicy }}
+          command: {{ toJson $component.command }}
+          env:
+            - name: KCI_API_TOKEN
+              valueFrom: {secretKeyRef: {name: {{ .Values.secrets.apiToken }}, key: token}}
+            {{- range $key, $value := $component.env }}
+            - {name: {{ $key }}, value: {{ $value | quote }}}
+            {{- end }}
+          {{- with $component.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $component.healthPort }}
+          livenessProbe:
+            httpGet: {path: /health, port: {{ . }}, scheme: HTTP}
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 10
+            failureThreshold: 3
+          {{- end }}
+          volumeMounts:
+            - {name: secrets, mountPath: /secrets}
+            - {name: config-volume, mountPath: /config}
+            - {name: config-volume, mountPath: /home/kernelci/config}
+      volumes:
+        - name: secrets
+          secret: {secretName: {{ .Values.secrets.pipeline }}}
+        - name: config-volume
+          configMap: {name: {{ include "kernelci-pipeline.configMapName" . }}}
